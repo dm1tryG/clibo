@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 14 — CRM & Leads · 2026-05-23
+
+Opened the 🤝 CRM & Relationships category.
+
+- 👥 `crm` — contacts CRM with company/email/phone/tags, lead/active/
+  customer/cold status, search, and a `touch` command to log contact.
+- 🧲 `leads` — sales pipeline with deals, stage transitions via `move`,
+  a `pipeline` view grouping open deals by stage, and win-rate stats.
+- **Tests:** 181 passing (+12).
+- Micro-skills written for both tools.
+
+**Built: 32 / 50.**
+
+---
+
 ### Iteration 13 — Worklog & Bookmark · 2026-05-23
 
 Shipped the last two Productivity & Work tools — **category complete (10/10)**.

@@ -9,6 +9,7 @@ from clibo.clis import (
     bookmark,
     budget,
     calorie,
+    crm,
     debt,
     events,
     expense,
@@ -17,6 +18,7 @@ from clibo.clis import (
     habit,
     invoice,
     journal,
+    leads,
     meditate,
     meds,
     mood,
@@ -69,4 +71,6 @@ ALL = [
     events,
     worklog,
     bookmark,
+    crm,
+    leads,
 ]

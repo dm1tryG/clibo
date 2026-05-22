@@ -68,8 +68,8 @@ its tests are green and its skill is written.
 - [x] `bookmark` 🔖 — Bookmarks & link saver
 
 ## 🤝 CRM & Relationships
-- [ ] `crm` 👥 — Contacts CRM
-- [ ] `leads` 🧲 — Sales pipeline & deals
+- [x] `crm` 👥 — Contacts CRM
+- [x] `leads` 🧲 — Sales pipeline & deals
 - [ ] `followup` 🔔 — Follow-up reminders for people
 - [ ] `meetings` 🗓️ — Meeting notes & action items
 - [ ] `jobs` 💼 — Job application tracker

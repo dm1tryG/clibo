@@ -1,0 +1,234 @@
+"""👥 crm — contacts CRM."""
+
+from __future__ import annotations
+
+from datetime import date, datetime
+
+import typer
+from sqlalchemy import or_
+from sqlmodel import Field, SQLModel, select
+
+from clibo.core.base import humanize_delta, parse_date
+from clibo.core.db import session
+from clibo.core.output import JsonOpt, fail, ok, render_record, render_rows
+
+NAME = "crm"
+HELP = "👥 Contacts CRM"
+EMOJI = "👥"
+STATUSES = ["lead", "active", "customer", "cold"]
+
+
+class Contact(SQLModel, table=True):
+    """A person or company in your contacts."""
+
+    __tablename__ = "crm_contact"
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    company: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    tags: str | None = None
+    status: str = "active"
+    notes: str | None = None
+    last_contact: date | None = None
+    created_at: datetime = Field(default_factory=datetime.now)
+
+
+app = typer.Typer(no_args_is_help=True, help=HELP)
+
+
+def _row(contact: Contact) -> dict:
+    return {
+        "id": contact.id,
+        "name": contact.name,
+        "company": contact.company,
+        "email": contact.email,
+        "phone": contact.phone,
+        "tags": contact.tags,
+        "status": contact.status,
+        "last_contact": contact.last_contact,
+        "last_contact_ago": humanize_delta(contact.last_contact) if contact.last_contact else None,
+        "notes": contact.notes,
+    }
+
+
+def _status_cell(status: str) -> str:
+    return {
+        "lead": "[yellow]lead[/yellow]",
+        "active": "[green]active[/green]",
+        "customer": "[cyan]customer[/cyan]",
+        "cold": "[dim]cold[/dim]",
+    }.get(status, status)
+
+
+@app.command()
+def add(
+    name: str = typer.Argument(..., help="Contact name"),
+    company: str = typer.Option(None, "--company", "-c", help="Company"),
+    email: str = typer.Option(None, "--email", "-e", help="Email address"),
+    phone: str = typer.Option(None, "--phone", "-p", help="Phone number"),
+    tag: str = typer.Option(None, "--tag", "-t", help="Comma-separated tags"),
+    status: str = typer.Option("active", "--status", "-s", help="lead/active/customer/cold"),
+    note: str = typer.Option(None, "--note", "-n", help="Optional note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """👥 Add a contact."""
+    status = status.lower()
+    if status not in STATUSES:
+        fail(f"Status must be one of: {', '.join(STATUSES)}", json_out=json_out)
+    contact = Contact(
+        name=name, company=company, email=email, phone=phone,
+        tags=tag, status=status, notes=note,
+    )
+    with session() as db:
+        db.add(contact)
+        db.flush()
+        db.refresh(contact)
+        data = _row(contact)
+    ok(f"Added {EMOJI} {name}" + (f" ({company})" if company else ""),
+       json_out=json_out, data=data)
+
+
+@app.command(name="list")
+def list_contacts(
+    status: str = typer.Option(None, "--status", "-s", help="Filter by status"),
+    tag: str = typer.Option(None, "--tag", "-t", help="Filter by tag"),
+    json_out: JsonOpt = False,
+) -> None:
+    """👥 List contacts."""
+    if status and status.lower() not in STATUSES:
+        fail(f"Status must be one of: {', '.join(STATUSES)}", json_out=json_out)
+    with session() as db:
+        query = select(Contact)
+        if status:
+            query = query.where(Contact.status == status.lower())
+        if tag:
+            query = query.where(Contact.tags.ilike(f"%{tag}%"))
+        contacts = list(db.exec(query.order_by(Contact.name)).all())
+    render_rows(
+        [_row(c) for c in contacts],
+        [("id", "ID"), ("name", "Name"), ("company", "Company"),
+         ("status", "Status"), ("email", "Email"), ("last_contact_ago", "Last Contact")],
+        json_out=json_out,
+        title="👥 Contacts",
+        formatters={"status": lambda v, r: _status_cell(v)},
+        empty="No contacts yet — try: clibo crm add 'Anna Petrova' -c Acme",
+    )
+
+
+@app.command()
+def show(contact_id: int = typer.Argument(..., help="Contact ID"), json_out: JsonOpt = False) -> None:
+    """👥 Show one contact in detail."""
+    with session() as db:
+        contact = db.get(Contact, contact_id)
+        if not contact:
+            fail(f"No contact #{contact_id}", json_out=json_out)
+        data = _row(contact) | {"created_at": contact.created_at}
+    render_record(data, json_out=json_out, title=f"👥 {data['name']}")
+
+
+@app.command()
+def edit(
+    contact_id: int = typer.Argument(..., help="Contact ID"),
+    name: str = typer.Option(None, "--name", help="New name"),
+    company: str = typer.Option(None, "--company", "-c"),
+    email: str = typer.Option(None, "--email", "-e"),
+    phone: str = typer.Option(None, "--phone", "-p"),
+    tag: str = typer.Option(None, "--tag", "-t"),
+    status: str = typer.Option(None, "--status", "-s"),
+    note: str = typer.Option(None, "--note", "-n"),
+    json_out: JsonOpt = False,
+) -> None:
+    """👥 Edit a contact."""
+    if status and status.lower() not in STATUSES:
+        fail(f"Status must be one of: {', '.join(STATUSES)}", json_out=json_out)
+    with session() as db:
+        contact = db.get(Contact, contact_id)
+        if not contact:
+            fail(f"No contact #{contact_id}", json_out=json_out)
+        for field, value in {"name": name, "company": company, "email": email,
+                             "phone": phone, "tags": tag, "notes": note}.items():
+            if value is not None:
+                setattr(contact, field, value)
+        if status is not None:
+            contact.status = status.lower()
+        db.add(contact)
+        db.flush()
+        data = _row(contact)
+    ok(f"Updated contact #{contact_id}", json_out=json_out, data=data)
+
+
+@app.command()
+def touch(
+    contact_id: int = typer.Argument(..., help="Contact ID"),
+    on: str = typer.Option("today", "--date", "-d", help="Date of contact"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🤝 Record that you were in touch with a contact."""
+    with session() as db:
+        contact = db.get(Contact, contact_id)
+        if not contact:
+            fail(f"No contact #{contact_id}", json_out=json_out)
+        contact.last_contact = parse_date(on)
+        db.add(contact)
+        db.flush()
+        data = _row(contact)
+    ok(f"Logged contact with {contact.name}", json_out=json_out, data=data)
+
+
+@app.command()
+def search(
+    query: str = typer.Argument(..., help="Text to search for"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🔍 Search contacts by name, company, email or tags."""
+    pattern = f"%{query}%"
+    with session() as db:
+        contacts = list(
+            db.exec(
+                select(Contact).where(
+                    or_(
+                        Contact.name.ilike(pattern),
+                        Contact.company.ilike(pattern),
+                        Contact.email.ilike(pattern),
+                        Contact.tags.ilike(pattern),
+                    )
+                ).order_by(Contact.name)
+            ).all()
+        )
+    render_rows(
+        [_row(c) for c in contacts],
+        [("id", "ID"), ("name", "Name"), ("company", "Company"),
+         ("status", "Status"), ("email", "Email")],
+        json_out=json_out,
+        title=f"🔍 Contacts matching '{query}'",
+        formatters={"status": lambda v, r: _status_cell(v)},
+        empty=f"No contacts match '{query}'.",
+    )
+
+
+@app.command()
+def rm(contact_id: int = typer.Argument(..., help="Contact ID"), json_out: JsonOpt = False) -> None:
+    """👥 Delete a contact."""
+    with session() as db:
+        contact = db.get(Contact, contact_id)
+        if not contact:
+            fail(f"No contact #{contact_id}", json_out=json_out)
+        db.delete(contact)
+    ok(f"Deleted contact #{contact_id}", json_out=json_out, data={"deleted": contact_id})
+
+
+@app.command()
+def stats(json_out: JsonOpt = False) -> None:
+    """📊 Contact stats by status."""
+    with session() as db:
+        contacts = list(db.exec(select(Contact)).all())
+    by_status = {s: sum(1 for c in contacts if c.status == s) for s in STATUSES}
+    data = {
+        "total": len(contacts),
+        "by_status": by_status,
+        "with_company": sum(1 for c in contacts if c.company),
+        "never_contacted": sum(1 for c in contacts if not c.last_contact),
+    }
+    render_record(data, json_out=json_out, title="📊 CRM stats")

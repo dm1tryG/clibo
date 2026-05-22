@@ -104,7 +104,18 @@ clibo calorie --help  # any tool's help
 | ✅ | `bookmark` 🔖 | Bookmarks & link saver |
 
 ### 🤝 CRM & Relationships
-`crm` 👥 · `leads` 🧲 · `followup` 🔔 · `meetings` 🗓️ · `jobs` 💼 · `clients` 🧑‍💼 · `birthdays` 🎂 · `network` 🌐 · `gifts` 🎁 · `brag` 🏆
+| | Tool | What it does |
+|---|---|---|
+| ✅ | `crm` 👥 | Contacts CRM |
+| ✅ | `leads` 🧲 | Sales pipeline & deals |
+| ⬜ | `followup` 🔔 | Follow-up reminders for people |
+| ⬜ | `meetings` 🗓️ | Meeting notes & action items |
+| ⬜ | `jobs` 💼 | Job application tracker |
+| ⬜ | `clients` 🧑‍💼 | Freelance client manager |
+| ⬜ | `birthdays` 🎂 | Birthday & anniversary reminders |
+| ⬜ | `network` 🌐 | Networking & people-you-met log |
+| ⬜ | `gifts` 🎁 | Gift ideas & giving tracker |
+| ⬜ | `brag` 🏆 | Achievement log for reviews |
 
 ### 🏠 Home & Life
 `groceries` 🛒 · `pantry` 🥫 · `recipes` 👨‍🍳 · `meals` 🍽️ · `chores` 🧹 · `plants` 🪴 · `car` 🚗 · `home` 🏠 · `pets` 🐾 · `travel` ✈️
