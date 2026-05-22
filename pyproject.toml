@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "clibo"
+version = "0.1.0"
+description = "50 local-first CLI tools for AI agents and humans — from a calorie tracker to a CRM, all in your terminal."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "dm1tryG" }]
+keywords = [
+    "cli",
+    "ai-agents",
+    "agent-tools",
+    "sqlite",
+    "productivity",
+    "crm",
+    "tracker",
+    "typer",
+    "local-first",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "typer>=0.12.0",
+    "sqlmodel>=0.0.21",
+    "rich>=13.7.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/dm1tryG/clibo"
+Repository = "https://github.com/dm1tryG/clibo"
+Issues = "https://github.com/dm1tryG/clibo/issues"
+
+[project.scripts]
+clibo = "clibo.main:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["clibo"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,103 @@
+# 🗺️ clibo — build plan
+
+The goal: **50 local-first CLI tools**, one `clibo <tool>` sub-command each,
+all sharing one SQLite database and a `--json` contract for AI agents.
+
+Stack: **Python · Typer · SQLModel · Rich**.
+
+---
+
+## Build loop protocol
+
+clibo is built by a `/loop` that runs every **15 minutes**. Each iteration:
+
+1. Read `PROGRESS.md` and this file. Pick the **first unchecked tool** below.
+2. Implement `clibo/clis/<tool>.py` following the pattern in
+   [`docs/ADDING_A_TOOL.md`](docs/ADDING_A_TOOL.md) — use `calorie.py` as the
+   reference. A SQLModel table, a Typer `app`, `--json` on every command,
+   emoji-rich Rich output for humans.
+3. Register it: add the import + entry to `clibo/clis/__init__.py`.
+4. Write `tests/test_<tool>.py` (cover create / read / json / stats / an error).
+5. Write `skills/<tool>/SKILL.md` (the micro-skill).
+6. Run `pytest` — **all tests must pass**. Fix until green.
+7. Manually smoke-test the new tool's commands, including `--json`.
+8. Tick the box below, append an entry to `PROGRESS.md`, update the README
+   table, and `git commit && git push`.
+9. If every tool is built, move to the **Polish phase**.
+
+Aim for 1–2 tools per iteration. Quality over speed: a tool isn't done until
+its tests are green and its skill is written.
+
+---
+
+## 🏃 Health & Wellness
+- [x] `calorie` 🍎 — Food & calorie tracker with macros
+- [x] `water` 💧 — Daily water intake tracker
+- [x] `weight` ⚖️ — Body-weight log with BMI & trend
+- [x] `workout` 🏋️ — Exercise & gym session log
+- [ ] `sleep` 😴 — Sleep duration & quality tracker
+- [ ] `mood` 🙂 — Daily mood & emotion journal
+- [ ] `meds` 💊 — Medication log & dosage reminders
+- [ ] `period` 🌸 — Menstrual cycle tracker & predictions
+- [ ] `meditate` 🧘 — Meditation & mindfulness sessions
+- [ ] `vitals` ❤️ — Blood pressure, pulse & glucose log
+
+## 💰 Money & Finance
+- [ ] `expense` 💸 — Personal expense tracker
+- [ ] `budget` 📊 — Monthly budgets by category
+- [ ] `subs` 🔁 — Recurring subscriptions tracker
+- [ ] `bills` 🧾 — Bills & due-date reminders
+- [ ] `savings` 🐷 — Savings goals with progress
+- [ ] `debt` 📉 — Debt & loan payoff tracker
+- [ ] `networth` 💰 — Assets, liabilities & net worth
+- [ ] `invoice` 📄 — Freelance invoice generator
+- [ ] `split` 🤝 — Split shared expenses with people
+- [ ] `wishlist` ⭐ — Things-to-buy wishlist with prices
+
+## ✅ Productivity & Work
+- [ ] `todo` ✅ — Task & to-do manager
+- [ ] `notes` 📝 — Quick searchable notes
+- [ ] `habit` 🔥 — Habit tracker with streaks
+- [ ] `focus` 🍅 — Pomodoro & focus sessions
+- [ ] `time` ⏱️ — Time tracking by project
+- [ ] `journal` 📔 — Daily journal & diary
+- [ ] `goals` 🎯 — Goals & OKRs with milestones
+- [ ] `events` 📅 — Events & reminders calendar
+- [ ] `worklog` 🗒️ — Work log & standup notes
+- [ ] `bookmark` 🔖 — Bookmarks & link saver
+
+## 🤝 CRM & Relationships
+- [ ] `crm` 👥 — Contacts CRM
+- [ ] `leads` 🧲 — Sales pipeline & deals
+- [ ] `followup` 🔔 — Follow-up reminders for people
+- [ ] `meetings` 🗓️ — Meeting notes & action items
+- [ ] `jobs` 💼 — Job application tracker
+- [ ] `clients` 🧑‍💼 — Freelance client manager
+- [ ] `birthdays` 🎂 — Birthday & anniversary reminders
+- [ ] `network` 🌐 — Networking & people-you-met log
+- [ ] `gifts` 🎁 — Gift ideas & giving tracker
+- [ ] `brag` 🏆 — Achievement log for performance reviews
+
+## 🏠 Home & Life
+- [ ] `groceries` 🛒 — Grocery & shopping list
+- [ ] `pantry` 🥫 — Food inventory with expiry dates
+- [ ] `recipes` 👨‍🍳 — Personal recipe book
+- [ ] `meals` 🍽️ — Weekly meal planner
+- [ ] `chores` 🧹 — Household chores rotation
+- [ ] `plants` 🪴 — Plant care & watering schedule
+- [ ] `car` 🚗 — Car maintenance & fuel log
+- [ ] `home` 🏠 — Home maintenance & repairs
+- [ ] `pets` 🐾 — Pet care, feeding & vet log
+- [ ] `travel` ✈️ — Trip planner & itinerary
+
+---
+
+## ✨ Polish phase (after all 50)
+
+- [ ] `clibo today` — one-screen dashboard across all trackers
+- [ ] `clibo export` / `clibo backup` — dump & restore the database
+- [ ] `clibo search` — global search across tools
+- [ ] Shell completion install docs
+- [ ] Demo GIFs / asciinema in the README
+- [ ] Publish to PyPI (`pipx install clibo`)
+- [ ] Tag the `v1.0.0` release
