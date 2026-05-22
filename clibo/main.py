@@ -6,16 +6,20 @@ Run ``clibo`` for the menu, ``clibo <tool> --help`` for any tool, and
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import typer
 from rich.box import ROUNDED
 from rich.panel import Panel
 from rich.table import Table
 
 from clibo import __version__, clis
+from clibo.admin import backup_db, export_data, restore_db
 from clibo.catalog import CATALOG, CATEGORIES
 from clibo.core import config
 from clibo.core.db import init_db
-from clibo.core.output import JsonOpt, _emit_json, console
+from clibo.core.output import JsonOpt, _emit_json, console, fail, ok
+from clibo.dashboard import render_today
 
 app = typer.Typer(
     name="clibo",
@@ -101,6 +105,54 @@ def info(json_out: JsonOpt = False) -> None:
 def version() -> None:
     """Show the clibo version."""
     console.print(f"clibo {__version__}")
+
+
+@app.command()
+def today(json_out: JsonOpt = False) -> None:
+    """📅 Today across every clibo tool: tasks, habits, meals, bills…"""
+    render_today(json_out=json_out)
+
+
+@app.command()
+def backup(
+    dest: Path = typer.Argument(None, help="Where to write the backup .db file"),
+    json_out: JsonOpt = False,
+) -> None:
+    """💾 Copy the clibo database to a timestamped backup file."""
+    try:
+        path = backup_db(dest)
+    except FileNotFoundError as exc:
+        fail(str(exc), json_out=json_out)
+    ok(f"Backed up clibo database → {path}", json_out=json_out, data={"path": str(path)})
+
+
+@app.command()
+def restore(
+    src: Path = typer.Argument(..., help="Backup file to restore from"),
+    json_out: JsonOpt = False,
+) -> None:
+    """💾 Replace the live clibo database with a backup file."""
+    try:
+        path = restore_db(src)
+    except FileNotFoundError as exc:
+        fail(str(exc), json_out=json_out)
+    ok(f"Restored clibo database from {src} → {path}",
+       json_out=json_out, data={"restored_to": str(path)})
+
+
+@app.command(name="export")
+def export_cmd(
+    dest: Path = typer.Argument(None, help="JSON file to write"),
+    json_out: JsonOpt = False,
+) -> None:
+    """📤 Dump every clibo table to one JSON file (great for AI agents)."""
+    try:
+        path, summary = export_data(dest)
+    except FileNotFoundError as exc:
+        fail(str(exc), json_out=json_out)
+    data = {"path": str(path), "tables": summary, "rows": sum(summary.values())}
+    ok(f"Exported {data['rows']} rows across {len(summary)} tables → {path}",
+       json_out=json_out, data=data)
 
 
 def main() -> None:

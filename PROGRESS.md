@@ -4,6 +4,25 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 24 — Polish: `clibo today` + backup/export · 2026-05-23
+
+First Polish-phase iteration: the integrating commands that turn 50 separate
+trackers into one app.
+
+- 📅 `clibo today` — a one-screen dashboard pulling from 12 tools at once:
+  overdue/today tasks, habit check-offs, water/calorie/focus progress bars,
+  today's events and meals, bills due, follow-ups, plants needing water,
+  chores due, and birthdays today. Sections only appear if there's data.
+- 💾 `clibo backup` / `clibo restore` — copy the SQLite file to a
+  timestamped backup, or replace the live DB from a backup.
+- 📤 `clibo export` — dump every table as one JSON file (great for an
+  agent to consume the whole local state in one read).
+- **Tests:** 294 passing (+11).
+
+**Built: 50 tools + 4 polish commands.**
+
+---
+
 ### 🎉 Iteration 23 — Pets & Travel · 2026-05-23 — **ALL 50 SHIPPED**
 
 The final two Home & Life tools — the project's main build phase is **done**.

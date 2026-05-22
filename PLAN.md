@@ -95,8 +95,8 @@ its tests are green and its skill is written.
 
 ## ✨ Polish phase (after all 50)
 
-- [ ] `clibo today` — one-screen dashboard across all trackers
-- [ ] `clibo export` / `clibo backup` — dump & restore the database
+- [x] `clibo today` — one-screen dashboard across all trackers
+- [x] `clibo export` / `clibo backup` — dump & restore the database
 - [ ] `clibo search` — global search across tools
 - [ ] Shell completion install docs
 - [ ] Demo GIFs / asciinema in the README

@@ -53,9 +53,21 @@ Then:
 
 ```bash
 clibo --help          # the full menu
+clibo today           # a dashboard of everything actionable today
 clibo info            # what's built, what's coming
 clibo calorie --help  # any tool's help
 ```
+
+## Cross-tool commands
+
+A handful of root commands tie all 50 tools together:
+
+| Command | What it does |
+|---|---|
+| `clibo today` | A one-screen dashboard pulling from every tool — tasks, habits, meals, events, bills, water/calorie/focus progress, plants & chores due, today's birthdays. |
+| `clibo backup [PATH]` | Copy the local SQLite database to a timestamped `.db` backup (default: `~/.clibo/backups/`). |
+| `clibo restore PATH` | Replace the live database with a backup. |
+| `clibo export [PATH]` | Dump every clibo table to one JSON file — ideal for an agent to read the whole local state in one go. |
 
 ## The 50 tools
 
