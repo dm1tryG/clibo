@@ -1,0 +1,193 @@
+"""🎂 birthdays — birthday & anniversary reminders."""
+
+from __future__ import annotations
+
+from datetime import date, datetime
+
+import typer
+from sqlmodel import Field, SQLModel, select
+
+from clibo.core.db import session
+from clibo.core.output import JsonOpt, fail, ok, render_record, render_rows
+
+NAME = "birthdays"
+HELP = "🎂 Birthday & anniversary reminders"
+EMOJI = "🎂"
+KINDS = ["birthday", "anniversary"]
+
+
+class Occasion(SQLModel, table=True):
+    """A recurring yearly occasion — a birthday or an anniversary."""
+
+    __tablename__ = "birthdays_occasion"
+
+    id: int | None = Field(default=None, primary_key=True)
+    person: str
+    kind: str = "birthday"
+    month: int
+    day: int
+    year: int | None = None
+    note: str | None = None
+    created_at: datetime = Field(default_factory=datetime.now)
+
+
+app = typer.Typer(no_args_is_help=True, help=HELP)
+
+
+def _parse_md(text: str) -> tuple[int, int, int | None]:
+    """Parse a date string into (month, day, optional year)."""
+    for fmt, has_year in (("%Y-%m-%d", True), ("%m-%d", False),
+                          ("%d.%m", False), ("%m/%d", False)):
+        try:
+            parsed = datetime.strptime(text.strip(), fmt)
+        except ValueError:
+            continue
+        return parsed.month, parsed.day, (parsed.year if has_year else None)
+    raise typer.BadParameter(f"Date must be MM-DD or YYYY-MM-DD: {text!r}")
+
+
+def _next_occurrence(month: int, day: int) -> date:
+    """The next date this month/day falls on, today or later."""
+    today = date.today()
+    for year in (today.year, today.year + 1):
+        try:
+            occ = date(year, month, day)
+        except ValueError:  # Feb 29 in a non-leap year
+            occ = date(year, month, 28)
+        if occ >= today:
+            return occ
+    return today
+
+
+def _row(occasion: Occasion) -> dict:
+    nxt = _next_occurrence(occasion.month, occasion.day)
+    return {
+        "id": occasion.id,
+        "person": occasion.person,
+        "kind": occasion.kind,
+        "date": f"{occasion.month:02d}-{occasion.day:02d}",
+        "next_date": nxt,
+        "days_until": (nxt - date.today()).days,
+        "turning": (nxt.year - occasion.year) if occasion.year else None,
+        "note": occasion.note,
+    }
+
+
+@app.command()
+def add(
+    person: str = typer.Argument(..., help="Whose occasion this is"),
+    on: str = typer.Option(..., "--date", "-d", help="MM-DD or YYYY-MM-DD"),
+    kind: str = typer.Option("birthday", "--kind", "-k", help="birthday / anniversary"),
+    note: str = typer.Option(None, "--note", "-n", help="Optional note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🎂 Add a birthday or anniversary."""
+    kind = kind.lower()
+    if kind not in KINDS:
+        fail(f"Kind must be one of: {', '.join(KINDS)}", json_out=json_out)
+    month, day, year = _parse_md(on)
+    if not 1 <= month <= 12 or not 1 <= day <= 31:
+        fail("Invalid month or day", json_out=json_out)
+    occasion = Occasion(person=person, kind=kind, month=month, day=day, year=year, note=note)
+    with session() as db:
+        db.add(occasion)
+        db.flush()
+        db.refresh(occasion)
+        data = _row(occasion)
+    ok(f"Added {EMOJI} {kind} for {person} ({data['date']})", json_out=json_out, data=data)
+
+
+@app.command(name="list")
+def list_occasions(
+    kind: str = typer.Option(None, "--kind", "-k", help="Filter by kind"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🎂 List occasions, soonest first."""
+    if kind and kind.lower() not in KINDS:
+        fail(f"Kind must be one of: {', '.join(KINDS)}", json_out=json_out)
+    with session() as db:
+        query = select(Occasion)
+        if kind:
+            query = query.where(Occasion.kind == kind.lower())
+        occasions = list(db.exec(query).all())
+    rows = sorted((_row(o) for o in occasions), key=lambda r: r["days_until"])
+    render_rows(
+        rows,
+        [("id", "ID"), ("person", "Person"), ("kind", "Kind"),
+         ("next_date", "Next"), ("days_until", "Days"), ("turning", "Turning")],
+        json_out=json_out,
+        title="🎂 Birthdays & anniversaries",
+        empty="Nothing yet — try: clibo birthdays add 'Mom' -d 04-15",
+    )
+
+
+@app.command()
+def today(json_out: JsonOpt = False) -> None:
+    """🎂 Whose birthday or anniversary is today."""
+    with session() as db:
+        occasions = list(db.exec(select(Occasion)).all())
+    rows = [_row(o) for o in occasions if _row(o)["days_until"] == 0]
+    if json_out:
+        render_record({"date": date.today(), "occasions": rows}, json_out=True)
+        return
+    if not rows:
+        from clibo.core.output import console
+
+        console.print("\n  🎂 [dim]No birthdays or anniversaries today.[/dim]\n")
+        return
+    render_rows(
+        rows,
+        [("person", "Person"), ("kind", "Kind"), ("turning", "Turning")],
+        json_out=False,
+        title=f"🎉 Today · {date.today():%d %B}",
+    )
+
+
+@app.command()
+def upcoming(
+    days: int = typer.Option(30, "--days", help="Look ahead this many days"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🔔 Occasions coming up in the next N days."""
+    with session() as db:
+        occasions = list(db.exec(select(Occasion)).all())
+    rows = sorted(
+        (r for o in occasions if (r := _row(o))["days_until"] <= days),
+        key=lambda r: r["days_until"],
+    )
+    render_rows(
+        rows,
+        [("person", "Person"), ("kind", "Kind"), ("next_date", "Date"),
+         ("days_until", "Days"), ("turning", "Turning")],
+        json_out=json_out,
+        title=f"🔔 Next {days} days",
+        empty="Nothing coming up.",
+    )
+
+
+@app.command()
+def rm(occasion_id: int = typer.Argument(..., help="Occasion ID"), json_out: JsonOpt = False) -> None:
+    """🎂 Delete an occasion."""
+    with session() as db:
+        occasion = db.get(Occasion, occasion_id)
+        if not occasion:
+            fail(f"No occasion #{occasion_id}", json_out=json_out)
+        db.delete(occasion)
+    ok(f"Deleted occasion #{occasion_id}", json_out=json_out, data={"deleted": occasion_id})
+
+
+@app.command()
+def stats(json_out: JsonOpt = False) -> None:
+    """📊 Occasion stats."""
+    with session() as db:
+        occasions = list(db.exec(select(Occasion)).all())
+    rows = [_row(o) for o in occasions]
+    nxt = min(rows, key=lambda r: r["days_until"], default=None)
+    data = {
+        "total": len(occasions),
+        "birthdays": sum(1 for o in occasions if o.kind == "birthday"),
+        "anniversaries": sum(1 for o in occasions if o.kind == "anniversary"),
+        "next_up": nxt["person"] if nxt else None,
+        "next_in_days": nxt["days_until"] if nxt else None,
+    }
+    render_record(data, json_out=json_out, title="📊 Birthday stats")

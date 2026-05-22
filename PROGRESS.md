@@ -4,6 +4,22 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 17 — Birthdays & Network · 2026-05-23
+
+Two more CRM & Relationships tools.
+
+- 🎂 `birthdays` — birthday & anniversary reminders; recurring yearly
+  occasions with next-occurrence and age calculation, `today` and
+  `upcoming` views.
+- 🌐 `network` — log people you meet (where, when, context), search,
+  and stats with your top meeting places.
+- **Tests:** 215 passing (+11).
+- Micro-skills written for both tools.
+
+**Built: 38 / 50.**
+
+---
+
 ### Iteration 16 — Jobs & Clients · 2026-05-23
 
 Two more CRM & Relationships tools.

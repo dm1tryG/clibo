@@ -74,8 +74,8 @@ its tests are green and its skill is written.
 - [x] `meetings` 🗓️ — Meeting notes & action items
 - [x] `jobs` 💼 — Job application tracker
 - [x] `clients` 🧑‍💼 — Freelance client manager
-- [ ] `birthdays` 🎂 — Birthday & anniversary reminders
-- [ ] `network` 🌐 — Networking & people-you-met log
+- [x] `birthdays` 🎂 — Birthday & anniversary reminders
+- [x] `network` 🌐 — Networking & people-you-met log
 - [ ] `gifts` 🎁 — Gift ideas & giving tracker
 - [ ] `brag` 🏆 — Achievement log for performance reviews
 

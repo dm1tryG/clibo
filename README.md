@@ -112,8 +112,8 @@ clibo calorie --help  # any tool's help
 | ✅ | `meetings` 🗓️ | Meeting notes & action items |
 | ✅ | `jobs` 💼 | Job application tracker |
 | ✅ | `clients` 🧑‍💼 | Freelance client manager |
-| ⬜ | `birthdays` 🎂 | Birthday & anniversary reminders |
-| ⬜ | `network` 🌐 | Networking & people-you-met log |
+| ✅ | `birthdays` 🎂 | Birthday & anniversary reminders |
+| ✅ | `network` 🌐 | Networking & people-you-met log |
 | ⬜ | `gifts` 🎁 | Gift ideas & giving tracker |
 | ⬜ | `brag` 🏆 | Achievement log for reviews |
 
