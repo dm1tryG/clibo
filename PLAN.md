@@ -50,8 +50,8 @@ its tests are green and its skill is written.
 - [x] `bills` 🧾 — Bills & due-date reminders
 - [x] `savings` 🐷 — Savings goals with progress
 - [x] `debt` 📉 — Debt & loan payoff tracker
-- [ ] `networth` 💰 — Assets, liabilities & net worth
-- [ ] `invoice` 📄 — Freelance invoice generator
+- [x] `networth` 💰 — Assets, liabilities & net worth
+- [x] `invoice` 📄 — Freelance invoice generator
 - [ ] `split` 🤝 — Split shared expenses with people
 - [ ] `wishlist` ⭐ — Things-to-buy wishlist with prices
 

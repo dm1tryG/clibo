@@ -10,9 +10,11 @@ from clibo.clis import (
     calorie,
     debt,
     expense,
+    invoice,
     meditate,
     meds,
     mood,
+    networth,
     period,
     savings,
     sleep,
@@ -41,4 +43,6 @@ ALL = [
     bills,
     savings,
     debt,
+    networth,
+    invoice,
 ]

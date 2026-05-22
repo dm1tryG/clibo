@@ -4,6 +4,22 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 7 — Net Worth & Invoice · 2026-05-22
+
+Two more Money & Finance tools.
+
+- 💰 `networth` — track assets and liabilities, see current net worth,
+  and save dated snapshots to build a net-worth history.
+- 📄 `invoice` — freelance invoices with auto-numbering (INV-0001…),
+  tax, a draft→sent→paid flow, a formatted `render` document, and
+  billed/paid/outstanding stats.
+- **Tests:** 97 passing (+11).
+- Micro-skills written for both tools.
+
+**Built: 18 / 50.**
+
+---
+
 ### Iteration 6 — Savings & Debt · 2026-05-22
 
 Two more Money & Finance tools, both built on a goal + contributions model.

@@ -84,8 +84,8 @@ clibo calorie --help  # any tool's help
 | ✅ | `bills` 🧾 | Bills & due-date reminders |
 | ✅ | `savings` 🐷 | Savings goals with progress |
 | ✅ | `debt` 📉 | Debt & loan payoff tracker |
-| ⬜ | `networth` 💰 | Assets, liabilities & net worth |
-| ⬜ | `invoice` 📄 | Freelance invoice generator |
+| ✅ | `networth` 💰 | Assets, liabilities & net worth |
+| ✅ | `invoice` 📄 | Freelance invoice generator |
 | ⬜ | `split` 🤝 | Split shared expenses with people |
 | ⬜ | `wishlist` ⭐ | Things-to-buy wishlist with prices |
 
