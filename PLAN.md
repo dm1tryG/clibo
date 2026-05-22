@@ -44,8 +44,8 @@ its tests are green and its skill is written.
 - [x] `vitals` ❤️ — Blood pressure, pulse & glucose log
 
 ## 💰 Money & Finance
-- [ ] `expense` 💸 — Personal expense tracker
-- [ ] `budget` 📊 — Monthly budgets by category
+- [x] `expense` 💸 — Personal expense tracker
+- [x] `budget` 📊 — Monthly budgets by category
 - [ ] `subs` 🔁 — Recurring subscriptions tracker
 - [ ] `bills` 🧾 — Bills & due-date reminders
 - [ ] `savings` 🐷 — Savings goals with progress

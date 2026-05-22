@@ -4,6 +4,22 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 4 — Expense & Budget · 2026-05-22
+
+Opened the 💰 Money & Finance category — and the first cross-tool integration.
+
+- 💸 `expense` — record expenses, monthly breakdown by category with
+  share bars, a shared currency setting, edit/delete, and stats.
+- 📊 `budget` — set per-category monthly limits; `list`/`check`/`status`
+  read the expense tool's data live to show real spending vs each budget,
+  flagging over-budget categories.
+- **Tests:** 63 passing (+12).
+- Micro-skills written for both tools.
+
+**Built: 12 / 50.**
+
+---
+
 ### Iteration 3 — Meditate & Vitals · 2026-05-22
 
 Shipped the last two Health & Wellness tools — **category complete (10/10)**.

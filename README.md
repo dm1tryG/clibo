@@ -76,7 +76,18 @@ clibo calorie --help  # any tool's help
 | ✅ | `vitals` ❤️ | Blood pressure, pulse & glucose log |
 
 ### 💰 Money & Finance
-`expense` 💸 · `budget` 📊 · `subs` 🔁 · `bills` 🧾 · `savings` 🐷 · `debt` 📉 · `networth` 💰 · `invoice` 📄 · `split` 🤝 · `wishlist` ⭐
+| | Tool | What it does |
+|---|---|---|
+| ✅ | `expense` 💸 | Personal expense tracker |
+| ✅ | `budget` 📊 | Monthly budgets by category |
+| ⬜ | `subs` 🔁 | Recurring subscriptions tracker |
+| ⬜ | `bills` 🧾 | Bills & due-date reminders |
+| ⬜ | `savings` 🐷 | Savings goals with progress |
+| ⬜ | `debt` 📉 | Debt & loan payoff tracker |
+| ⬜ | `networth` 💰 | Assets, liabilities & net worth |
+| ⬜ | `invoice` 📄 | Freelance invoice generator |
+| ⬜ | `split` 🤝 | Split shared expenses with people |
+| ⬜ | `wishlist` ⭐ | Things-to-buy wishlist with prices |
 
 ### ✅ Productivity & Work
 `todo` ✅ · `notes` 📝 · `habit` 🔥 · `focus` 🍅 · `time` ⏱️ · `journal` 📔 · `goals` 🎯 · `events` 📅 · `worklog` 🗒️ · `bookmark` 🔖
