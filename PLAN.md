@@ -48,8 +48,8 @@ its tests are green and its skill is written.
 - [x] `budget` 📊 — Monthly budgets by category
 - [x] `subs` 🔁 — Recurring subscriptions tracker
 - [x] `bills` 🧾 — Bills & due-date reminders
-- [ ] `savings` 🐷 — Savings goals with progress
-- [ ] `debt` 📉 — Debt & loan payoff tracker
+- [x] `savings` 🐷 — Savings goals with progress
+- [x] `debt` 📉 — Debt & loan payoff tracker
 - [ ] `networth` 💰 — Assets, liabilities & net worth
 - [ ] `invoice` 📄 — Freelance invoice generator
 - [ ] `split` 🤝 — Split shared expenses with people

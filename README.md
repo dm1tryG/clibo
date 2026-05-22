@@ -82,8 +82,8 @@ clibo calorie --help  # any tool's help
 | ✅ | `budget` 📊 | Monthly budgets by category |
 | ✅ | `subs` 🔁 | Recurring subscriptions tracker |
 | ✅ | `bills` 🧾 | Bills & due-date reminders |
-| ⬜ | `savings` 🐷 | Savings goals with progress |
-| ⬜ | `debt` 📉 | Debt & loan payoff tracker |
+| ✅ | `savings` 🐷 | Savings goals with progress |
+| ✅ | `debt` 📉 | Debt & loan payoff tracker |
 | ⬜ | `networth` 💰 | Assets, liabilities & net worth |
 | ⬜ | `invoice` 📄 | Freelance invoice generator |
 | ⬜ | `split` 🤝 | Split shared expenses with people |

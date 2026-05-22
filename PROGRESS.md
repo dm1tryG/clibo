@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 6 — Savings & Debt · 2026-05-22
+
+Two more Money & Finance tools, both built on a goal + contributions model.
+
+- 🐷 `savings` — savings goals with deposits/withdrawals; `list` shows a
+  progress bar per goal, `show` adds deposit history, plus overall stats.
+- 📉 `debt` — debts/loans with logged payments; payoff progress bars,
+  payment history, a `cleared` flag and overall debt stats.
+- **Tests:** 86 passing (+12).
+- Micro-skills written for both tools.
+
+**Built: 16 / 50.**
+
+---
+
 ### Iteration 5 — Subs & Bills · 2026-05-22
 
 Two more Money & Finance tools.
