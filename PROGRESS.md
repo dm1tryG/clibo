@@ -4,6 +4,23 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 2 — Meds & Period · 2026-05-22
+
+Shipped two more Health & Wellness tools.
+
+- 💊 `meds` — register medications (dosage, times/day), `take` doses by
+  name or ID, a `today` view showing what's still due, dose history,
+  `stop`/`rm`, and adherence stats.
+- 🌸 `period` — log period `start`/`end` or a complete past period,
+  `predict` the next period + fertile window from cycle history, and
+  cycle/length stats.
+- **Tests:** 40 passing (+12).
+- Micro-skills written for both tools.
+
+**Built: 8 / 50.**
+
+---
+
 ### Iteration 1 — Sleep & Mood · 2026-05-22
 
 Shipped two more Health & Wellness tools.

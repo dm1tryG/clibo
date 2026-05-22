@@ -70,8 +70,8 @@ clibo calorie --help  # any tool's help
 | ✅ | `workout` 🏋️ | Exercise & gym session log |
 | ✅ | `sleep` 😴 | Sleep duration & quality tracker |
 | ✅ | `mood` 🙂 | Daily mood & emotion journal |
-| ⬜ | `meds` 💊 | Medication log & dosage reminders |
-| ⬜ | `period` 🌸 | Menstrual cycle tracker |
+| ✅ | `meds` 💊 | Medication log & dosage reminders |
+| ✅ | `period` 🌸 | Menstrual cycle tracker |
 | ⬜ | `meditate` 🧘 | Meditation & mindfulness sessions |
 | ⬜ | `vitals` ❤️ | Blood pressure, pulse & glucose log |
 

@@ -38,8 +38,8 @@ its tests are green and its skill is written.
 - [x] `workout` 🏋️ — Exercise & gym session log
 - [x] `sleep` 😴 — Sleep duration & quality tracker
 - [x] `mood` 🙂 — Daily mood & emotion journal
-- [ ] `meds` 💊 — Medication log & dosage reminders
-- [ ] `period` 🌸 — Menstrual cycle tracker & predictions
+- [x] `meds` 💊 — Medication log & dosage reminders
+- [x] `period` 🌸 — Menstrual cycle tracker & predictions
 - [ ] `meditate` 🧘 — Meditation & mindfulness sessions
 - [ ] `vitals` ❤️ — Blood pressure, pulse & glucose log
 

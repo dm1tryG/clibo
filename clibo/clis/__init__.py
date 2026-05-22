@@ -4,7 +4,7 @@ Each tool is a module exposing ``NAME``, ``HELP`` and a Typer ``app``. The
 build loop appends new modules to the imports and to ``ALL`` as it ships them.
 """
 
-from clibo.clis import calorie, mood, sleep, water, weight, workout
+from clibo.clis import calorie, meds, mood, period, sleep, water, weight, workout
 
 #: Every built tool module, in catalog order. Extended by the build loop.
 ALL = [
@@ -14,4 +14,6 @@ ALL = [
     workout,
     sleep,
     mood,
+    meds,
+    period,
 ]
