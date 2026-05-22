@@ -108,8 +108,8 @@ clibo calorie --help  # any tool's help
 |---|---|---|
 | ✅ | `crm` 👥 | Contacts CRM |
 | ✅ | `leads` 🧲 | Sales pipeline & deals |
-| ⬜ | `followup` 🔔 | Follow-up reminders for people |
-| ⬜ | `meetings` 🗓️ | Meeting notes & action items |
+| ✅ | `followup` 🔔 | Follow-up reminders for people |
+| ✅ | `meetings` 🗓️ | Meeting notes & action items |
 | ⬜ | `jobs` 💼 | Job application tracker |
 | ⬜ | `clients` 🧑‍💼 | Freelance client manager |
 | ⬜ | `birthdays` 🎂 | Birthday & anniversary reminders |

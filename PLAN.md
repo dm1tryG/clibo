@@ -70,8 +70,8 @@ its tests are green and its skill is written.
 ## 🤝 CRM & Relationships
 - [x] `crm` 👥 — Contacts CRM
 - [x] `leads` 🧲 — Sales pipeline & deals
-- [ ] `followup` 🔔 — Follow-up reminders for people
-- [ ] `meetings` 🗓️ — Meeting notes & action items
+- [x] `followup` 🔔 — Follow-up reminders for people
+- [x] `meetings` 🗓️ — Meeting notes & action items
 - [ ] `jobs` 💼 — Job application tracker
 - [ ] `clients` 🧑‍💼 — Freelance client manager
 - [ ] `birthdays` 🎂 — Birthday & anniversary reminders

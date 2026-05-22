@@ -14,6 +14,7 @@ from clibo.clis import (
     events,
     expense,
     focus,
+    followup,
     goals,
     habit,
     invoice,
@@ -21,6 +22,7 @@ from clibo.clis import (
     leads,
     meditate,
     meds,
+    meetings,
     mood,
     networth,
     notes,
@@ -73,4 +75,6 @@ ALL = [
     bookmark,
     crm,
     leads,
+    followup,
+    meetings,
 ]

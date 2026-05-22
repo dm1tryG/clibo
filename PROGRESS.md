@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 15 — Followup & Meetings · 2026-05-23
+
+Two more CRM & Relationships tools.
+
+- 🔔 `followup` — follow-up reminders for people with due dates, auto
+  status (overdue/due soon), a `due` view and a `snooze` command.
+- 🗓️ `meetings` — meeting notes with attendees plus action items;
+  per-meeting `show`, an `actions` view of all open items, and stats.
+- **Tests:** 192 passing (+11).
+- Micro-skills written for both tools.
+
+**Built: 34 / 50.**
+
+---
+
 ### Iteration 14 — CRM & Leads · 2026-05-23
 
 Opened the 🤝 CRM & Relationships category.
