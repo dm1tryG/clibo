@@ -4,6 +4,18 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 27 — `clibo doctor` · 2026-05-23
+
+Post-v1.0 polish: a sixth cross-tool command for diagnostics.
+
+- 🩺 `clibo doctor` — health check: version, Python version, tool
+  count vs catalog, DB path + size on disk, table count, total rows,
+  and a "tables with data" mini-table. `--healthy` boolean for agents.
+- README: `clibo doctor` added to the Cross-tool commands table.
+- **Tests:** 302 passing (+3).
+
+---
+
 ### 🏷️ Iteration 26 — v1.0.0 release · 2026-05-23
 
 Final Polish-phase iteration that the build loop can do on its own.

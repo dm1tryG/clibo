@@ -6,6 +6,8 @@ Run ``clibo`` for the menu, ``clibo <tool> --help`` for any tool, and
 
 from __future__ import annotations
 
+import sqlite3
+import sys
 from pathlib import Path
 
 import typer
@@ -154,6 +156,82 @@ def export_cmd(
     data = {"path": str(path), "tables": summary, "rows": sum(summary.values())}
     ok(f"Exported {data['rows']} rows across {len(summary)} tables → {path}",
        json_out=json_out, data=data)
+
+
+def _human_size(num: int) -> str:
+    """Format a byte count as a short ``42 B`` / ``3.1 KB`` / ``2.4 MB``."""
+    for unit in ("B", "KB", "MB", "GB"):
+        if num < 1024 or unit == "GB":
+            return f"{num:.0f} {unit}" if unit == "B" else f"{num:.1f} {unit}"
+        num /= 1024
+    return f"{num:.1f} GB"
+
+
+@app.command()
+def doctor(json_out: JsonOpt = False) -> None:
+    """🩺 Health check — verify the install and inspect the local database."""
+    db_path = config.db_path()
+    db_exists = db_path.exists()
+    db_size = db_path.stat().st_size if db_exists else 0
+    rows_per_table: dict[str, int] = {}
+    if db_exists:
+        with sqlite3.connect(str(db_path)) as conn:
+            for (name,) in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall():
+                if name.startswith("sqlite_"):
+                    continue
+                rows_per_table[name] = conn.execute(
+                    f'SELECT COUNT(*) FROM "{name}"'
+                ).fetchone()[0]
+    total_rows = sum(rows_per_table.values())
+    healthy = db_exists and len(clis.ALL) == len(CATALOG)
+    data = {
+        "version": __version__,
+        "python": sys.version.split()[0],
+        "tools_built": len(clis.ALL),
+        "tools_planned": len(CATALOG),
+        "database": str(db_path),
+        "database_exists": db_exists,
+        "database_size_bytes": db_size,
+        "tables": len(rows_per_table),
+        "total_rows": total_rows,
+        "rows_per_table": rows_per_table,
+        "healthy": healthy,
+    }
+    if json_out:
+        _emit_json(data)
+        return
+    status = ("[bold green]✓ healthy[/bold green]" if healthy
+              else "[bold yellow]⚠ check warnings below[/bold yellow]")
+    console.print(
+        Panel(
+            f"🩺 [bold]clibo doctor[/bold]   {status}\n\n"
+            f"  Version       [bold]{__version__}[/bold]\n"
+            f"  Python        {sys.version.split()[0]}\n"
+            f"  Tools built   [bold]{len(clis.ALL)}[/bold] / {len(CATALOG)}\n"
+            f"  Database      [dim]{db_path}[/dim]\n"
+            f"  DB size       {_human_size(db_size) if db_exists else '[red]missing[/red]'}\n"
+            f"  Tables        {len(rows_per_table)}\n"
+            f"  Total rows    {total_rows}",
+            border_style="cyan", box=ROUNDED,
+        )
+    )
+    if rows_per_table:
+        top = sorted(rows_per_table.items(), key=lambda kv: kv[1], reverse=True)
+        top = [(n, c) for n, c in top if c > 0][:8]
+        if top:
+            table = Table(
+                box=ROUNDED, header_style="bold cyan",
+                title="Tables with data", title_style="bold magenta",
+                title_justify="left", pad_edge=False,
+            )
+            table.add_column("Table")
+            table.add_column("Rows", justify="right")
+            for name, count in top:
+                table.add_row(name, str(count))
+            console.print(table)
+    console.print()
 
 
 @app.command(name="search")

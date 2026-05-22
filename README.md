@@ -146,6 +146,7 @@ A handful of root commands tie all 50 tools together:
 | `clibo restore PATH` | Replace the live database with a backup. |
 | `clibo export [PATH]` | Dump every clibo table to one JSON file — ideal for an agent to read the whole local state in one go. |
 | `clibo search QUERY` | One query across notes, journal, tasks, bookmarks, contacts, meetings, achievements, recipes, worklog, network, gifts, expenses and the wishlist. |
+| `clibo doctor` | Health check — version, paths, DB size and row counts per table. |
 
 ## Shell completion
 
