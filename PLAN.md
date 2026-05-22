@@ -62,8 +62,8 @@ its tests are green and its skill is written.
 - [x] `focus` 🍅 — Pomodoro & focus sessions
 - [x] `time` ⏱️ — Time tracking by project
 - [x] `journal` 📔 — Daily journal & diary
-- [ ] `goals` 🎯 — Goals & OKRs with milestones
-- [ ] `events` 📅 — Events & reminders calendar
+- [x] `goals` 🎯 — Goals & OKRs with milestones
+- [x] `events` 📅 — Events & reminders calendar
 - [ ] `worklog` 🗒️ — Work log & standup notes
 - [ ] `bookmark` 🔖 — Bookmarks & link saver
 

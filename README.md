@@ -98,8 +98,8 @@ clibo calorie --help  # any tool's help
 | ✅ | `focus` 🍅 | Pomodoro & focus sessions |
 | ✅ | `time` ⏱️ | Time tracking by project |
 | ✅ | `journal` 📔 | Daily journal & diary |
-| ⬜ | `goals` 🎯 | Goals & OKRs with milestones |
-| ⬜ | `events` 📅 | Events & reminders calendar |
+| ✅ | `goals` 🎯 | Goals & OKRs with milestones |
+| ✅ | `events` 📅 | Events & reminders calendar |
 | ⬜ | `worklog` 🗒️ | Work log & standup notes |
 | ⬜ | `bookmark` 🔖 | Bookmarks & link saver |
 

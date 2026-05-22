@@ -9,8 +9,10 @@ from clibo.clis import (
     budget,
     calorie,
     debt,
+    events,
     expense,
     focus,
+    goals,
     habit,
     invoice,
     journal,
@@ -61,4 +63,6 @@ ALL = [
     focus,
     time,
     journal,
+    goals,
+    events,
 ]

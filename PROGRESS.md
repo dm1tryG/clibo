@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 12 — Goals & Events · 2026-05-22
+
+Two more Productivity & Work tools.
+
+- 🎯 `goals` — goals/OKRs with milestones; progress bars driven by
+  milestone completion, check/uncheck, mark a whole goal achieved.
+- 📅 `events` — events & reminders calendar with `today`, `upcoming`,
+  relative "when" labels and edit support.
+- **Tests:** 158 passing (+13).
+- Micro-skills written for both tools.
+
+**Built: 28 / 50.**
+
+---
+
 ### Iteration 11 — Time & Journal · 2026-05-22
 
 Two more Productivity & Work tools.
