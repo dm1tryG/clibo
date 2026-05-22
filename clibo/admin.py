@@ -53,6 +53,69 @@ def restore_db(src: Path) -> Path:
     return target
 
 
+def import_data(src: Path, *, replace: bool = False) -> dict[str, int]:
+    """Insert rows from a ``clibo export`` JSON file into the live database.
+
+    With ``replace=True`` each table is emptied first; otherwise existing rows
+    are kept and any primary-key collisions are silently skipped (so the same
+    file can be re-imported safely).
+
+    Returns a ``{table_name: inserted_rows}`` summary.
+    """
+    init_db()
+    source = Path(src).expanduser()
+    if not source.exists():
+        raise FileNotFoundError(f"Import file not found at {source}")
+    with source.open(encoding="utf-8") as fh:
+        payload = _json.load(fh)
+    if isinstance(payload, dict) and isinstance(payload.get("tables"), dict):
+        tables = payload["tables"]
+    elif (
+        isinstance(payload, dict)
+        and payload
+        and all(isinstance(v, list) for v in payload.values())
+    ):
+        # Allow a bare ``{table_name: [rows]}`` dump (no envelope).
+        tables = payload
+    else:
+        raise ValueError("Import file is not a clibo export — expected a 'tables' map")
+
+    reset_engine()
+    inserted: dict[str, int] = {}
+    db_path = config.db_path()
+    conn = sqlite3.connect(str(db_path))
+    try:
+        cursor = conn.cursor()
+        for table_name, rows in tables.items():
+            if not isinstance(rows, list):
+                continue
+            exists = cursor.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+                (table_name,),
+            ).fetchone()
+            if not exists:
+                continue  # an extra table from a different clibo version
+            if replace:
+                cursor.execute(f'DELETE FROM "{table_name}"')
+            inserted.setdefault(table_name, 0)
+            for row in rows:
+                if not isinstance(row, dict) or not row:
+                    continue
+                cols = list(row.keys())
+                placeholders = ", ".join("?" for _ in cols)
+                col_list = ", ".join(f'"{c}"' for c in cols)
+                cursor.execute(
+                    f'INSERT OR IGNORE INTO "{table_name}" ({col_list}) VALUES ({placeholders})',
+                    [row[c] for c in cols],
+                )
+                if cursor.rowcount > 0:
+                    inserted[table_name] += 1
+        conn.commit()
+    finally:
+        conn.close()
+    return inserted
+
+
 def export_data(dest: Path | None = None) -> tuple[Path, dict]:
     """Dump every clibo table as JSON.
 

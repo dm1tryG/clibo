@@ -4,6 +4,24 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 28 — `clibo import` · 2026-05-23
+
+Another post-v1.0 polish: a seventh cross-tool command, the counterpart
+to `clibo export`.
+
+- 📥 `clibo import PATH` — load rows from a `clibo export` JSON file.
+  Default mode uses `INSERT OR IGNORE` so re-importing is safe; pass
+  `--replace` to wipe each table first. Tolerates the new
+  `{version, tables: {...}}` envelope or a bare `{table: [rows]}` map.
+- Rejects files that don't look like a clibo export (no `tables` map
+  and no top-level dict-of-lists).
+- Pairs with `export` to give a clean cross-machine migration path
+  without copying the binary `.db` file.
+- README's Cross-tool commands table updated.
+- **Tests:** 307 passing (+5).
+
+---
+
 ### Iteration 27 — `clibo doctor` · 2026-05-23
 
 Post-v1.0 polish: a sixth cross-tool command for diagnostics.

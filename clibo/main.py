@@ -16,7 +16,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from clibo import __version__, clis
-from clibo.admin import backup_db, export_data, restore_db
+from clibo.admin import backup_db, export_data, import_data, restore_db
 from clibo.catalog import CATALOG, CATEGORIES
 from clibo.core import config
 from clibo.core.db import init_db
@@ -156,6 +156,24 @@ def export_cmd(
     data = {"path": str(path), "tables": summary, "rows": sum(summary.values())}
     ok(f"Exported {data['rows']} rows across {len(summary)} tables → {path}",
        json_out=json_out, data=data)
+
+
+@app.command(name="import")
+def import_cmd(
+    src: Path = typer.Argument(..., help="JSON file produced by `clibo export`"),
+    replace: bool = typer.Option(False, "--replace", help="Wipe each table before importing"),
+    json_out: JsonOpt = False,
+) -> None:
+    """📥 Load rows from a `clibo export` JSON file."""
+    try:
+        summary = import_data(src, replace=replace)
+    except FileNotFoundError as exc:
+        fail(str(exc), json_out=json_out)
+    except ValueError as exc:
+        fail(str(exc), json_out=json_out)
+    total = sum(summary.values())
+    ok(f"Imported {total} rows across {len(summary)} tables from {src}",
+       json_out=json_out, data={"source": str(src), "rows": total, "tables": summary})
 
 
 def _human_size(num: int) -> str:
