@@ -39,6 +39,7 @@ from clibo.clis import (
     notes,
     pantry,
     period,
+    pets,
     plants,
     recipes,
     savings,
@@ -47,6 +48,7 @@ from clibo.clis import (
     subs,
     time,
     todo,
+    travel,
     vitals,
     water,
     weight,
@@ -105,4 +107,6 @@ ALL = [
     plants,
     car,
     home,
+    pets,
+    travel,
 ]

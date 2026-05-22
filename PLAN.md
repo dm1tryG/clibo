@@ -88,8 +88,8 @@ its tests are green and its skill is written.
 - [x] `plants` 🪴 — Plant care & watering schedule
 - [x] `car` 🚗 — Car maintenance & fuel log
 - [x] `home` 🏠 — Home maintenance & repairs
-- [ ] `pets` 🐾 — Pet care, feeding & vet log
-- [ ] `travel` ✈️ — Trip planner & itinerary
+- [x] `pets` 🐾 — Pet care, feeding & vet log
+- [x] `travel` ✈️ — Trip planner & itinerary
 
 ---
 

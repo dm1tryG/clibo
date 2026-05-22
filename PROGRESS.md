@@ -4,6 +4,35 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### 🎉 Iteration 23 — Pets & Travel · 2026-05-23 — **ALL 50 SHIPPED**
+
+The final two Home & Life tools — the project's main build phase is **done**.
+
+- 🐾 `pets` — pet care log with multiple kinds of events (feeding, vet,
+  grooming, walk, medication, note), per-pet history, age and last-vet
+  tracking, plus events across all pets.
+- ✈️ `travel` — trip planner with day-by-day itineraries; budget vs
+  spent per trip, an `upcoming` view, and travel stats.
+- **Tests:** 283 passing (+12).
+- Micro-skills written for both tools.
+
+**Built: 50 / 50** — 🏠 Home & Life done. All five categories complete.
+
+### Where we are
+
+| | |
+|---|---|
+| Tools | **50** |
+| Tests | **283** passing across all CLIs |
+| Lines of Python | ~6.5k (tools + tests + skills) |
+| SKILL.md files | 50, one per tool |
+
+Next up: the Polish phase from PLAN.md — a `clibo today` dashboard, an
+`export`/`backup` of the database, global search, demo recordings and
+a v1.0 release.
+
+---
+
 ### Iteration 22 — Car & Home · 2026-05-23
 
 Two more Home & Life tools.

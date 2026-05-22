@@ -59,7 +59,7 @@ clibo calorie --help  # any tool's help
 
 ## The 50 tools
 
-> Built tools are ✅. The rest ship continuously — run `clibo info` for live status.
+> 🎉 **All 50 tools are built.** Run `clibo info` for a live menu.
 
 ### 🏃 Health & Wellness
 | | Tool | What it does |
@@ -128,8 +128,8 @@ clibo calorie --help  # any tool's help
 | ✅ | `plants` 🪴 | Plant care & watering schedule |
 | ✅ | `car` 🚗 | Car maintenance & fuel log |
 | ✅ | `home` 🏠 | Home maintenance & repairs |
-| ⬜ | `pets` 🐾 | Pet care, feeding & vet log |
-| ⬜ | `travel` ✈️ | Trip planner & itinerary |
+| ✅ | `pets` 🐾 | Pet care, feeding & vet log |
+| ✅ | `travel` ✈️ | Trip planner & itinerary |
 
 ## For AI agents
 
