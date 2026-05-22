@@ -86,8 +86,8 @@ its tests are green and its skill is written.
 - [x] `meals` 🍽️ — Weekly meal planner
 - [x] `chores` 🧹 — Household chores rotation
 - [x] `plants` 🪴 — Plant care & watering schedule
-- [ ] `car` 🚗 — Car maintenance & fuel log
-- [ ] `home` 🏠 — Home maintenance & repairs
+- [x] `car` 🚗 — Car maintenance & fuel log
+- [x] `home` 🏠 — Home maintenance & repairs
 - [ ] `pets` 🐾 — Pet care, feeding & vet log
 - [ ] `travel` ✈️ — Trip planner & itinerary
 

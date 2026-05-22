@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 22 — Car & Home · 2026-05-23
+
+Two more Home & Life tools.
+
+- 🚗 `car` — fuel log + service log under one tool, with spending
+  stats and a per-100 fuel-economy computation across fill-ups.
+- 🏠 `home` — home maintenance / repair / improvement entries with
+  cost, location, contractor and per-kind/location stats.
+- **Tests:** 271 passing (+11).
+- Micro-skills written for both tools.
+
+**Built: 48 / 50.**
+
+---
+
 ### Iteration 21 — Chores & Plants · 2026-05-23
 
 Two more Home & Life tools, both built on a recurring-task pattern.

@@ -11,6 +11,7 @@ from clibo.clis import (
     brag,
     budget,
     calorie,
+    car,
     chores,
     clients,
     crm,
@@ -23,6 +24,7 @@ from clibo.clis import (
     goals,
     groceries,
     habit,
+    home,
     invoice,
     jobs,
     journal,
@@ -101,4 +103,6 @@ ALL = [
     meals,
     chores,
     plants,
+    car,
+    home,
 ]
