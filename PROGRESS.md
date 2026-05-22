@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 13 — Worklog & Bookmark · 2026-05-23
+
+Shipped the last two Productivity & Work tools — **category complete (10/10)**.
+
+- 🗒️ `worklog` — work-log entries tagged done/doing/blocked/note, plus
+  a `standup` command that buckets them into yesterday/today/blockers.
+- 🔖 `bookmark` — save links with tags and categories, full-text
+  search, favorites, and open-in-browser.
+- **Tests:** 169 passing (+11).
+- Micro-skills written for both tools.
+
+**Built: 30 / 50** — ✅ Productivity & Work done. 3 categories of 5.
+
+---
+
 ### Iteration 12 — Goals & Events · 2026-05-22
 
 Two more Productivity & Work tools.

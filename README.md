@@ -100,8 +100,8 @@ clibo calorie --help  # any tool's help
 | ✅ | `journal` 📔 | Daily journal & diary |
 | ✅ | `goals` 🎯 | Goals & OKRs with milestones |
 | ✅ | `events` 📅 | Events & reminders calendar |
-| ⬜ | `worklog` 🗒️ | Work log & standup notes |
-| ⬜ | `bookmark` 🔖 | Bookmarks & link saver |
+| ✅ | `worklog` 🗒️ | Work log & standup notes |
+| ✅ | `bookmark` 🔖 | Bookmarks & link saver |
 
 ### 🤝 CRM & Relationships
 `crm` 👥 · `leads` 🧲 · `followup` 🔔 · `meetings` 🗓️ · `jobs` 💼 · `clients` 🧑‍💼 · `birthdays` 🎂 · `network` 🌐 · `gifts` 🎁 · `brag` 🏆

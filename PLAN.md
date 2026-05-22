@@ -64,8 +64,8 @@ its tests are green and its skill is written.
 - [x] `journal` 📔 — Daily journal & diary
 - [x] `goals` 🎯 — Goals & OKRs with milestones
 - [x] `events` 📅 — Events & reminders calendar
-- [ ] `worklog` 🗒️ — Work log & standup notes
-- [ ] `bookmark` 🔖 — Bookmarks & link saver
+- [x] `worklog` 🗒️ — Work log & standup notes
+- [x] `bookmark` 🔖 — Bookmarks & link saver
 
 ## 🤝 CRM & Relationships
 - [ ] `crm` 👥 — Contacts CRM

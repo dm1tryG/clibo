@@ -6,6 +6,7 @@ build loop appends new modules to the imports and to ``ALL`` as it ships them.
 
 from clibo.clis import (
     bills,
+    bookmark,
     budget,
     calorie,
     debt,
@@ -33,6 +34,7 @@ from clibo.clis import (
     weight,
     wishlist,
     workout,
+    worklog,
 )
 
 #: Every built tool module, in catalog order. Extended by the build loop.
@@ -65,4 +67,6 @@ ALL = [
     journal,
     goals,
     events,
+    worklog,
+    bookmark,
 ]
