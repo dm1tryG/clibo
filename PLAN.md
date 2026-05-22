@@ -72,8 +72,8 @@ its tests are green and its skill is written.
 - [x] `leads` 🧲 — Sales pipeline & deals
 - [x] `followup` 🔔 — Follow-up reminders for people
 - [x] `meetings` 🗓️ — Meeting notes & action items
-- [ ] `jobs` 💼 — Job application tracker
-- [ ] `clients` 🧑‍💼 — Freelance client manager
+- [x] `jobs` 💼 — Job application tracker
+- [x] `clients` 🧑‍💼 — Freelance client manager
 - [ ] `birthdays` 🎂 — Birthday & anniversary reminders
 - [ ] `network` 🌐 — Networking & people-you-met log
 - [ ] `gifts` 🎁 — Gift ideas & giving tracker

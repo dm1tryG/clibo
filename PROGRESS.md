@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 16 — Jobs & Clients · 2026-05-23
+
+Two more CRM & Relationships tools.
+
+- 💼 `jobs` — job application tracker with a wishlist→accepted status
+  flow, a `pipeline` view and response-rate stats.
+- 🧑‍💼 `clients` — freelance client manager; log billable hours per
+  client, see earnings (hours × rate), and total stats.
+- **Tests:** 204 passing (+12).
+- Micro-skills written for both tools.
+
+**Built: 36 / 50.**
+
+---
+
 ### Iteration 15 — Followup & Meetings · 2026-05-23
 
 Two more CRM & Relationships tools.
