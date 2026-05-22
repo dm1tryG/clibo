@@ -84,8 +84,8 @@ its tests are green and its skill is written.
 - [x] `pantry` 🥫 — Food inventory with expiry dates
 - [x] `recipes` 👨‍🍳 — Personal recipe book
 - [x] `meals` 🍽️ — Weekly meal planner
-- [ ] `chores` 🧹 — Household chores rotation
-- [ ] `plants` 🪴 — Plant care & watering schedule
+- [x] `chores` 🧹 — Household chores rotation
+- [x] `plants` 🪴 — Plant care & watering schedule
 - [ ] `car` 🚗 — Car maintenance & fuel log
 - [ ] `home` 🏠 — Home maintenance & repairs
 - [ ] `pets` 🐾 — Pet care, feeding & vet log

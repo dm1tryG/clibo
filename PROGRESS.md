@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 21 — Chores & Plants · 2026-05-23
+
+Two more Home & Life tools, both built on a recurring-task pattern.
+
+- 🧹 `chores` — household chores with a per-chore frequency, assignee,
+  auto status (overdue/due/upcoming) and a `due` view.
+- 🪴 `plants` — plant watering schedule with an interval per plant,
+  `water` action, and a `thirsty` view of plants needing water.
+- **Tests:** 260 passing (+12).
+- Micro-skills written for both tools.
+
+**Built: 46 / 50.**
+
+---
+
 ### Iteration 20 — Recipes & Meals · 2026-05-23
 
 Two more Home & Life tools.

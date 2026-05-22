@@ -11,6 +11,7 @@ from clibo.clis import (
     brag,
     budget,
     calorie,
+    chores,
     clients,
     crm,
     debt,
@@ -36,6 +37,7 @@ from clibo.clis import (
     notes,
     pantry,
     period,
+    plants,
     recipes,
     savings,
     sleep,
@@ -97,4 +99,6 @@ ALL = [
     pantry,
     recipes,
     meals,
+    chores,
+    plants,
 ]
