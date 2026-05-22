@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "clibo"
-version = "0.1.0"
+version = "1.0.0"
 description = "50 local-first CLI tools for AI agents and humans — from a calorie tracker to a CRM, all in your terminal."
 readme = "README.md"
 license = "MIT"
@@ -22,7 +22,7 @@ keywords = [
     "local-first",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",

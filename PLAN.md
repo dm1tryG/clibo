@@ -99,6 +99,6 @@ its tests are green and its skill is written.
 - [x] `clibo export` / `clibo backup` — dump & restore the database
 - [x] `clibo search` — global search across tools
 - [x] Shell completion install docs
-- [ ] Demo GIFs / asciinema in the README
-- [ ] Publish to PyPI (`pipx install clibo`)
-- [ ] Tag the `v1.0.0` release
+- [x] Demo GIFs / asciinema in the README *(text captures + `scripts/demo.sh`)*
+- [ ] Publish to PyPI (`pipx install clibo`) *(deferred — needs PyPI token)*
+- [x] Tag the `v1.0.0` release

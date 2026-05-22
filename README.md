@@ -58,6 +58,83 @@ clibo info            # what's built, what's coming
 clibo calorie --help  # any tool's help
 ```
 
+## Demos
+
+[`scripts/demo.sh`](scripts/demo.sh) populates a throwaway database and runs
+the showcase commands — perfect for recording an asciinema or for seeing
+what clibo actually looks like:
+
+```bash
+CLIBO=./.venv/bin/clibo bash scripts/demo.sh
+```
+
+### 📅 `clibo today`
+
+```
+📅 Today · Saturday 23 May 2026
+
+✅ Tasks
+  ● today    Ship clibo v1  (high)
+
+🔥 Habits  1/2 done
+  ✓ Read 10 pages
+  ○ Exercise
+
+  💧 Water    ███████░░░░░░░░░░░  38%  750/2000 ml
+  🍎 Calories ████████░░░░░░░░░░  42%  845/2000 kcal
+  🍅 Focus    █████████░░░░░░░░░  50%  45/90 min
+
+📅 Events
+  10:00  Team standup
+
+🧾 Bills due
+  ⚠ overdue  Electricity  (2026-05-22)
+
+🪴 Plants needing water
+  Basil  (kitchen)
+```
+
+### 🍎 `clibo calorie today`
+
+```
+🍎 Food log · Sat 23 May
+╭──────────┬──────────────────────┬──────┬─────┬─────┬────╮
+│Meal      │ Food                 │ Kcal │ P·g │ C·g │ F·g│
+├──────────┼──────────────────────┼──────┼─────┼─────┼────┤
+│breakfast │ oatmeal with berries │ 320  │ 12  │ 48  │ 6  │
+│breakfast │ black coffee         │ 5    │ 0   │ 0   │ 0  │
+│lunch     │ chicken salad        │ 520  │ 38  │ 22  │ 24 │
+╰──────────┴──────────────────────┴──────┴─────┴─────┴────╯
+🔥 845 kcal    🥩 50g    🍚 70g    🧈 30g
+🎯 ██████████░░░░░░░░░░░░░░  42%  845/2000 kcal
+```
+
+### 🧲 `clibo leads pipeline`
+
+```
+📊 Pipeline
+╭──────────┬───────┬────────────────────────────────────╮
+│Stage     │ Deals │ Value                              │
+├──────────┼───────┼────────────────────────────────────┤
+│qualified │ 1     │ 4000.00 USD  ████░░░░░░░░░░░░  25% │
+│proposal  │ 1     │ 12000.00 USD  ████████████░░░░  75%│
+╰──────────┴───────┴────────────────────────────────────╯
+  💰 Open pipeline value: 16000.00 USD
+```
+
+### 🔍 `clibo search acme`
+
+```
+🔍 3 matches for 'acme'
+
+notes  (1)            todo  (1)              crm  (1)
+╭────┬───────────────╮ ╭────┬──────────────╮ ╭────┬────────────────────────╮
+│ID  │ Match         │ │ID  │ Match        │ │ID  │ Match                  │
+├────┼───────────────┤ ├────┼──────────────┤ ├────┼────────────────────────┤
+│1   │ Acme contract │ │2   │ Reply to Acme│ │1   │ Anna Petrova · Acme Inc│
+╰────┴───────────────╯ ╰────┴──────────────╯ ╰────┴────────────────────────╯
+```
+
 ## Cross-tool commands
 
 A handful of root commands tie all 50 tools together:

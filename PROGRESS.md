@@ -4,6 +4,32 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### 🏷️ Iteration 26 — v1.0.0 release · 2026-05-23
+
+Final Polish-phase iteration that the build loop can do on its own.
+
+- 🎬 `scripts/demo.sh` — a self-contained, recordable tour: seeds a
+  throwaway database with sample data across tools, then runs the
+  showcase commands. The README now embeds the captured outputs.
+- 📝 `CHANGELOG.md` — proper Keep-a-Changelog entry for v1.0.0.
+- ⬆️ Version bumped to **1.0.0** in `pyproject.toml` and
+  `clibo/__init__.py`; classifier moved to `Production/Stable`.
+- 🏷️ Annotated git tag **`v1.0.0`** pushed; GitHub release created
+  with the changelog notes.
+- **Tests:** 299 passing.
+
+### Polish phase wrap-up
+
+- [x] `clibo today` · [x] `clibo backup`/`restore`/`export`
+- [x] `clibo search` · [x] Shell completion docs
+- [x] Demo captures + `scripts/demo.sh`
+- [x] v1.0.0 release tagged
+- [ ] PyPI publish (deferred — needs PyPI token from the maintainer)
+
+That's the loop done. clibo v1.0.0 is in the world.
+
+---
+
 ### Iteration 25 — Polish: `clibo search` + shell completion · 2026-05-23
 
 Second Polish-phase iteration.
