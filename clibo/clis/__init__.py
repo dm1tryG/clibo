@@ -26,6 +26,7 @@ from clibo.clis import (
     jobs,
     journal,
     leads,
+    meals,
     meditate,
     meds,
     meetings,
@@ -35,6 +36,7 @@ from clibo.clis import (
     notes,
     pantry,
     period,
+    recipes,
     savings,
     sleep,
     split,
@@ -93,4 +95,6 @@ ALL = [
     brag,
     groceries,
     pantry,
+    recipes,
+    meals,
 ]

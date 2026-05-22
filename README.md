@@ -122,8 +122,8 @@ clibo calorie --help  # any tool's help
 |---|---|---|
 | ✅ | `groceries` 🛒 | Grocery & shopping list |
 | ✅ | `pantry` 🥫 | Food inventory with expiry dates |
-| ⬜ | `recipes` 👨‍🍳 | Personal recipe book |
-| ⬜ | `meals` 🍽️ | Weekly meal planner |
+| ✅ | `recipes` 👨‍🍳 | Personal recipe book |
+| ✅ | `meals` 🍽️ | Weekly meal planner |
 | ⬜ | `chores` 🧹 | Household chores rotation |
 | ⬜ | `plants` 🪴 | Plant care & watering schedule |
 | ⬜ | `car` 🚗 | Car maintenance & fuel log |

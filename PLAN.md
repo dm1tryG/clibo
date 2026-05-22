@@ -82,8 +82,8 @@ its tests are green and its skill is written.
 ## 🏠 Home & Life
 - [x] `groceries` 🛒 — Grocery & shopping list
 - [x] `pantry` 🥫 — Food inventory with expiry dates
-- [ ] `recipes` 👨‍🍳 — Personal recipe book
-- [ ] `meals` 🍽️ — Weekly meal planner
+- [x] `recipes` 👨‍🍳 — Personal recipe book
+- [x] `meals` 🍽️ — Weekly meal planner
 - [ ] `chores` 🧹 — Household chores rotation
 - [ ] `plants` 🪴 — Plant care & watering schedule
 - [ ] `car` 🚗 — Car maintenance & fuel log

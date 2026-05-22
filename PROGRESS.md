@@ -4,6 +4,22 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 20 — Recipes & Meals · 2026-05-23
+
+Two more Home & Life tools.
+
+- 👨‍🍳 `recipes` — a recipe book with ingredients, instructions, prep
+  time and servings; search by ingredient and a `random` "what to
+  cook" picker.
+- 🍽️ `meals` — weekly meal planner; plan meals per day and view the
+  whole week as a breakfast/lunch/dinner grid.
+- **Tests:** 248 passing (+12).
+- Micro-skills written for both tools.
+
+**Built: 44 / 50.**
+
+---
+
 ### Iteration 19 — Groceries & Pantry · 2026-05-23
 
 Opened the 🏠 Home & Life category — the final stretch.
