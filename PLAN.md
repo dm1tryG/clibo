@@ -40,8 +40,8 @@ its tests are green and its skill is written.
 - [x] `mood` 🙂 — Daily mood & emotion journal
 - [x] `meds` 💊 — Medication log & dosage reminders
 - [x] `period` 🌸 — Menstrual cycle tracker & predictions
-- [ ] `meditate` 🧘 — Meditation & mindfulness sessions
-- [ ] `vitals` ❤️ — Blood pressure, pulse & glucose log
+- [x] `meditate` 🧘 — Meditation & mindfulness sessions
+- [x] `vitals` ❤️ — Blood pressure, pulse & glucose log
 
 ## 💰 Money & Finance
 - [ ] `expense` 💸 — Personal expense tracker

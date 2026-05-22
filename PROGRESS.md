@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 3 — Meditate & Vitals · 2026-05-22
+
+Shipped the last two Health & Wellness tools — **category complete (10/10)**.
+
+- 🧘 `meditate` — log sessions by minutes & kind, daily goal with a
+  progress bar, consecutive-day streak, and stats.
+- ❤️ `vitals` — log blood pressure (auto-classified), pulse, glucose,
+  temperature and SpO₂; `latest` per vital and per-kind stats.
+- **Tests:** 51 passing (+11).
+- Micro-skills written for both tools.
+
+**Built: 10 / 50** — 🏃 Health & Wellness done.
+
+---
+
 ### Iteration 2 — Meds & Period · 2026-05-22
 
 Shipped two more Health & Wellness tools.

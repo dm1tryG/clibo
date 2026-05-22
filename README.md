@@ -72,8 +72,8 @@ clibo calorie --help  # any tool's help
 | ✅ | `mood` 🙂 | Daily mood & emotion journal |
 | ✅ | `meds` 💊 | Medication log & dosage reminders |
 | ✅ | `period` 🌸 | Menstrual cycle tracker |
-| ⬜ | `meditate` 🧘 | Meditation & mindfulness sessions |
-| ⬜ | `vitals` ❤️ | Blood pressure, pulse & glucose log |
+| ✅ | `meditate` 🧘 | Meditation & mindfulness sessions |
+| ✅ | `vitals` ❤️ | Blood pressure, pulse & glucose log |
 
 ### 💰 Money & Finance
 `expense` 💸 · `budget` 📊 · `subs` 🔁 · `bills` 🧾 · `savings` 🐷 · `debt` 📉 · `networth` 💰 · `invoice` 📄 · `split` 🤝 · `wishlist` ⭐
