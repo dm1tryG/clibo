@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 1 — Sleep & Mood · 2026-05-22
+
+Shipped two more Health & Wellness tools.
+
+- 😴 `sleep` — log hours + quality (1–5), bedtime/wake times, nightly goal,
+  `last` night view with a progress bar, and stats.
+- 🙂 `mood` — 1–5 mood check-ins with emoji faces, emotion tags, `today`
+  view, and stats with score distribution + top emotions.
+- **Tests:** 28 passing (+10).
+- Micro-skills written for both tools.
+
+**Built: 6 / 50.**
+
+---
+
 ### Iteration 0 — Foundation · 2026-05-22
 
 Scaffolded the whole project and shipped the first 4 tools.

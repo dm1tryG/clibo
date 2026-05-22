@@ -22,7 +22,8 @@ clibo is built by a `/loop` that runs every **15 minutes**. Each iteration:
 6. Run `pytest` — **all tests must pass**. Fix until green.
 7. Manually smoke-test the new tool's commands, including `--json`.
 8. Tick the box below, append an entry to `PROGRESS.md`, update the README
-   table, and `git commit && git push`.
+   table, and `git commit && git push`. **Do not add any `Co-Authored-By`
+   trailer or "Generated with Claude" line to commit messages.**
 9. If every tool is built, move to the **Polish phase**.
 
 Aim for 1–2 tools per iteration. Quality over speed: a tool isn't done until
@@ -35,8 +36,8 @@ its tests are green and its skill is written.
 - [x] `water` 💧 — Daily water intake tracker
 - [x] `weight` ⚖️ — Body-weight log with BMI & trend
 - [x] `workout` 🏋️ — Exercise & gym session log
-- [ ] `sleep` 😴 — Sleep duration & quality tracker
-- [ ] `mood` 🙂 — Daily mood & emotion journal
+- [x] `sleep` 😴 — Sleep duration & quality tracker
+- [x] `mood` 🙂 — Daily mood & emotion journal
 - [ ] `meds` 💊 — Medication log & dosage reminders
 - [ ] `period` 🌸 — Menstrual cycle tracker & predictions
 - [ ] `meditate` 🧘 — Meditation & mindfulness sessions

@@ -68,8 +68,8 @@ clibo calorie --help  # any tool's help
 | ✅ | `water` 💧 | Daily water intake tracker |
 | ✅ | `weight` ⚖️ | Body-weight log with BMI & trend |
 | ✅ | `workout` 🏋️ | Exercise & gym session log |
-| ⬜ | `sleep` 😴 | Sleep duration & quality tracker |
-| ⬜ | `mood` 🙂 | Daily mood & emotion journal |
+| ✅ | `sleep` 😴 | Sleep duration & quality tracker |
+| ✅ | `mood` 🙂 | Daily mood & emotion journal |
 | ⬜ | `meds` 💊 | Medication log & dosage reminders |
 | ⬜ | `period` 🌸 | Menstrual cycle tracker |
 | ⬜ | `meditate` 🧘 | Meditation & mindfulness sessions |
