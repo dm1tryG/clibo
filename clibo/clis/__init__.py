@@ -8,6 +8,7 @@ from clibo.clis import (
     bills,
     birthdays,
     bookmark,
+    brag,
     budget,
     calorie,
     clients,
@@ -17,6 +18,7 @@ from clibo.clis import (
     expense,
     focus,
     followup,
+    gifts,
     goals,
     habit,
     invoice,
@@ -85,4 +87,6 @@ ALL = [
     clients,
     birthdays,
     network,
+    gifts,
+    brag,
 ]

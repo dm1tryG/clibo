@@ -76,8 +76,8 @@ its tests are green and its skill is written.
 - [x] `clients` 🧑‍💼 — Freelance client manager
 - [x] `birthdays` 🎂 — Birthday & anniversary reminders
 - [x] `network` 🌐 — Networking & people-you-met log
-- [ ] `gifts` 🎁 — Gift ideas & giving tracker
-- [ ] `brag` 🏆 — Achievement log for performance reviews
+- [x] `gifts` 🎁 — Gift ideas & giving tracker
+- [x] `brag` 🏆 — Achievement log for performance reviews
 
 ## 🏠 Home & Life
 - [ ] `groceries` 🛒 — Grocery & shopping list

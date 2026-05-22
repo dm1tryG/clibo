@@ -114,8 +114,8 @@ clibo calorie --help  # any tool's help
 | ✅ | `clients` 🧑‍💼 | Freelance client manager |
 | ✅ | `birthdays` 🎂 | Birthday & anniversary reminders |
 | ✅ | `network` 🌐 | Networking & people-you-met log |
-| ⬜ | `gifts` 🎁 | Gift ideas & giving tracker |
-| ⬜ | `brag` 🏆 | Achievement log for reviews |
+| ✅ | `gifts` 🎁 | Gift ideas & giving tracker |
+| ✅ | `brag` 🏆 | Achievement log for reviews |
 
 ### 🏠 Home & Life
 `groceries` 🛒 · `pantry` 🥫 · `recipes` 👨‍🍳 · `meals` 🍽️ · `chores` 🧹 · `plants` 🪴 · `car` 🚗 · `home` 🏠 · `pets` 🐾 · `travel` ✈️

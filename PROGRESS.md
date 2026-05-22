@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 18 — Gifts & Brag · 2026-05-23
+
+Shipped the last two CRM & Relationships tools — **category complete (10/10)**.
+
+- 🎁 `gifts` — gift ideas tracked from idea → bought → given, filtered
+  by recipient or status, with spending stats.
+- 🏆 `brag` — an achievement log / brag document with impact notes and
+  a `since` command for assembling performance-review summaries.
+- **Tests:** 225 passing (+10).
+- Micro-skills written for both tools.
+
+**Built: 40 / 50** — 🤝 CRM & Relationships done. 4 categories of 5.
+
+---
+
 ### Iteration 17 — Birthdays & Network · 2026-05-23
 
 Two more CRM & Relationships tools.
