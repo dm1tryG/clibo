@@ -94,8 +94,8 @@ clibo calorie --help  # any tool's help
 |---|---|---|
 | ✅ | `todo` ✅ | Task & to-do manager |
 | ✅ | `notes` 📝 | Quick searchable notes |
-| ⬜ | `habit` 🔥 | Habit tracker with streaks |
-| ⬜ | `focus` 🍅 | Pomodoro & focus sessions |
+| ✅ | `habit` 🔥 | Habit tracker with streaks |
+| ✅ | `focus` 🍅 | Pomodoro & focus sessions |
 | ⬜ | `time` ⏱️ | Time tracking by project |
 | ⬜ | `journal` 📔 | Daily journal & diary |
 | ⬜ | `goals` 🎯 | Goals & OKRs with milestones |

@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 10 — Habit & Focus · 2026-05-22
+
+Two more Productivity & Work tools.
+
+- 🔥 `habit` — habit tracker with current/longest streaks, weekly
+  targets, idempotent check/uncheck, a `today` view and per-habit stats.
+- 🍅 `focus` — pomodoro & focus sessions with a live countdown `timer`,
+  manual `log`, a daily goal with progress bar, and stats.
+- **Tests:** 133 passing (+13).
+- Micro-skills written for both tools.
+
+**Built: 24 / 50.**
+
+---
+
 ### Iteration 9 — Todo & Notes · 2026-05-22
 
 Opened the ✅ Productivity & Work category.

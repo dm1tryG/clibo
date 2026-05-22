@@ -10,6 +10,8 @@ from clibo.clis import (
     calorie,
     debt,
     expense,
+    focus,
+    habit,
     invoice,
     meditate,
     meds,
@@ -53,4 +55,6 @@ ALL = [
     wishlist,
     todo,
     notes,
+    habit,
+    focus,
 ]

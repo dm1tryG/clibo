@@ -58,8 +58,8 @@ its tests are green and its skill is written.
 ## ✅ Productivity & Work
 - [x] `todo` ✅ — Task & to-do manager
 - [x] `notes` 📝 — Quick searchable notes
-- [ ] `habit` 🔥 — Habit tracker with streaks
-- [ ] `focus` 🍅 — Pomodoro & focus sessions
+- [x] `habit` 🔥 — Habit tracker with streaks
+- [x] `focus` 🍅 — Pomodoro & focus sessions
 - [ ] `time` ⏱️ — Time tracking by project
 - [ ] `journal` 📔 — Daily journal & diary
 - [ ] `goals` 🎯 — Goals & OKRs with milestones
