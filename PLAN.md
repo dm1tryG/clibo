@@ -46,8 +46,8 @@ its tests are green and its skill is written.
 ## 💰 Money & Finance
 - [x] `expense` 💸 — Personal expense tracker
 - [x] `budget` 📊 — Monthly budgets by category
-- [ ] `subs` 🔁 — Recurring subscriptions tracker
-- [ ] `bills` 🧾 — Bills & due-date reminders
+- [x] `subs` 🔁 — Recurring subscriptions tracker
+- [x] `bills` 🧾 — Bills & due-date reminders
 - [ ] `savings` 🐷 — Savings goals with progress
 - [ ] `debt` 📉 — Debt & loan payoff tracker
 - [ ] `networth` 💰 — Assets, liabilities & net worth

@@ -4,6 +4,22 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 5 — Subs & Bills · 2026-05-22
+
+Two more Money & Finance tools.
+
+- 🔁 `subs` — track recurring subscriptions; every billing cycle
+  (weekly/monthly/yearly) is normalised to a monthly cost, with
+  `total`, `upcoming` reminders, cancel/delete and category stats.
+- 🧾 `bills` — bills with due dates and paid/unpaid state; auto status
+  (overdue / due soon / upcoming), a `due` reminder view, and stats.
+- **Tests:** 74 passing (+11).
+- Micro-skills written for both tools.
+
+**Built: 14 / 50.**
+
+---
+
 ### Iteration 4 — Expense & Budget · 2026-05-22
 
 Opened the 💰 Money & Finance category — and the first cross-tool integration.

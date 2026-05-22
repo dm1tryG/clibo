@@ -5,6 +5,7 @@ build loop appends new modules to the imports and to ``ALL`` as it ships them.
 """
 
 from clibo.clis import (
+    bills,
     budget,
     calorie,
     expense,
@@ -13,6 +14,7 @@ from clibo.clis import (
     mood,
     period,
     sleep,
+    subs,
     vitals,
     water,
     weight,
@@ -33,4 +35,6 @@ ALL = [
     vitals,
     expense,
     budget,
+    subs,
+    bills,
 ]
