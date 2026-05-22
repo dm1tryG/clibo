@@ -52,8 +52,8 @@ its tests are green and its skill is written.
 - [x] `debt` 📉 — Debt & loan payoff tracker
 - [x] `networth` 💰 — Assets, liabilities & net worth
 - [x] `invoice` 📄 — Freelance invoice generator
-- [ ] `split` 🤝 — Split shared expenses with people
-- [ ] `wishlist` ⭐ — Things-to-buy wishlist with prices
+- [x] `split` 🤝 — Split shared expenses with people
+- [x] `wishlist` ⭐ — Things-to-buy wishlist with prices
 
 ## ✅ Productivity & Work
 - [ ] `todo` ✅ — Task & to-do manager

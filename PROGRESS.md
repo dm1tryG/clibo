@@ -4,6 +4,22 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 8 — Split & Wishlist · 2026-05-22
+
+Shipped the last two Money & Finance tools — **category complete (10/10)**.
+
+- 🤝 `split` — shared expenses split equally; per-person `balances`,
+  settle-up payments, and a `who` solver for the fewest payments to
+  square everyone up.
+- ⭐ `wishlist` — things-to-buy list with prices and 1–5 star
+  priorities; mark items purchased, plus total-pending-cost stats.
+- **Tests:** 107 passing (+10).
+- Micro-skills written for both tools.
+
+**Built: 20 / 50** — 💰 Money & Finance done.
+
+---
+
 ### Iteration 7 — Net Worth & Invoice · 2026-05-22
 
 Two more Money & Finance tools.

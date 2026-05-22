@@ -18,10 +18,12 @@ from clibo.clis import (
     period,
     savings,
     sleep,
+    split,
     subs,
     vitals,
     water,
     weight,
+    wishlist,
     workout,
 )
 
@@ -45,4 +47,6 @@ ALL = [
     debt,
     networth,
     invoice,
+    split,
+    wishlist,
 ]

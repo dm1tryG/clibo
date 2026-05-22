@@ -86,8 +86,8 @@ clibo calorie --help  # any tool's help
 | ✅ | `debt` 📉 | Debt & loan payoff tracker |
 | ✅ | `networth` 💰 | Assets, liabilities & net worth |
 | ✅ | `invoice` 📄 | Freelance invoice generator |
-| ⬜ | `split` 🤝 | Split shared expenses with people |
-| ⬜ | `wishlist` ⭐ | Things-to-buy wishlist with prices |
+| ✅ | `split` 🤝 | Split shared expenses with people |
+| ✅ | `wishlist` ⭐ | Things-to-buy wishlist with prices |
 
 ### ✅ Productivity & Work
 `todo` ✅ · `notes` 📝 · `habit` 🔥 · `focus` 🍅 · `time` ⏱️ · `journal` 📔 · `goals` 🎯 · `events` 📅 · `worklog` 🗒️ · `bookmark` 🔖
