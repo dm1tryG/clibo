@@ -1,0 +1,233 @@
+"""✅ todo — task & to-do manager."""
+
+from __future__ import annotations
+
+from datetime import date, datetime
+
+import typer
+from sqlmodel import Field, SQLModel, select
+
+from clibo.core.base import humanize_delta, parse_date
+from clibo.core.db import session
+from clibo.core.output import JsonOpt, fail, ok, render_record, render_rows
+
+NAME = "todo"
+HELP = "✅ Task & to-do manager"
+EMOJI = "✅"
+
+#: priority name -> sort rank (higher = more urgent)
+PRIORITIES: dict[str, int] = {"low": 0, "med": 1, "high": 2}
+
+
+class Task(SQLModel, table=True):
+    """A single to-do task."""
+
+    __tablename__ = "todo_task"
+
+    id: int | None = Field(default=None, primary_key=True)
+    title: str
+    priority: str = "med"
+    due: date | None = None
+    done: bool = False
+    done_at: date | None = None
+    project: str | None = None
+    tags: str | None = None
+    note: str | None = None
+    created_at: datetime = Field(default_factory=datetime.now)
+
+
+app = typer.Typer(no_args_is_help=True, help=HELP)
+
+
+def _row(task: Task) -> dict:
+    return {
+        "id": task.id,
+        "title": task.title,
+        "priority": task.priority,
+        "due": task.due,
+        "due_in": humanize_delta(task.due) if task.due else None,
+        "overdue": bool(task.due and not task.done and task.due < date.today()),
+        "done": task.done,
+        "done_at": task.done_at,
+        "project": task.project,
+        "tags": task.tags,
+        "note": task.note,
+    }
+
+
+def _priority_cell(value: str) -> str:
+    return {
+        "high": "[red]● high[/red]",
+        "med": "[yellow]● med[/yellow]",
+        "low": "[dim]● low[/dim]",
+    }.get(value, value)
+
+
+@app.command()
+def add(
+    title: str = typer.Argument(..., help="What needs doing"),
+    priority: str = typer.Option("med", "--priority", "-p", help="low / med / high"),
+    due: str = typer.Option(None, "--due", "-d", help="Due date"),
+    project: str = typer.Option(None, "--project", "-P", help="Project this belongs to"),
+    tag: str = typer.Option(None, "--tag", "-t", help="Comma-separated tags"),
+    note: str = typer.Option(None, "--note", "-n", help="Optional note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """✅ Add a task."""
+    priority = priority.lower()
+    if priority not in PRIORITIES:
+        fail(f"Priority must be one of: {', '.join(PRIORITIES)}", json_out=json_out)
+    task = Task(
+        title=title, priority=priority,
+        due=parse_date(due) if due else None,
+        project=project, tags=tag, note=note,
+    )
+    with session() as db:
+        db.add(task)
+        db.flush()
+        db.refresh(task)
+        data = _row(task)
+    ok(f"Added {EMOJI} task #{task.id}: {title}", json_out=json_out, data=data)
+
+
+@app.command(name="list")
+def list_tasks(
+    show_all: bool = typer.Option(False, "--all", help="Include completed tasks"),
+    project: str = typer.Option(None, "--project", "-P", help="Filter by project"),
+    tag: str = typer.Option(None, "--tag", "-t", help="Filter by tag"),
+    json_out: JsonOpt = False,
+) -> None:
+    """✅ List tasks (pending first, by priority then due date)."""
+    with session() as db:
+        query = select(Task)
+        if not show_all:
+            query = query.where(Task.done == False)  # noqa: E712
+        if project:
+            query = query.where(Task.project == project)
+        if tag:
+            query = query.where(Task.tags.ilike(f"%{tag}%"))
+        tasks = list(db.exec(query).all())
+    tasks.sort(key=lambda t: (
+        t.done,
+        -PRIORITIES.get(t.priority, 1),
+        t.due or date.max,
+        t.id,
+    ))
+    render_rows(
+        [_row(t) for t in tasks],
+        [("id", "ID"), ("done", "✓"), ("title", "Task"), ("priority", "Priority"),
+         ("due", "Due"), ("due_in", "When"), ("project", "Project")],
+        json_out=json_out,
+        title="✅ Tasks",
+        formatters={
+            "priority": lambda v, r: _priority_cell(v),
+            "due_in": lambda v, r: (f"[red]{v}[/red]" if r["overdue"] else (v or "[dim]—[/dim]")),
+        },
+        empty="No tasks — add one with: clibo todo add 'Buy milk' -p high",
+    )
+
+
+@app.command()
+def done(task_id: int = typer.Argument(..., help="Task ID"), json_out: JsonOpt = False) -> None:
+    """✅ Mark a task as done."""
+    with session() as db:
+        task = db.get(Task, task_id)
+        if not task:
+            fail(f"No task #{task_id}", json_out=json_out)
+        task.done = True
+        task.done_at = date.today()
+        db.add(task)
+        db.flush()
+        data = _row(task)
+    ok(f"Completed {EMOJI} task #{task_id}: {task.title}", json_out=json_out, data=data)
+
+
+@app.command()
+def undone(task_id: int = typer.Argument(..., help="Task ID"), json_out: JsonOpt = False) -> None:
+    """✅ Mark a task as not done again."""
+    with session() as db:
+        task = db.get(Task, task_id)
+        if not task:
+            fail(f"No task #{task_id}", json_out=json_out)
+        task.done = False
+        task.done_at = None
+        db.add(task)
+        db.flush()
+        data = _row(task)
+    ok(f"Reopened task #{task_id}", json_out=json_out, data=data)
+
+
+@app.command()
+def edit(
+    task_id: int = typer.Argument(..., help="Task ID"),
+    title: str = typer.Option(None, "--title", help="New title"),
+    priority: str = typer.Option(None, "--priority", "-p", help="low / med / high"),
+    due: str = typer.Option(None, "--due", "-d", help="New due date"),
+    project: str = typer.Option(None, "--project", "-P"),
+    tag: str = typer.Option(None, "--tag", "-t"),
+    note: str = typer.Option(None, "--note", "-n"),
+    json_out: JsonOpt = False,
+) -> None:
+    """✅ Edit a task."""
+    if priority and priority.lower() not in PRIORITIES:
+        fail(f"Priority must be one of: {', '.join(PRIORITIES)}", json_out=json_out)
+    with session() as db:
+        task = db.get(Task, task_id)
+        if not task:
+            fail(f"No task #{task_id}", json_out=json_out)
+        if title is not None:
+            task.title = title
+        if priority is not None:
+            task.priority = priority.lower()
+        if due is not None:
+            task.due = parse_date(due)
+        if project is not None:
+            task.project = project
+        if tag is not None:
+            task.tags = tag
+        if note is not None:
+            task.note = note
+        db.add(task)
+        db.flush()
+        data = _row(task)
+    ok(f"Updated task #{task_id}", json_out=json_out, data=data)
+
+
+@app.command()
+def show(task_id: int = typer.Argument(..., help="Task ID"), json_out: JsonOpt = False) -> None:
+    """✅ Show one task in detail."""
+    with session() as db:
+        task = db.get(Task, task_id)
+        if not task:
+            fail(f"No task #{task_id}", json_out=json_out)
+        data = _row(task) | {"created_at": task.created_at}
+    render_record(data, json_out=json_out, title=f"✅ Task #{task_id}")
+
+
+@app.command()
+def rm(task_id: int = typer.Argument(..., help="Task ID"), json_out: JsonOpt = False) -> None:
+    """✅ Delete a task."""
+    with session() as db:
+        task = db.get(Task, task_id)
+        if not task:
+            fail(f"No task #{task_id}", json_out=json_out)
+        db.delete(task)
+    ok(f"Deleted task #{task_id}", json_out=json_out, data={"deleted": task_id})
+
+
+@app.command()
+def stats(json_out: JsonOpt = False) -> None:
+    """📊 Task stats — pending, done and overdue counts."""
+    with session() as db:
+        tasks = list(db.exec(select(Task)).all())
+    pending = [t for t in tasks if not t.done]
+    overdue = [t for t in pending if t.due and t.due < date.today()]
+    by_priority = {p: sum(1 for t in pending if t.priority == p) for p in PRIORITIES}
+    data = {
+        "total": len(tasks),
+        "pending": len(pending),
+        "done": sum(1 for t in tasks if t.done),
+        "overdue": len(overdue),
+        "pending_by_priority": by_priority,
+    }
+    render_record(data, json_out=json_out, title="📊 Todo stats")

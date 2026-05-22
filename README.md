@@ -90,7 +90,18 @@ clibo calorie --help  # any tool's help
 | ✅ | `wishlist` ⭐ | Things-to-buy wishlist with prices |
 
 ### ✅ Productivity & Work
-`todo` ✅ · `notes` 📝 · `habit` 🔥 · `focus` 🍅 · `time` ⏱️ · `journal` 📔 · `goals` 🎯 · `events` 📅 · `worklog` 🗒️ · `bookmark` 🔖
+| | Tool | What it does |
+|---|---|---|
+| ✅ | `todo` ✅ | Task & to-do manager |
+| ✅ | `notes` 📝 | Quick searchable notes |
+| ⬜ | `habit` 🔥 | Habit tracker with streaks |
+| ⬜ | `focus` 🍅 | Pomodoro & focus sessions |
+| ⬜ | `time` ⏱️ | Time tracking by project |
+| ⬜ | `journal` 📔 | Daily journal & diary |
+| ⬜ | `goals` 🎯 | Goals & OKRs with milestones |
+| ⬜ | `events` 📅 | Events & reminders calendar |
+| ⬜ | `worklog` 🗒️ | Work log & standup notes |
+| ⬜ | `bookmark` 🔖 | Bookmarks & link saver |
 
 ### 🤝 CRM & Relationships
 `crm` 👥 · `leads` 🧲 · `followup` 🔔 · `meetings` 🗓️ · `jobs` 💼 · `clients` 🧑‍💼 · `birthdays` 🎂 · `network` 🌐 · `gifts` 🎁 · `brag` 🏆

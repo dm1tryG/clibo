@@ -4,6 +4,22 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 9 — Todo & Notes · 2026-05-22
+
+Opened the ✅ Productivity & Work category.
+
+- ✅ `todo` — task manager with low/med/high priority, due dates,
+  projects and tags; pending tasks sort overdue/high-priority first,
+  with done/undone, edit and stats.
+- 📝 `notes` — quick notes with tags, full-text `search`, pinning,
+  and a one-line preview in the list view.
+- **Tests:** 120 passing (+13).
+- Micro-skills written for both tools.
+
+**Built: 22 / 50.**
+
+---
+
 ### Iteration 8 — Split & Wishlist · 2026-05-22
 
 Shipped the last two Money & Finance tools — **category complete (10/10)**.

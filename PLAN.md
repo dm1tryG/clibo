@@ -56,8 +56,8 @@ its tests are green and its skill is written.
 - [x] `wishlist` ⭐ — Things-to-buy wishlist with prices
 
 ## ✅ Productivity & Work
-- [ ] `todo` ✅ — Task & to-do manager
-- [ ] `notes` 📝 — Quick searchable notes
+- [x] `todo` ✅ — Task & to-do manager
+- [x] `notes` 📝 — Quick searchable notes
 - [ ] `habit` 🔥 — Habit tracker with streaks
 - [ ] `focus` 🍅 — Pomodoro & focus sessions
 - [ ] `time` ⏱️ — Time tracking by project
