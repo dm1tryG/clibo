@@ -80,8 +80,8 @@ its tests are green and its skill is written.
 - [x] `brag` 🏆 — Achievement log for performance reviews
 
 ## 🏠 Home & Life
-- [ ] `groceries` 🛒 — Grocery & shopping list
-- [ ] `pantry` 🥫 — Food inventory with expiry dates
+- [x] `groceries` 🛒 — Grocery & shopping list
+- [x] `pantry` 🥫 — Food inventory with expiry dates
 - [ ] `recipes` 👨‍🍳 — Personal recipe book
 - [ ] `meals` 🍽️ — Weekly meal planner
 - [ ] `chores` 🧹 — Household chores rotation

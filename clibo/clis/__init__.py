@@ -20,6 +20,7 @@ from clibo.clis import (
     followup,
     gifts,
     goals,
+    groceries,
     habit,
     invoice,
     jobs,
@@ -32,6 +33,7 @@ from clibo.clis import (
     network,
     networth,
     notes,
+    pantry,
     period,
     savings,
     sleep,
@@ -89,4 +91,6 @@ ALL = [
     network,
     gifts,
     brag,
+    groceries,
+    pantry,
 ]

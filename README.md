@@ -118,7 +118,18 @@ clibo calorie --help  # any tool's help
 | ✅ | `brag` 🏆 | Achievement log for reviews |
 
 ### 🏠 Home & Life
-`groceries` 🛒 · `pantry` 🥫 · `recipes` 👨‍🍳 · `meals` 🍽️ · `chores` 🧹 · `plants` 🪴 · `car` 🚗 · `home` 🏠 · `pets` 🐾 · `travel` ✈️
+| | Tool | What it does |
+|---|---|---|
+| ✅ | `groceries` 🛒 | Grocery & shopping list |
+| ✅ | `pantry` 🥫 | Food inventory with expiry dates |
+| ⬜ | `recipes` 👨‍🍳 | Personal recipe book |
+| ⬜ | `meals` 🍽️ | Weekly meal planner |
+| ⬜ | `chores` 🧹 | Household chores rotation |
+| ⬜ | `plants` 🪴 | Plant care & watering schedule |
+| ⬜ | `car` 🚗 | Car maintenance & fuel log |
+| ⬜ | `home` 🏠 | Home maintenance & repairs |
+| ⬜ | `pets` 🐾 | Pet care, feeding & vet log |
+| ⬜ | `travel` ✈️ | Trip planner & itinerary |
 
 ## For AI agents
 

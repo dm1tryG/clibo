@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 19 — Groceries & Pantry · 2026-05-23
+
+Opened the 🏠 Home & Life category — the final stretch.
+
+- 🛒 `groceries` — a shopping list with quantities and categories;
+  buy/unbuy items and `clear` bought ones after shopping.
+- 🥫 `pantry` — food inventory with expiry dates and locations; an
+  `expiring` view flags items expired or expiring soon.
+- **Tests:** 236 passing (+11).
+- Micro-skills written for both tools.
+
+**Built: 42 / 50.**
+
+---
+
 ### Iteration 18 — Gifts & Brag · 2026-05-23
 
 Shipped the last two CRM & Relationships tools — **category complete (10/10)**.
