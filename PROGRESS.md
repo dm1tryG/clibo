@@ -4,6 +4,21 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 11 — Time & Journal · 2026-05-22
+
+Two more Productivity & Work tools.
+
+- ⏱️ `time` — time tracking by project with a start/stop running timer,
+  manual logging, and a per-project `report` with share bars.
+- 📔 `journal` — daily journal/diary with mood, tags, full-text search,
+  a `today` view and a journaling-streak stat.
+- **Tests:** 145 passing (+12).
+- Micro-skills written for both tools.
+
+**Built: 26 / 50.**
+
+---
+
 ### Iteration 10 — Habit & Focus · 2026-05-22
 
 Two more Productivity & Work tools.

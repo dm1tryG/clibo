@@ -60,8 +60,8 @@ its tests are green and its skill is written.
 - [x] `notes` 📝 — Quick searchable notes
 - [x] `habit` 🔥 — Habit tracker with streaks
 - [x] `focus` 🍅 — Pomodoro & focus sessions
-- [ ] `time` ⏱️ — Time tracking by project
-- [ ] `journal` 📔 — Daily journal & diary
+- [x] `time` ⏱️ — Time tracking by project
+- [x] `journal` 📔 — Daily journal & diary
 - [ ] `goals` 🎯 — Goals & OKRs with milestones
 - [ ] `events` 📅 — Events & reminders calendar
 - [ ] `worklog` 🗒️ — Work log & standup notes

@@ -13,6 +13,7 @@ from clibo.clis import (
     focus,
     habit,
     invoice,
+    journal,
     meditate,
     meds,
     mood,
@@ -23,6 +24,7 @@ from clibo.clis import (
     sleep,
     split,
     subs,
+    time,
     todo,
     vitals,
     water,
@@ -57,4 +59,6 @@ ALL = [
     notes,
     habit,
     focus,
+    time,
+    journal,
 ]
