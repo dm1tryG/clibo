@@ -68,6 +68,21 @@ A handful of root commands tie all 50 tools together:
 | `clibo backup [PATH]` | Copy the local SQLite database to a timestamped `.db` backup (default: `~/.clibo/backups/`). |
 | `clibo restore PATH` | Replace the live database with a backup. |
 | `clibo export [PATH]` | Dump every clibo table to one JSON file — ideal for an agent to read the whole local state in one go. |
+| `clibo search QUERY` | One query across notes, journal, tasks, bookmarks, contacts, meetings, achievements, recipes, worklog, network, gifts, expenses and the wishlist. |
+
+## Shell completion
+
+clibo ships with completion for `bash`, `zsh` and `fish` — Typer wires it up
+for you. Install it once:
+
+```bash
+clibo --install-completion          # auto-detects your shell
+clibo --install-completion zsh      # or pick one explicitly
+clibo --show-completion             # print the script (don't install)
+```
+
+Then re-open the shell. You'll get tab-completion for every tool, every
+sub-command and every flag.
 
 ## The 50 tools
 

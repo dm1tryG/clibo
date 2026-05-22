@@ -97,8 +97,8 @@ its tests are green and its skill is written.
 
 - [x] `clibo today` — one-screen dashboard across all trackers
 - [x] `clibo export` / `clibo backup` — dump & restore the database
-- [ ] `clibo search` — global search across tools
-- [ ] Shell completion install docs
+- [x] `clibo search` — global search across tools
+- [x] Shell completion install docs
 - [ ] Demo GIFs / asciinema in the README
 - [ ] Publish to PyPI (`pipx install clibo`)
 - [ ] Tag the `v1.0.0` release

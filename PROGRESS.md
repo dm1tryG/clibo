@@ -4,6 +4,22 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 25 — Polish: `clibo search` + shell completion · 2026-05-23
+
+Second Polish-phase iteration.
+
+- 🔍 `clibo search QUERY` — one query across 13 text-bearing tables:
+  notes, journal, todo, bookmark, crm, network, meetings, brag, recipes,
+  worklog, gifts, expense, wishlist. Results are grouped by source.
+- ⌨️ **Shell completion** documented in the README — `clibo --install-completion`
+  installs tab-completion for bash/zsh/fish (Typer wires it up for free
+  via `add_completion=True`).
+- **Tests:** 299 passing (+5).
+
+**Polish phase: 4 / 7 items done.**
+
+---
+
 ### Iteration 24 — Polish: `clibo today` + backup/export · 2026-05-23
 
 First Polish-phase iteration: the integrating commands that turn 50 separate

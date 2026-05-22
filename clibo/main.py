@@ -20,6 +20,7 @@ from clibo.core import config
 from clibo.core.db import init_db
 from clibo.core.output import JsonOpt, _emit_json, console, fail, ok
 from clibo.dashboard import render_today
+from clibo.search import search_all
 
 app = typer.Typer(
     name="clibo",
@@ -153,6 +154,37 @@ def export_cmd(
     data = {"path": str(path), "tables": summary, "rows": sum(summary.values())}
     ok(f"Exported {data['rows']} rows across {len(summary)} tables → {path}",
        json_out=json_out, data=data)
+
+
+@app.command(name="search")
+def search_cmd(
+    query: str = typer.Argument(..., help="Text to search for across every tool"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🔍 Search every text-bearing clibo table at once."""
+    results = search_all(query)
+    if json_out:
+        _emit_json({"query": query, "count": len(results), "results": results})
+        return
+    if not results:
+        console.print(f"\n  [dim]No matches for {query!r}.[/dim]\n")
+        return
+    grouped: dict[str, list[dict]] = {}
+    for hit in results:
+        grouped.setdefault(hit["source"], []).append(hit)
+    console.print(f"\n🔍 [bold]{len(results)}[/bold] matches for [cyan]{query!r}[/cyan]\n")
+    for source, hits in grouped.items():
+        table = Table(
+            box=ROUNDED, header_style="bold cyan",
+            title=f"{source}  [dim]({len(hits)})[/dim]",
+            title_style="bold magenta", title_justify="left", pad_edge=False,
+        )
+        table.add_column("ID", width=5)
+        table.add_column("Match")
+        for hit in hits:
+            table.add_row(str(hit["id"]), hit["snippet"] or "[dim]—[/dim]")
+        console.print(table)
+    console.print()
 
 
 def main() -> None:
