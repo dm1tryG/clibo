@@ -1,0 +1,89 @@
+"""Tests for the daily check-in detection + `clibo checkin` command."""
+
+from __future__ import annotations
+
+
+def _seed_active_weight(cli, days_ago_list=(1, 2, 3)):
+    """Log a few prior weight entries so the tracker registers as active."""
+    for d in days_ago_list:
+        cli.run("weight", "log", str(70 + d), "-d", f"{d} days ago")
+
+
+def test_inactive_tracker_is_not_surfaced(cli):
+    """A tracker with < 2 entries in 14 days does NOT show up."""
+    cli.run("weight", "log", "70")  # only one entry
+    data = cli.json("today")
+    weight_in = [c for c in data["checkins"] if c["name"] == "Weight"]
+    assert weight_in == []
+
+
+def test_active_tracker_appears_pending(cli):
+    """≥ 2 entries in 14 days → tracker is active; today not logged → pending."""
+    _seed_active_weight(cli)
+    data = cli.json("today")
+    weight = next(c for c in data["checkins"] if c["name"] == "Weight")
+    assert weight["logged_today"] is False
+    assert weight["last_value"] is not None
+    assert weight["last_days_ago"] == 1
+
+
+def test_active_tracker_appears_logged(cli):
+    """If today is logged, the tracker shows up with today_value set."""
+    _seed_active_weight(cli)
+    cli.run("weight", "log", "70.5")  # today
+    data = cli.json("today")
+    weight = next(c for c in data["checkins"] if c["name"] == "Weight")
+    assert weight["logged_today"] is True
+    assert weight["today_value"] == "70.5 kg"
+
+
+def test_multiple_trackers_surface(cli):
+    """Mood + sleep + steps + gratitude all seed-able as active in parallel."""
+    for d in (1, 2, 3):
+        cli.run("weight", "log", "70", "-d", f"{d} days ago")
+        cli.run("mood", "log", "4", "-d", f"{d} days ago")
+        cli.run("sleep", "log", "7", "-d", f"{d} days ago")
+        cli.run("steps", "log", "8000", "-d", f"{d} days ago")
+        cli.run("gratitude", "add", "x", "-d", f"{d} days ago")
+    data = cli.json("today")
+    names = {c["name"] for c in data["checkins"]}
+    assert names == {"Weight", "Mood", "Sleep", "Steps", "Gratitude"}
+
+
+def test_checkin_command_json(cli):
+    """`clibo checkin --json` returns pending + logged splits."""
+    _seed_active_weight(cli)
+    for d in (1, 2):
+        cli.run("mood", "log", "4", "-d", f"{d} days ago")
+    cli.run("mood", "log", "5")  # logged today
+    data = cli.json("checkin")
+    assert data["logged_count"] == 1
+    assert data["pending_count"] == 1
+    assert data["logged"][0]["name"] == "Mood"
+    assert data["pending"][0]["name"] == "Weight"
+
+
+def test_checkin_command_pending_includes_question_and_command(cli):
+    _seed_active_weight(cli)
+    data = cli.json("checkin")
+    weight = data["pending"][0]
+    assert weight["question"] == "What's your weight today?"
+    assert weight["command"].startswith("clibo weight log")
+
+
+def test_checkin_command_all_done(cli):
+    """When every active tracker has a today entry, the human-readable view
+    says everything's in. JSON returns empty pending."""
+    _seed_active_weight(cli)
+    cli.run("weight", "log", "70.5")  # today
+    data = cli.json("checkin")
+    assert data["pending_count"] == 0
+    assert data["logged_count"] == 1
+
+
+def test_checkin_command_no_active_trackers(cli):
+    """A fresh clibo with no recent activity returns an empty checkins list."""
+    data = cli.json("checkin")
+    assert data["pending_count"] == 0
+    assert data["logged_count"] == 0
+    assert data["pending"] == []

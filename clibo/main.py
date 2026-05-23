@@ -18,8 +18,9 @@ from rich.table import Table
 from clibo import __version__, clis
 from clibo.admin import backup_db, export_data, import_data, restore_db
 from clibo.catalog import CATALOG, CATEGORIES
+from clibo.checkins import collect_checkins
 from clibo.core import config
-from clibo.core.db import init_db
+from clibo.core.db import init_db, session
 from clibo.core.output import JsonOpt, _emit_json, console, fail, ok
 from clibo.core.settings import get_setting, set_setting
 from clibo.dashboard import render_today
@@ -141,6 +142,58 @@ def week(json_out: JsonOpt = False) -> None:
 from clibo.monthly import month_command  # noqa: E402
 
 app.command(name="month")(month_command)
+
+
+@app.command()
+def checkin(json_out: JsonOpt = False) -> None:
+    """📋 Pending daily check-ins across every actively-tracked tool.
+
+    Surfaces one question per actively-used tracker (≥2 entries in the last
+    14 days) that hasn't been logged today, with a copy-pasteable command
+    and the last known value. `--json` outputs the same data structured —
+    ideal for an AI agent to ask the user one question at a time.
+    """
+    from datetime import date as _date
+    today = _date.today()
+    with session() as db:
+        checkins = collect_checkins(db, today=today)
+    pending = [c for c in checkins if not c["logged_today"]]
+    done = [c for c in checkins if c["logged_today"]]
+    if json_out:
+        _emit_json({
+            "date": today,
+            "pending_count": len(pending),
+            "logged_count": len(done),
+            "pending": pending,
+            "logged": done,
+        })
+        return
+    if not checkins:
+        console.print(
+            "\n  📋 [dim]No active trackers detected yet.[/dim]   "
+            "[dim](A tracker becomes active after 2+ entries in 14 days.)[/dim]\n"
+        )
+        return
+    if not pending:
+        console.print(
+            f"\n  📋 [green]✓ All {len(done)} daily check-ins are in for today.[/green]\n"
+        )
+        return
+    console.print(
+        f"\n[bold]📋 Today's check-ins[/bold]   "
+        f"[cyan]{len(done)}[/cyan] done   ·   "
+        f"[yellow]{len(pending)}[/yellow] pending\n"
+    )
+    for ci in pending:
+        console.print(f"  {ci['emoji']}  [bold]{ci['name']}[/bold]")
+        console.print(f"      ❓ [dim]{ci['question']}[/dim]")
+        if ci["last_value"] is not None:
+            ago_part = (f", {ci['last_days_ago']}d ago"
+                        if ci["last_days_ago"] else "")
+            console.print(
+                f"      💡 last [dim]{ci['last_value']}{ago_part}[/dim]"
+            )
+        console.print(f"      ➤  [cyan]{ci['command']}[/cyan]\n")
 
 
 @app.command()

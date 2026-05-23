@@ -14,6 +14,7 @@ from datetime import date, datetime, timedelta
 
 from sqlmodel import select
 
+from clibo.checkins import collect_checkins
 from clibo.clis.bills import Bill
 from clibo.clis.birthdays import Occasion
 from clibo.clis.caffeine import (
@@ -233,6 +234,9 @@ def collect_today() -> dict:
             ).all()
         )
 
+        # 📊 Daily check-ins — every actively-used tracker with today's status
+        daily_checkins = collect_checkins(db, today=today)
+
     # Latest mood for the headline row
     latest_mood = mood_today[0] if mood_today else None
 
@@ -296,6 +300,7 @@ def collect_today() -> dict:
              "days_until": (d.expires - today).days}
             for d in documents_expiring
         ],
+        "checkins": daily_checkins,
     }
 
 
@@ -419,6 +424,31 @@ def render_today(json_out: bool) -> None:
             console.print(f"  {line}")
         console.print()
 
+    # 📊 Daily check-ins — every active tracker, with today's status
+    if data["checkins"]:
+        done = sum(1 for c in data["checkins"] if c["logged_today"])
+        total = len(data["checkins"])
+        console.print(
+            f"[bold]📊 Daily check-ins[/bold]   [cyan]{done}[/cyan]/{total} logged"
+        )
+        for ci in data["checkins"]:
+            label = f"{ci['emoji']} {ci['name']}"
+            if ci["logged_today"]:
+                console.print(
+                    f"  [green]✓[/green]  {label:<14}  [bold]{ci['today_value']}[/bold]"
+                )
+            else:
+                ago = (f"{ci['last_days_ago']}d ago"
+                       if ci["last_days_ago"] is not None else "")
+                last = (f"   [dim]last {ci['last_value']}"
+                        + (f", {ago}" if ago else "") + "[/dim]"
+                        if ci["last_value"] else "")
+                console.print(
+                    f"  [dim]○[/dim]  {label:<14}  [dim]not logged today[/dim]"
+                    f"{last}"
+                )
+        console.print()
+
     # 🚀 Challenges that still need today's check-in
     if data["challenges_pending"]:
         console.print("[bold]🚀 Challenges — check-in pending[/bold]")
@@ -504,7 +534,7 @@ def render_today(json_out: bool) -> None:
         data["bills"], data["followups"], data["plants_thirsty"], data["chores_due"],
         data["fasting"], today_lines, data["challenges_pending"],
         data["packages"]["late"], data["packages"]["pending"],
-        data["documents_expiring"],
+        data["documents_expiring"], data["checkins"],
     ])
     if not has_anything:
         console.print("  [dim]Nothing on the radar today — enjoy! ✨[/dim]\n")

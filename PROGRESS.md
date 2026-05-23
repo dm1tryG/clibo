@@ -4,6 +4,48 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 71 — Daily check-ins on `today` + new `clibo checkin` command · 2026-05-23
+
+User feedback: "show more widgets on today, show all logged
+categories not only pomodoro and water — show all I am logging
+constantly. Also `clibo checkin` so an agent asks the questions I
+track."
+
+- 📊 **New `clibo/checkins.py`** — declarative `TRACKERS` config for
+  11 trackers (weight, sleep, mood, steps, workout, caffeine,
+  meditate, stretches, mileage, journal, gratitude, fasting).
+  `collect_checkins(db, today, days=14)` returns one dict per
+  *actively-used* tracker: a tracker is "active" if it has **≥ 2
+  entries in the last 14 days**. Single exploratory entries don't
+  pollute the list.
+- 🎛️ **`today` gains a "📊 Daily check-ins" section** — every active
+  tracker, ✓ if logged today (with today's value bolded) or ○ if
+  pending (with last value + how many days ago). Counts shown in
+  the header: `2/5 logged`. The section is conditional — a brand-new
+  user sees nothing here until they've started tracking.
+- 📋 **New top-level command `clibo checkin`** — surfaces only the
+  *pending* check-ins as questions, one per active tracker, each
+  with a copy-pasteable command and the last known value. The
+  `--json` form gives an agent everything it needs to ask the user
+  one question per pending tracker and then run the suggested log
+  command:
+  ```json
+  {"pending": [{"name":"Weight", "question":"What's your weight today?",
+    "command":"clibo weight log <kg>", "last_value":"71 kg",
+    "last_days_ago":1, ...}], ...}
+  ```
+- 🧪 8 new tests cover: inactive trackers (< 2 entries) don't surface,
+  active ones do, today's log flips the `logged_today` flag, multiple
+  trackers surface in parallel, and the `checkin` command's pending
+  vs logged split.
+- 🎤 Visual smoke on a populated 14-day database: today now shows the
+  full check-in row (`✓ 8500 steps · ○ not logged today, last 71 kg`)
+  and `clibo checkin` reads like a tiny morning standup the agent
+  can drive.
+- **Tests:** 670 passing (+8); ruff clean.
+
+---
+
 ### Iteration 70 — `month` view (calendar-month rollup, money-first) + v1.4.0 to PyPI · 2026-05-23
 
 Closes the aggregation trilogy: `today` (right now), `week` (last 7
