@@ -4,6 +4,25 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 30 — Repo housekeeping + release artifacts · 2026-05-23
+
+Open-source ergonomics around the v1.0.0 release.
+
+- 📝 [`CONTRIBUTING.md`](CONTRIBUTING.md) — quick setup, the four-part
+  definition of "done" for a new tool, commit-message rules.
+- 🐛 `.github/ISSUE_TEMPLATE/bug_report.md` — repro / expected / actual
+  / `clibo doctor --json` for environment.
+- ✨ `.github/ISSUE_TEMPLATE/feature_request.md` — what / why / `--json`
+  sketch / alternatives.
+- ✅ `.github/pull_request_template.md` — the "new-tool" checklist
+  matching the build-loop protocol.
+- 📦 **Built wheel + sdist** (`uv build`) and attached them to the
+  GitHub v1.0.0 release. Anyone can now `pip install` from the wheel
+  URL even without the PyPI token landing.
+- **Tests:** 307 passing.
+
+---
+
 ### Iteration 29 — `AGENTS.md` · 2026-05-23
 
 Post-v1.0 polish, focused on the project's primary audience.
