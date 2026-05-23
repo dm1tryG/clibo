@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import typer
 from sqlmodel import Field, SQLModel, select
 
+from clibo.core.base import parse_date
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, bar, fail, ok, render_record, render_rows
 
@@ -34,16 +35,37 @@ class Book(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
 
 
+class BookSession(SQLModel, table=True):
+    """One reading session — N pages on a book on a day, optionally timed.
+
+    The parent ``Book.pages_read`` is the running total; this table stores
+    the per-session events so users can answer "when did I last read?",
+    "what was my reading pace last week?" — questions the counter alone
+    can't.
+    """
+
+    __tablename__ = "books_session"
+
+    id: int | None = Field(default=None, primary_key=True)
+    book_id: int = Field(index=True)
+    pages: int
+    duration_min: int = 0
+    entry_date: date = Field(default_factory=date.today, index=True)
+    created_at: datetime = Field(default_factory=datetime.now)
+    note: str | None = None
+
+
 app = typer.Typer(no_args_is_help=True, help=HELP)
 
 
 def _resolve(db, ident: str) -> Book | None:
-    """Look up a book by numeric ID or by (case-insensitive) title."""
+    """Look up a book by numeric ID or by case-insensitive title (exact wins over substring)."""
     if ident.isdigit():
         book = db.get(Book, int(ident))
         if book:
             return book
-    return db.exec(select(Book).where(Book.title.ilike(f"%{ident}%"))).first()
+    return db.exec(select(Book).where(Book.title.ilike(ident))).first() \
+        or db.exec(select(Book).where(Book.title.ilike(f"%{ident}%"))).first()
 
 
 def _row(book: Book) -> dict:
@@ -109,34 +131,167 @@ def add(
 def read(
     book: str = typer.Argument(..., help="Book title (fuzzy) or ID"),
     pages: int = typer.Argument(..., help="Pages read in this session"),
+    minutes: int = typer.Option(
+        0, "--minutes", "-t", help="Minutes spent (enables pages/hour pace)"
+    ),
+    on: str = typer.Option("today", "--date", "-d", help="Date of the session"),
+    note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
 ) -> None:
-    """📖 Log a reading session — add to ``pages_read``."""
+    """📖 Log a reading session — add to ``pages_read`` and record the
+    session row in ``books_session`` (for history & pace queries).
+    """
     if pages <= 0:
         fail("Pages must be positive", json_out=json_out)
+    if minutes < 0:
+        fail("Minutes cannot be negative", json_out=json_out)
+    entry_date = parse_date(on)
     with session() as db:
         target = _resolve(db, book)
         if not target:
             fail(f"No book matching {book!r}", json_out=json_out)
         if target.status == "wishlist":
             target.status = "reading"
-            target.started = date.today()
+            target.started = target.started or entry_date
         target.pages_read += pages
         if target.pages and target.pages_read >= target.pages:
             target.status = "finished"
-            target.finished = date.today()
+            target.finished = target.finished or entry_date
         db.add(target)
         db.flush()
-        data = _row(target)
+        # Per-session row — what `history` and pace queries read from.
+        sess = BookSession(
+            book_id=target.id, pages=pages, duration_min=minutes,
+            entry_date=entry_date, note=note,
+        )
+        db.add(sess)
+        db.flush()
+        db.refresh(sess)
+        data = _row(target) | {
+            "session_id": sess.id,
+            "session_pages": pages,
+            "session_minutes": minutes,
+            "session_pages_per_hour": (
+                round(pages / minutes * 60, 1) if minutes else None
+            ),
+        }
     flair = "  🎉 finished!" if data["status"] == "finished" else ""
+    pace = f" · {data['session_pages_per_hour']} p/h" if minutes else ""
     ok(f"Read {pages}p of '{target.title}' — {target.pages_read}/{target.pages or '?'} "
-       f"({data['progress_pct']}%){flair}",
+       f"({data['progress_pct']}%){pace}{flair}",
        json_out=json_out, data=data)
 
 
 # `log` is a friendlier alias for `read` — agents naturally translate
 # "I read 30 pages today" to `books log 30`.
 app.command(name="log", help="Alias for `read` — log a reading session")(read)
+
+
+@app.command()
+def history(
+    days: int = typer.Option(14, "--days", help="Look back this many days"),
+    book: str = typer.Option(
+        None, "--book", "-b", help="Filter to one book (title fuzzy or ID)"
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """📖 Recent reading sessions across all books."""
+    since = date.today() - timedelta(days=days - 1)
+    with session() as db:
+        query = select(BookSession).where(BookSession.entry_date >= since)
+        if book:
+            target = _resolve(db, book)
+            if not target:
+                fail(f"No book matching {book!r}", json_out=json_out)
+            query = query.where(BookSession.book_id == target.id)
+        sessions = list(
+            db.exec(
+                query.order_by(
+                    BookSession.entry_date.desc(), BookSession.id.desc()
+                )
+            ).all()
+        )
+        titles = {b.id: b.title for b in db.exec(select(Book)).all()}
+    rows = [
+        {
+            "id": s.id,
+            "entry_date": s.entry_date,
+            "book": titles.get(s.book_id, "?"),
+            "pages": s.pages,
+            "minutes": s.duration_min,
+            "pages_per_hour": (
+                round(s.pages / s.duration_min * 60, 1) if s.duration_min else None
+            ),
+            "note": s.note,
+        }
+        for s in sessions
+    ]
+    render_rows(
+        rows,
+        [("entry_date", "Date"), ("book", "Book"),
+         ("pages", "Pages"), ("minutes", "Min"),
+         ("pages_per_hour", "p/h")],
+        json_out=json_out,
+        title=f"📖 Reading history · last {days}d",
+        formatters={
+            "minutes": lambda v, r: f"{v}" if v else "[dim]—[/dim]",
+            "pages_per_hour": lambda v, r: f"{v}" if v else "[dim]—[/dim]",
+        },
+        empty="No reading sessions yet — try: clibo books read 'Atomic Habits' 30 -t 45",
+    )
+
+
+@app.command()
+def edit(
+    book: str = typer.Argument(..., help="Book title (fuzzy) or ID"),
+    title: str = typer.Option(None, "--title", "-t", help="New title"),
+    author: str = typer.Option(None, "--author", "-a", help="New author"),
+    pages: int = typer.Option(None, "--pages", "-p", help="Total pages"),
+    pages_read: int = typer.Option(
+        None, "--pages-read", help="Override the running total"
+    ),
+    status: str = typer.Option(None, "--status", "-s",
+                                help=f"{'/'.join(STATUSES)}"),
+    rating: int = typer.Option(None, "--rating", "-r", help="Rating 1–5"),
+    note: str = typer.Option(None, "--note", "-n"),
+    json_out: JsonOpt = False,
+) -> None:
+    """📚 Edit a book. Accepts a numeric ID or a title (fuzzy)."""
+    if status and status.lower() not in STATUSES:
+        fail(f"Status must be one of: {', '.join(STATUSES)}", json_out=json_out)
+    if rating is not None and not 1 <= rating <= 5:
+        fail("Rating must be 1–5", json_out=json_out)
+    if pages is not None and pages < 0:
+        fail("Pages cannot be negative", json_out=json_out)
+    if pages_read is not None and pages_read < 0:
+        fail("Pages read cannot be negative", json_out=json_out)
+    with session() as db:
+        target = _resolve(db, book)
+        if not target:
+            fail(f"No book matching {book!r}", json_out=json_out)
+        if title is not None:
+            target.title = title
+        if author is not None:
+            target.author = author
+        if pages is not None:
+            target.pages = pages
+        if pages_read is not None:
+            target.pages_read = pages_read
+        if status is not None:
+            target.status = status.lower()
+            if status.lower() == "finished":
+                target.finished = target.finished or date.today()
+            if status.lower() == "reading":
+                target.started = target.started or date.today()
+        if rating is not None:
+            target.rating = rating
+        if note is not None:
+            target.note = note
+        db.add(target)
+        db.flush()
+        data = _row(target)
+    ok(f"Updated book #{target.id} — {target.title}",
+       json_out=json_out, data=data)
 
 
 @app.command()
@@ -224,23 +379,33 @@ def show(book: str = typer.Argument(..., help="Book title or ID"), json_out: Jso
 
 
 @app.command()
-def rm(book_id: int = typer.Argument(..., help="Book ID"), json_out: JsonOpt = False) -> None:
-    """📚 Delete a book from your shelf."""
+def rm(
+    book: str = typer.Argument(..., help="Book title (fuzzy) or ID"),
+    json_out: JsonOpt = False,
+) -> None:
+    """📚 Delete a book from your shelf and all its reading sessions."""
     with session() as db:
-        target = db.get(Book, book_id)
+        target = _resolve(db, book)
         if not target:
-            fail(f"No book #{book_id}", json_out=json_out)
+            fail(f"No book matching {book!r}", json_out=json_out)
+        bid = target.id
+        for s in db.exec(select(BookSession).where(BookSession.book_id == bid)).all():
+            db.delete(s)
         db.delete(target)
-    ok(f"Deleted book #{book_id}", json_out=json_out, data={"deleted": book_id})
+    ok(f"Deleted book #{bid}", json_out=json_out, data={"deleted": bid})
 
 
 @app.command()
 def stats(json_out: JsonOpt = False) -> None:
-    """📊 Reading stats — finished, in-progress, pages read."""
+    """📊 Reading stats — finished, in-progress, pages read, session pace."""
     with session() as db:
         books = list(db.exec(select(Book)).all())
+        sessions = list(db.exec(select(BookSession)).all())
     finished = [b for b in books if b.status == "finished"]
     ratings = [b.rating for b in finished if b.rating]
+    session_pages = sum(s.pages for s in sessions)
+    session_minutes = sum(s.duration_min for s in sessions)
+    days_read = {s.entry_date for s in sessions}
     data = {
         "total": len(books),
         "reading": sum(1 for b in books if b.status == "reading"),
@@ -248,5 +413,13 @@ def stats(json_out: JsonOpt = False) -> None:
         "wishlist": sum(1 for b in books if b.status == "wishlist"),
         "total_pages_read": sum(b.pages_read for b in books),
         "avg_rating": round(sum(ratings) / len(ratings), 1) if ratings else None,
+        "sessions_logged": len(sessions),
+        "session_pages": session_pages,
+        "session_minutes": session_minutes,
+        "avg_pages_per_hour": (
+            round(session_pages / session_minutes * 60, 1)
+            if session_minutes else None
+        ),
+        "days_read": len(days_read),
     }
     render_record(data, json_out=json_out, title="📊 Reading stats")

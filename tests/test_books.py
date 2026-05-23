@@ -59,3 +59,129 @@ def test_log_is_alias_for_read(cli):
     cli.run("books", "add", "Atomic Habits", "-a", "James Clear")
     data = cli.json("books", "log", "Atomic Habits", "30")
     assert data["pages_read"] == 30
+
+
+# ── reading sessions: --minutes + history + edit + rm-by-title (iter 91) ──
+
+
+def test_read_with_minutes_writes_session(cli):
+    cli.run("books", "add", "Atomic Habits", "-p", "320")
+    data = cli.json("books", "read", "Atomic Habits", "30", "--minutes", "45")
+    assert data["session_pages"] == 30
+    assert data["session_minutes"] == 45
+    assert data["session_pages_per_hour"] == 40.0
+
+
+def test_read_minutes_optional(cli):
+    """Existing flag-free usage stays compatible."""
+    cli.run("books", "add", "Some Book", "-p", "200")
+    data = cli.json("books", "read", "Some Book", "20")
+    assert data["session_minutes"] == 0
+    assert data["session_pages_per_hour"] is None
+
+
+def test_read_backdate_session(cli):
+    cli.run("books", "add", "Atomic Habits", "-p", "320")
+    cli.run("books", "read", "Atomic Habits", "30", "-t", "45",
+                    "-d", "yesterday")
+    # entry_date is on the session not the book row, so check via history
+    history = cli.json("books", "history")
+    assert any(h["book"] == "Atomic Habits" and h["pages"] == 30
+               for h in history)
+
+
+def test_read_negative_minutes_fails(cli):
+    cli.run("books", "add", "X", "-p", "100")
+    result = cli.run("books", "read", "X", "10", "-t", "-1")
+    assert result.exit_code != 0
+
+
+def test_history_filters_by_book(cli):
+    cli.run("books", "add", "Book A", "-p", "200")
+    cli.run("books", "add", "Book B", "-p", "200")
+    cli.run("books", "read", "Book A", "10", "-t", "20")
+    cli.run("books", "read", "Book B", "15", "-t", "20")
+    a_only = cli.json("books", "history", "--book", "Book A")
+    assert all(h["book"] == "Book A" for h in a_only)
+
+
+def test_history_filters_by_days(cli):
+    cli.run("books", "add", "Old", "-p", "200")
+    cli.run("books", "read", "Old", "5", "-t", "10", "-d", "30 days ago")
+    cli.run("books", "read", "Old", "5", "-t", "10")
+    recent = cli.json("books", "history", "--days", "7")
+    assert len(recent) == 1
+
+
+def test_history_empty(cli):
+    cli.run("books", "add", "Atomic Habits", "-p", "320")
+    history = cli.json("books", "history")
+    assert history == []
+
+
+def test_edit_by_title(cli):
+    cli.run("books", "add", "Original Title", "-p", "300")
+    edited = cli.json("books", "edit", "Original Title", "-t", "New Title")
+    assert edited["title"] == "New Title"
+
+
+def test_edit_status_to_finished_stamps_date(cli):
+    cli.run("books", "add", "Some Book", "-p", "100")
+    edited = cli.json("books", "edit", "Some Book", "-s", "finished")
+    assert edited["status"] == "finished"
+    assert edited["finished"] is not None
+
+
+def test_edit_pages_read_override(cli):
+    cli.run("books", "add", "X", "-p", "300")
+    edited = cli.json("books", "edit", "X", "--pages-read", "150")
+    assert edited["pages_read"] == 150
+    assert edited["progress_pct"] == 50.0
+
+
+def test_edit_rejects_bad_rating(cli):
+    cli.run("books", "add", "X", "-p", "100")
+    result = cli.run("books", "edit", "X", "-r", "9")
+    assert result.exit_code != 0
+
+
+def test_rm_by_title(cli):
+    cli.run("books", "add", "Doomed", "-p", "100")
+    cli.json("books", "rm", "Doomed")
+    listing = cli.json("books", "list")
+    assert not any(b["title"] == "Doomed" for b in listing)
+
+
+def test_rm_cascades_sessions(cli):
+    """Deleting a book also deletes its reading sessions."""
+    cli.run("books", "add", "Cascading", "-p", "100")
+    cli.run("books", "read", "Cascading", "10", "-t", "20")
+    cli.run("books", "read", "Cascading", "15")
+    cli.json("books", "rm", "Cascading")
+    history = cli.json("books", "history")
+    assert history == []
+
+
+def test_rm_unknown_fails(cli):
+    result = cli.run("books", "rm", "ghost-book-xyz")
+    assert result.exit_code != 0
+
+
+def test_resolve_exact_match_wins_over_substring(cli):
+    """`books show 'Dune'` finds Dune (exact), not 'Dune: Part Two'."""
+    cli.run("books", "add", "Dune: Part Two", "-p", "300")
+    cli.run("books", "add", "Dune", "-p", "400")
+    data = cli.json("books", "show", "Dune")
+    assert data["title"] == "Dune"
+
+
+def test_stats_includes_session_pace(cli):
+    cli.run("books", "add", "Atomic Habits", "-p", "320")
+    cli.run("books", "read", "Atomic Habits", "30", "-t", "45")
+    cli.run("books", "read", "Atomic Habits", "20", "-t", "15")
+    stats = cli.json("books", "stats")
+    assert stats["sessions_logged"] == 2
+    assert stats["session_pages"] == 50
+    assert stats["session_minutes"] == 60
+    assert stats["avg_pages_per_hour"] == 50.0
+    assert stats["days_read"] == 1

@@ -4,6 +4,70 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 91 — `books` gains per-session tracking · 2026-05-24
+
+Agent-mode self-test on "Read 30 pages of Atomic Habits in 45
+minutes" surfaced three real frictions on `books`:
+
+1. **`books read` had no `--minutes` option.** The 45-minute
+   duration in the user's statement was simply lost. The newly-
+   shipped `writing` tool tracks duration; `books` couldn't.
+2. **No session history at all.** Every `books read` just bumped
+   a cumulative `pages_read` counter — there was no way to answer
+   "what did I read last week?" or "how fast do I read?".
+3. **Carryovers**: `books rm` was integer-only, no `edit` existed.
+
+- 📖 **New `BookSession` table** (`books_session`): one row per
+  `read` call, storing `pages`, `duration_min`, `entry_date`,
+  optional `note`, FK-style `book_id`. Created automatically via
+  `create_all` for new installs; existing DBs pick it up on next
+  boot via the standard SQLModel.metadata bootstrap (no migration
+  needed — it's a new table, not a column).
+- 📖 **`books read … -t MIN -d DATE -n NOTE`** — duration enables
+  `pages_per_hour` pace. Backdate sessions via `--date`. The cumulative
+  counter still updates and still auto-promotes wishlist→reading and
+  auto-finishes at total pages. Response payload now includes
+  `session_id`, `session_pages`, `session_minutes`,
+  `session_pages_per_hour` so agents get the pace metric in one call.
+- 📖 **New `books history --days N [--book BOOK]`** — lists
+  recent sessions across all books (or filtered to one). Joins
+  book titles on the way out.
+- 📚 **New `books edit BOOK`** — change title/author/pages/
+  pages_read/status/rating/note in place. Status change to
+  `finished` or `reading` auto-stamps the date if not already set.
+- 📚 **`books rm <title>`** — accepts ID or fuzzy title;
+  **cascades to sessions** (delete a book → its session rows are
+  cleaned up too).
+- 📚 **`_resolve` prefers exact title match over substring** — so
+  `books show "Dune"` finds *Dune* not *Dune: Part Two*. Mirrors
+  the iter-87 fix to `films._resolve`.
+- 📊 **`books stats` extended** with `sessions_logged`,
+  `session_pages`, `session_minutes`, `avg_pages_per_hour`,
+  `days_read` — pulled from the session table.
+- 🎤 NL flow verified end-to-end:
+  • `books read "Atomic Habits" 30 -t 45` → session_pages_per_hour=40
+  • `books read "Atomic Habits" 25 -t 35 -d yesterday` → backdated session
+  • `books history` → both sessions ordered newest-first with pace
+  • `books rm "Atomic"` → book + 2 session rows all gone ✓
+- 🧪 **16 new tests**: read-with-minutes shape, minutes-optional
+  back-compat, backdated session, negative-minutes reject, history
+  filtering by book + days, edit by title incl. status-to-finished
+  date stamping & pages_read override & bad-rating reject, rm by
+  title, rm cascades sessions, rm unknown fails, exact-match resolver,
+  stats session-pace fields.
+- 📚 **SKILL.md** rewritten with a 9-row "Natural language →
+  command" table including the new minutes / history / edit flows.
+- 📚 **docs/SCHEMA.md** regenerated — `books_session` table (88
+  total, up from 87 after iter 90).
+- **Tests:** 887 passing (+16); ruff clean.
+
+`books` now matches the per-session shape of `writing` (iter 90)
+and the auto-progress shape of `films` (iter 87). All three media
+trackers — read/watch/write — answer the *"what did I do this
+week and how fast?"* questions out of the box.
+
+---
+
 ### Iteration 90 — new tool: ✍️ `writing` (word-count tracker) · 2026-05-24
 
 The 73rd tool. Writers track *words*, not minutes — minute-based
