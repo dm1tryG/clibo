@@ -44,6 +44,25 @@ no "Generated with …" lines, no mentions of any LLM.
 A short [pull-request template](.github/pull_request_template.md) is
 auto-filled when you open a PR — please tick the boxes honestly.
 
+## Releasing (maintainers)
+
+Cutting a new version is one command on a clean `main`:
+
+1. Bump `version` in `pyproject.toml` **and** `__version__` in
+   `clibo/__init__.py`.
+2. Add a `## [X.Y.Z] — YYYY-MM-DD` section at the top of `CHANGELOG.md`.
+3. Commit the bump, then:
+
+   ```bash
+   git tag -a vX.Y.Z -m "clibo vX.Y.Z"
+   git push origin main --follow-tags
+   ```
+
+The [`Release` workflow](.github/workflows/release.yml) takes it from there:
+builds the wheel and sdist, sanity-checks the tag matches the pyproject
+version, creates the GitHub release, attaches the artifacts, and (if the
+`PYPI_API_TOKEN` repo secret is set) publishes to PyPI.
+
 ## Code of conduct
 
 Be kind. Assume good faith. We follow the

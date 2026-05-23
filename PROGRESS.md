@@ -4,6 +4,25 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 31 — Automated release workflow · 2026-05-23
+
+Future releases are now one command. `v1.0.0` was built and uploaded
+by hand; `v1.1.0+` won't be.
+
+- 🤖 [`.github/workflows/release.yml`](.github/workflows/release.yml)
+  fires on any `v*.*.*` tag push and:
+  - builds the wheel and sdist with `python -m build`,
+  - sanity-checks that the tag matches `pyproject.toml`'s version (so
+    a forgotten bump can't ship a mismatched artifact),
+  - creates or updates the GitHub release and attaches the artifacts,
+  - publishes to PyPI **only if** the `PYPI_API_TOKEN` repo secret is
+    set, so the workflow is safe to merge before the token lands.
+- 📝 `CONTRIBUTING.md` gains a Releasing section documenting the
+  one-command flow: bump version, edit CHANGELOG, tag, push.
+- **Tests:** 307 passing.
+
+---
+
 ### Iteration 30 — Repo housekeeping + release artifacts · 2026-05-23
 
 Open-source ergonomics around the v1.0.0 release.
