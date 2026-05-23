@@ -28,6 +28,7 @@ from clibo.clis import (
     groceries,
     habit,
     home,
+    ideas,
     income,
     invoice,
     jobs,
@@ -120,4 +121,5 @@ ALL = [
     mileage,
     gratitude,
     income,
+    ideas,
 ]

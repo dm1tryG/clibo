@@ -55,6 +55,7 @@ CATALOG: list[Tool] = [
     Tool("events", "📅", "Productivity & Work", "Events & reminders calendar"),
     Tool("worklog", "🗒️", "Productivity & Work", "Work log & standup notes"),
     Tool("bookmark", "🔖", "Productivity & Work", "Bookmarks & link saver"),
+    Tool("ideas", "💡", "Productivity & Work", "Idea capture with lifecycle (raw → shipped)"),
     # ── 🤝 CRM & Relationships ────────────────────────────────────────────
     Tool("crm", "👥", "CRM & Relationships", "Contacts CRM"),
     Tool("leads", "🧲", "CRM & Relationships", "Sales pipeline & deals"),

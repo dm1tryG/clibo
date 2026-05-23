@@ -214,6 +214,7 @@ sub-command and every flag.
 | ✅ | `events` 📅 | Events & reminders calendar |
 | ✅ | `worklog` 🗒️ | Work log & standup notes |
 | ✅ | `bookmark` 🔖 | Bookmarks & link saver |
+| ✅ | `ideas` 💡 | Idea capture with lifecycle |
 
 ### 🤝 CRM & Relationships
 | | Tool | What it does |

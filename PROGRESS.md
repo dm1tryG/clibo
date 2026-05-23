@@ -4,6 +4,28 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 45 — `ideas` with lifecycle · 2026-05-23
+
+Self-test: "Idea: build a marketplace" only fit via `notes add` — but
+ideas have a lifecycle (raw → exploring → validated → shipped/abandoned)
+that notes can't express. Closing that.
+
+- 💡 **New tool `ideas` (56th)** — idea capture with status flow,
+  modeled after `leads`/`jobs`: `add` / `move ID STATUS` / `list --open`
+  / `search` / `pipeline` (counts by status) / `edit` / `rm` / `stats`.
+- Filed under **Productivity & Work** (expanding past the original 10,
+  same way `income` expanded Money & Finance).
+- 📜 `recent` picks up ideas with `[status] title` so you can see
+  lifecycle moves in the activity feed.
+- 📄 `docs/SCHEMA.md` regenerated (69 tables).
+- 🎤 NL mappings work end-to-end:
+  • "Idea: build a clibo plugin marketplace" → `ideas add "clibo plugin marketplace"`
+  • "Thinking about tags on ideas"           → `ideas add "tags on ideas" -s exploring`
+  • "I shipped the pomodoro variant"         → `ideas move <id> shipped`
+- **Tests:** 380 passing (+6); ruff clean.
+
+---
+
 ### Iteration 44 — Closed the income gap · 2026-05-23
 
 Last iteration's self-test flagged "Got 500 USD from freelance gig" had
