@@ -14,6 +14,7 @@ from sqlmodel import select
 from clibo.clis.bookmark import Bookmark
 from clibo.clis.books import Book
 from clibo.clis.brag import Achievement
+from clibo.clis.caffeine import CaffeineEntry
 from clibo.clis.crm import Contact
 from clibo.clis.cv import CvEntry
 from clibo.clis.dreams import Dream
@@ -119,6 +120,9 @@ SOURCES: list[tuple] = [
     ("steps", StepEntry, [StepEntry.source, StepEntry.note],
      lambda s: f"{s.count:,} steps"
                 + (f" ({s.source})" if s.source else "")),
+    ("caffeine", CaffeineEntry,
+     [CaffeineEntry.drink, CaffeineEntry.note],
+     lambda c: f"{c.drink} ({c.mg} mg)"),
 ]
 
 

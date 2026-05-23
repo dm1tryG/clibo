@@ -17,7 +17,10 @@ from clibo.core import config
 from clibo.core.db import init_db
 
 #: Tables whose timestamp column isn't ``created_at`` (overrides for ``recent``).
-TIME_COLUMN_OVERRIDES = {"habit_check": "check_date"}
+TIME_COLUMN_OVERRIDES = {
+    "habit_check": "check_date",
+    "caffeine_entry": "consumed_at",
+}
 
 
 #: ``(label, emoji, table, columns to fetch, format(row) -> str)`` for every
@@ -163,6 +166,8 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
     ("steps", "👟", "step_entry", ["count", "source"],
      lambda r: f"{r['count']:,} steps"
                 + (f" ({r['source']})" if r["source"] else "")),
+    ("caffeine", "☕", "caffeine_entry", ["drink", "mg"],
+     lambda r: f"{r['drink']} ({r['mg']} mg)"),
 ]
 
 

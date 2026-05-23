@@ -187,6 +187,7 @@ sub-command and every flag.
 | ✅ | `vitals` ❤️ | Blood pressure, pulse & glucose log |
 | ✅ | `stretches` 🧎 | Mobility & flexibility session log |
 | ✅ | `steps` 👟 | Daily step-count tracker — goal, streak, by-source totals |
+| ✅ | `caffeine` ☕ | Caffeine intake with bedtime-residual estimate (half-life model) |
 
 ### 💰 Money & Finance
 | | Tool | What it does |

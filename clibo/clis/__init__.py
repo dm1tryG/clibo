@@ -11,6 +11,7 @@ from clibo.clis import (
     books,
     brag,
     budget,
+    caffeine,
     calorie,
     car,
     chores,
@@ -140,4 +141,5 @@ ALL = [
     stretches,
     tip,
     steps,
+    caffeine,
 ]

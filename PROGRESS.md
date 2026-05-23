@@ -4,6 +4,49 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 59 — `caffeine` (intake tracker with bedtime-residual model) · 2026-05-23
+
+Agent-mode self-test: "Had a coffee at 9am" had nowhere to go.
+`water` is hydration, `calorie` is food kcal, `meds` is prescribed
+medication. None capture caffeine specifically — and none of them
+would compute *the* number that actually matters: how much will still
+be in your system at bedtime.
+
+- ☕ **New tool `caffeine` (66th, Health & Wellness)** — per-drink log
+  with the canonical 5.5-hour half-life decay model. The headline
+  number on every `log` and on `today` is **residual at bedtime**, not
+  raw mg. A 95 mg coffee at 14:00 leaves ~30 mg by 23:00 — enough to
+  fragment sleep; this tool puts that number in front of the user
+  every time they log.
+- 🧮 **20 built-in presets** so agents don't have to invent mg numbers:
+  `espresso`=63, `coffee`=95, `latte`=75, `cold-brew`=200, `matcha`=70,
+  `redbull`=80, `monster`=160, etc. (USDA / FDA / manufacturer values.)
+  Override with `-m / --mg` for custom drinks; an unknown drink without
+  `-m` fails loudly with the preset list.
+- 🕘 **`cutoff` subcommand** — the killer view: for every preset,
+  compute the latest time today you can still drink it and stay under
+  10 mg residual at bedtime (`hours = half_life × log₂(mg / 10)`).
+- Commands: `log DRINK [-m MG] [-t HH:MM]` (with `add` alias from day
+  one) / `today` / **`cutoff`** / `list [--drink X]` / `show` / `rm` /
+  `bedtime --set HH:MM` (default 23:00) / `stats`.
+- 🔌 Integrated: `recent.py` (with `consumed_at` time-column override
+  so backdated entries sort correctly), `search.py` (drink + note
+  indexed), `catalog.py` (Health & Wellness), README.
+- 📄 `docs/SCHEMA.md` regenerated (78 tables).
+- 🧪 21 new tests — preset mg lookup, mg override, unknown-drink
+  failure, time-of-day parsing, residual-at-bedtime presence, the
+  residual-decays-with-time property, cutoff table coverage, bedtime
+  set/get with validation, and a direct half-life math sanity check
+  (50% after one half-life, 25% after two).
+- 🎤 NL flow verified:
+  • "Had a coffee at 9am" → `caffeine log coffee -t 09:00` ✓
+  • "Cold brew, guessing 220mg" → `caffeine log cold-brew -m 220` ✓
+  • "Can I still have a coffee?" → `caffeine cutoff` ✓
+  • "My bedtime is 10pm" → `caffeine bedtime --set 22:00` ✓
+- **Tests:** 509 passing (+21); ruff clean.
+
+---
+
 ### Iteration 58 — `steps` (daily step-count tracker with streaks) · 2026-05-23
 
 Agent-mode self-test: "My step count was 8500 today" → no tool. The
