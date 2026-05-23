@@ -23,6 +23,7 @@ from clibo.core.db import init_db
 from clibo.core.output import JsonOpt, _emit_json, console, fail, ok
 from clibo.core.settings import get_setting, set_setting
 from clibo.dashboard import render_today
+from clibo.recent import _ago, collect_recent
 from clibo.search import search_all
 from clibo.tags import collect_tags
 from clibo.weekly import render_week
@@ -328,6 +329,33 @@ def init_cmd(
             cell = f"[green]{cell}[/green]"
         table.add_row(label, cell)
     console.print(table)
+    console.print()
+
+
+@app.command()
+def recent(
+    limit: int = typer.Option(20, "--limit", "-n", help="How many entries to show"),
+    json_out: JsonOpt = False,
+) -> None:
+    """📜 A chronological feed of your most recent actions across every tool."""
+    rows = collect_recent(limit=limit)
+    if json_out:
+        _emit_json({
+            "count": len(rows),
+            "events": [
+                {**row, "ago": _ago(row["created_at"])} for row in rows
+            ],
+        })
+        return
+    if not rows:
+        console.print("\n  [dim]Nothing logged yet — try `clibo today` to get started.[/dim]\n")
+        return
+    console.print(f"\n📜 [bold]Recent activity[/bold]  [dim](last {len(rows)})[/dim]\n")
+    for row in rows:
+        when = f"[dim]{_ago(row['created_at']):>10}[/dim]"
+        console.print(
+            f"  {when}  {row['emoji']} [cyan]{row['source']:<10}[/cyan] {row['summary']}"
+        )
     console.print()
 
 

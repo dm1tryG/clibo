@@ -4,6 +4,25 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 37 — `clibo recent` · 2026-05-23
+
+Third integrating view — `today` is categorical, `week` is aggregate,
+`recent` is just a chronological feed.
+
+- 📜 `clibo recent --limit N` pulls the most-recent entries across 40+
+  tables (every tool with a `created_at` or domain-specific timestamp
+  column), formats each as a one-liner with an emoji and relative
+  "just now / 9h ago / yesterday" label, and shows them newest-first.
+- Uses raw SQLite + PRAGMA schema introspection so the feed survives
+  schema tweaks; `habit_check` uses `check_date` instead of
+  `created_at` via a small override map.
+- Tests caught and fixed a missing-column case (`habit_check` lacks
+  `created_at`) before commit.
+- README's Cross-tool commands table lists `recent` next to `week`.
+- **Tests:** 331 passing (+6).
+
+---
+
 ### Iteration 36 — `clibo tags` · 2026-05-23
 
 A real gap closed: seven tools accept `-t/--tag`, but nothing told you
