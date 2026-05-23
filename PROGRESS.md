@@ -4,6 +4,78 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 78 — examples: drop `.sh`, replace with 11 use-case `.md` files · 2026-05-23
+
+User request: "improve examples — drop there sh scripts — just add .md
+files with use cases by categories or case".
+
+- 🗑️ Deleted `examples/daily_brief.sh` (the jq/bash twin of
+  `daily_brief.py`). Python scripts stay as working code.
+- 📚 Added **11 use-case markdown files**, organised both ways:
+
+  By *case*:
+  • `morning-checkin.md` — 60-second morning routine
+  • `evening-wrapup.md` — closing the day
+  • `weekly-retrospective.md` — Fri/Sun review using
+    `clibo week`/`compare`/`streaks`
+  • `monthly-money.md` — calendar-month money rollup
+  • `agent-daily-brief.md` — patterns for an AI driving clibo
+    from `--json` output
+
+  By *category*:
+  • `health-tracking.md` — weight, sleep, mood, caffeine, fasting,
+    steps, workout, meditate, stretches, mileage, vitals, meds
+  • `money-tracking.md` — expense, income, bills, subs, donations,
+    invest, debt, tip, etc.
+  • `productivity.md` — todo, focus, habit, challenge, journal,
+    worklog, notes, goals, bookmark, ideas
+  • `relationships.md` — crm, network, followup, meetings,
+    birthdays, gifts, brag, cv, jobs, leads, clients
+  • `home-life.md` — groceries, pantry, recipes, meals, chores,
+    plants, car, home, pets, travel, packages, documents
+  • `hobbies.md` — books, films, quotes, gratitude, lessons,
+    flashcards, dreams, dashboard
+
+- 🗂️ **`examples/README.md`** rewritten as a two-way index (by case
+  / by category) plus a "working scripts" section for `daily_brief.py`
+  + `find_and_act.py`.
+- 1037 lines of new docs total, each file ~70-110 lines so they're
+  scannable in one sitting and read top-to-bottom.
+
+---
+
+### Iteration 77 — `clibo streaks` — every active streak in one view · 2026-05-23
+
+Agent-mode self-test: "Show me a streak summary across everything" —
+habit stats showed per-habit streaks but nothing aggregated streaks
+from habits + gratitude + step goal + fasting + challenges into one
+motivational view.
+
+- 🆕 **`clibo/streaks.py`** — `collect_streaks()` aggregates from
+  five sources and returns rows sorted current-desc:
+  • 🔥 Habits (per active habit, with target/wk if non-default)
+  • 🙏 Gratitude (global streak across all entries)
+  • 👟 Step-goal (consecutive days at goal)
+  • 🕒 Fasting (consecutive completed fasts hitting target)
+  • 🚀 Challenges (per active challenge, with `day N/M` note)
+- 🆕 **`clibo streaks`** top-level command renders inline with
+  green-bold ≥7-day streaks. JSON output too.
+- 🧪 8 new tests covering empty state, per-source surfacing,
+  current-desc sorting, abandoned challenges excluded, below-goal
+  steps not surfacing a phantom streak.
+- 🎤 Visual smoke confirms the motivational close-of-day view:
+  ```
+  🔥 Streaks   5 active
+    🔥  Read                       5   ·
+    🔥  Walk                       5   ·
+    🙏  Daily gratitude            5   ·
+    👟  Step goal                  5   ·   (goal 10,000/day)
+    🚀  no sugar                   1   ·   (day 1/30)
+  ```
+- **Tests:** 719 passing (+8); ruff clean.
+
+---
+
 ### Iteration 76 — ASCII sparklines in six `stats` commands · 2026-05-23
 
 Agent-mode self-test: "I want to plot my weight over time" — the
