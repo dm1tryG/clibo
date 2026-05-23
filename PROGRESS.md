@@ -4,6 +4,37 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 65 — polish: mood multi-emotion, goals `-d`, events `--category` filter · 2026-05-23
+
+Three small rough edges surfaced by agent-mode self-test, all real,
+all touched by recent NL probes — bundled into one focused polish
+iteration (same theme: agent-friendly defaults).
+
+- 🙂 **`mood log` now keeps every emotion you pass.** Was silently
+  dropping all but the last `-e`. New behaviour: `--emotion/-e` is a
+  list option — repeat the flag (`-e anxious -e excited`) **or**
+  pass a comma-separated value (`-e "anxious,excited"`). Both forms
+  normalise to comma-separated, deduplicated and lower-cased.
+- 🎯 **`goals add -d`** is now a shortcut for `--deadline`. Was
+  the natural agent translation of "by Friday" / "in 6 months" but
+  the option had no short flag, so `-d` came back as `No such option`.
+- 📅 **`events list -c/--category`** filter — schema has a `category`
+  field, but `list` had no way to filter on it. "Show my dentist
+  appointments" now works (`events list -c health`).
+- 🧪 8 new tests (mood multi-emotion via repeat + comma + case-
+  insensitivity + dedup, goals deadline shortcut, events category
+  filter happy + neutral paths).
+- 🎤 NL flow re-verified:
+  • "Mood 3 with anxiety and excitement" →
+    `mood log 3 -e anxious -e excited` ✓ (both stored)
+  • "Goal: run a marathon in 6 months" →
+    `goals add "Run a marathon" -d "in 6 months"` ✓
+  • "What dentist appointments do I have?" →
+    `events list -c health` ✓
+- **Tests:** 595 passing (+7); ruff clean.
+
+---
+
 ### Iteration 64 — `invest` (positions with cost basis + unrealized P/L) · 2026-05-23
 
 Agent-mode self-test: "I bought 5 shares of AAPL at $200" had no

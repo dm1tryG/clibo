@@ -53,3 +53,10 @@ def test_stats(cli):
 def test_milestone_unknown_goal_fails(cli):
     result = cli.run("goals", "milestone", "Ghost", "Step")
     assert result.exit_code != 0
+
+
+def test_deadline_accepts_d_shortcut(cli):
+    """`goals add -d` is the natural shorthand; was missing before."""
+    data = cli.json("goals", "add", "Run a marathon", "-d", "in 6 months")
+    assert data["name"] == "Run a marathon"
+    assert data["deadline"] is not None

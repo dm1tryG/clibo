@@ -49,7 +49,11 @@ def _row(entry: MoodLog) -> dict:
 @app.command()
 def log(
     score: int = typer.Argument(..., help="How you feel, 1 (awful) – 5 (great)"),
-    emotion: str = typer.Option(None, "--emotion", "-e", help="Emotion word, e.g. 'calm'"),
+    emotions: list[str] = typer.Option(
+        None, "--emotion", "-e",
+        help="Emotion word(s). Repeat the flag or pass a comma-separated "
+             "value: `-e anxious -e excited` or `-e \"anxious,excited\"`.",
+    ),
     note: str = typer.Option(None, "--note", "-n", help="What's on your mind"),
     on: str = typer.Option("today", "--date", "-d", help="Date"),
     json_out: JsonOpt = False,
@@ -57,9 +61,20 @@ def log(
     """🙂 Log how you're feeling right now."""
     if score not in MOOD_FACES:
         fail("Score must be 1–5", json_out=json_out)
+    flat: list[str] = []
+    for raw in emotions or []:
+        flat.extend(s.strip().lower() for s in raw.split(",") if s.strip())
+    # Preserve order, drop duplicates.
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for word in flat:
+        if word not in seen:
+            seen.add(word)
+            ordered.append(word)
+    emotion_str = ",".join(ordered) if ordered else None
     entry = MoodLog(
         score=score,
-        emotion=emotion.lower() if emotion else None,
+        emotion=emotion_str,
         note=note,
         entry_date=parse_date(on),
     )
@@ -70,7 +85,7 @@ def log(
         data = _row(entry)
     ok(
         f"Logged mood {MOOD_FACES[score]} {MOOD_LABELS[score]}"
-        + (f" — {emotion}" if emotion else ""),
+        + (f" — {emotion_str}" if emotion_str else ""),
         json_out=json_out,
         data=data,
     )

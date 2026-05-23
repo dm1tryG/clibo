@@ -37,3 +37,27 @@ def test_remove(cli):
 def test_invalid_score_fails(cli):
     result = cli.run("mood", "log", "7")
     assert result.exit_code != 0
+
+
+def test_multiple_emotions_via_repeated_flag(cli):
+    """`-e anxious -e excited` keeps both, in order, deduplicated."""
+    data = cli.json("mood", "log", "3", "-e", "anxious", "-e", "excited")
+    assert data["emotion"] == "anxious,excited"
+
+
+def test_multiple_emotions_via_comma(cli):
+    """`-e \"anxious,excited\"` is the equivalent comma-separated form."""
+    data = cli.json("mood", "log", "3", "-e", "anxious, excited")
+    assert data["emotion"] == "anxious,excited"
+
+
+def test_emotions_are_deduplicated_and_lowercased(cli):
+    """Repeated emotions collapse; case is normalised."""
+    data = cli.json("mood", "log", "3", "-e", "Calm", "-e", "calm",
+                    "-e", "FOCUSED")
+    assert data["emotion"] == "calm,focused"
+
+
+def test_no_emotion_stays_null(cli):
+    data = cli.json("mood", "log", "4")
+    assert data["emotion"] is None

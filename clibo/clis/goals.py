@@ -82,7 +82,7 @@ def _row(db, goal: Goal) -> dict:
 def add(
     name: str = typer.Argument(..., help="Goal name"),
     description: str = typer.Option(None, "--desc", "-D", help="What the goal means"),
-    deadline: str = typer.Option(None, "--deadline", help="Target date"),
+    deadline: str = typer.Option(None, "--deadline", "-d", help="Target date"),
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
 ) -> None:

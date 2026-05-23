@@ -50,3 +50,21 @@ def test_stats(cli):
     stats = cli.json("events", "stats")
     assert stats["total_events"] == 1
     assert stats["upcoming"] == 1
+
+
+def test_list_filters_by_category(cli):
+    cli.run("events", "add", "Dentist visit", "-d", "2027-06-01",
+            "-c", "health")
+    cli.run("events", "add", "Standup", "-d", "2027-06-02",
+            "-c", "work")
+    cli.run("events", "add", "Lunch with Anna", "-d", "2027-06-03",
+            "-c", "social")
+    only_health = cli.json("events", "list", "-c", "health")
+    assert {e["title"] for e in only_health} == {"Dentist visit"}
+
+
+def test_list_no_filter_returns_all_upcoming(cli):
+    cli.run("events", "add", "A", "-d", "2027-06-01", "-c", "x")
+    cli.run("events", "add", "B", "-d", "2027-06-02", "-c", "y")
+    rows = cli.json("events", "list")
+    assert len(rows) == 2

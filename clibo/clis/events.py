@@ -80,20 +80,25 @@ def add(
 @app.command(name="list")
 def list_events(
     show_all: bool = typer.Option(False, "--all", help="Include past events"),
+    category: str = typer.Option(None, "--category", "-c",
+                                  help="Filter by category"),
     json_out: JsonOpt = False,
 ) -> None:
-    """📅 List events (upcoming first)."""
+    """📅 List events (upcoming first; optionally filtered by category)."""
     with session() as db:
         query = select(Event)
         if not show_all:
             query = query.where(Event.event_date >= date.today())
+        if category:
+            query = query.where(Event.category == category.lower())
         events = _sorted(list(db.exec(query).all()))
     render_rows(
         [_row(e) for e in events],
         [("id", "ID"), ("event_date", "Date"), ("event_time", "Time"),
-         ("title", "Event"), ("when", "When"), ("location", "Location")],
+         ("title", "Event"), ("category", "Category"),
+         ("when", "When"), ("location", "Location")],
         json_out=json_out,
-        title="📅 Events",
+        title="📅 Events" + (f" · {category}" if category else ""),
         empty="No events — add one with: clibo events add 'Dentist' -d 2026-06-01 -t 09:00",
     )
 
