@@ -4,6 +4,50 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 66 — `packages` (parcel tracker with late detection) · 2026-05-23
+
+Agent-mode self-test: "Amazon order coming Tuesday" / "Where's my
+FedEx package?" had no home. `bills` is recurring money out, `events`
+is one-off dates with no logistical state, `wishlist` is things you
+want (not in transit). Real new use case.
+
+- 📦 **New tool `packages` (71st, Home & Life)** — one table
+  `package_entry` with sender, tracking_number, carrier, description,
+  ordered_date, expected_date, received_date, status, note.
+  Status progresses **`ordered`** → **`in_transit`** → **`delivered`**
+  with branches to `lost` / `returned`.
+- 🚨 **`pending` is the daily-driver view** — sorts late packages
+  first (with ⚠ marker), then by ETA ascending, then by order date.
+  `--late` filters to just the late ones. Computed `is_late` flag
+  fires when `expected_date < today` AND the package isn't resolved.
+- ✅ **`received ID`** convenience — single command to mark
+  delivered and set today as `received_date`.
+- 🔧 **`update`** for status changes and ETA revisions
+  ("FedEx pushed delivery to Friday" → `update 1 -e Friday`).
+- 📊 **`stats`** — total, by status, by carrier, on-time vs late
+  arrivals in the window, avg delivery days, currently pending.
+- 🪄 **`log` alias for `add`** from day one (predictable verbs).
+- 🔌 Integrated: `recent.py`, `search.py` (sender + description +
+  tracking_number + carrier + note all indexed — so `clibo search
+  TRACK-XYZ` finds the package), `catalog.py` (Home & Life — now 12
+  tools), README.
+- 📄 `docs/SCHEMA.md` regenerated (85 tables).
+- 🧪 20 new tests covering add validation, log alias, received,
+  update validation, pending sorting + late detection, --late filter,
+  status filter, carrier filter, --all flag, stats arithmetic, and
+  integration with `search` + `recent`.
+- 🎤 NL flow verified:
+  • "Amazon order placed, expected Tuesday" →
+    `packages add Amazon -e Tuesday` ✓
+  • "Tracked: USPS 9400... arriving in 3 days" →
+    `packages add Sender -t "9400..." -c usps -e "in 3 days"` ✓
+  • "Got the FedEx package today" → `packages received 1` ✓
+  • "What packages am I waiting on?" → `packages pending` ✓
+  • "Anything late?" → `packages pending --late` ✓
+- **Tests:** 615 passing (+20); ruff clean.
+
+---
+
 ### Iteration 65 — polish: mood multi-emotion, goals `-d`, events `--category` filter · 2026-05-23
 
 Three small rough edges surfaced by agent-mode self-test, all real,

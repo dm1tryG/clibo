@@ -180,6 +180,10 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
      ["ticker", "action", "shares", "price_per_share"],
      lambda r: f"{r['action']} {r['shares']:g} {r['ticker']} @ "
                 f"{r['price_per_share']:.2f}"),
+    ("packages", "📦", "package_entry",
+     ["sender", "status", "description"],
+     lambda r: f"[{r['status']}] {r['sender']}"
+                + (f" — {r['description']}" if r["description"] else "")),
 ]
 
 

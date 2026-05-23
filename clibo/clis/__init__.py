@@ -53,6 +53,7 @@ from clibo.clis import (
     network,
     networth,
     notes,
+    packages,
     pantry,
     period,
     pets,
@@ -150,4 +151,5 @@ ALL = [
     challenge,
     donations,
     invest,
+    packages,
 ]

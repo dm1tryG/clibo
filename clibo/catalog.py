@@ -105,6 +105,8 @@ CATALOG: list[Tool] = [
          "Charitable giving log with tax-year and recipient stats"),
     Tool("invest", "📈", "Money & Finance",
          "Investment positions — cost basis + unrealized P/L"),
+    Tool("packages", "📦", "Home & Life",
+         "Shipment & parcel tracker — pending, late, by carrier"),
 ]
 
 CATEGORIES: list[str] = list(dict.fromkeys(t.category for t in CATALOG))

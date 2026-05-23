@@ -33,6 +33,7 @@ from clibo.clis.lessons import Lesson
 from clibo.clis.meetings import Meeting
 from clibo.clis.network import Connection
 from clibo.clis.notes import Note
+from clibo.clis.packages import Package
 from clibo.clis.quotes import Quote
 from clibo.clis.recipes import Recipe
 from clibo.clis.steps import StepEntry
@@ -139,6 +140,11 @@ SOURCES: list[tuple] = [
     ("invest", InvestTransaction,
      [InvestTransaction.ticker, InvestTransaction.note],
      lambda t: f"{t.action} {t.shares:g} {t.ticker} @ {t.price_per_share:.2f}"),
+    ("packages", Package,
+     [Package.sender, Package.description, Package.tracking_number,
+      Package.carrier, Package.note],
+     lambda p: f"[{p.status}] {p.sender}"
+                + (f" — {p.description}" if p.description else "")),
 ]
 
 

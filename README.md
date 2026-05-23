@@ -262,6 +262,7 @@ sub-command and every flag.
 | ✅ | `pets` 🐾 | Pet care, feeding & vet log |
 | ✅ | `travel` ✈️ | Trip planner & itinerary |
 | ✅ | `documents` 📑 | Important documents with expiry tracking |
+| ✅ | `packages` 📦 | Shipment & parcel tracker — pending, late, by carrier |
 
 ### 🎨 Hobbies & Culture *(beyond the original 50)*
 | | Tool | What it does |
