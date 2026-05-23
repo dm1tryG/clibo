@@ -133,6 +133,10 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
                 + (f" by {r['author']}" if r["author"] else "")),
     ("films", "🎬", "films_film", ["title", "kind", "status"],
      lambda r: f"{r['status']} {r['kind']}: {r['title']}"),
+    ("mileage", "🏃", "mileage_entry", ["activity", "distance_km"],
+     lambda r: f"{r['distance_km']:g} km {r['activity']}"),
+    ("gratitude", "🙏", "gratitude_entry", ["text"],
+     lambda r: f"grateful for: {r['text']}"),
 ]
 
 

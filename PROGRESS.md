@@ -4,6 +4,27 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 43 — Self-test → added `gratitude` · 2026-05-23
+
+Agent self-test of 3 NL inputs surfaced two gaps; closing the first one.
+
+- 🎤 Self-tested ① "I'm grateful for sunshine" — only fits via
+  `journal write` which is overkill (free-form, no daily focus, no
+  streak); ② "Got 500 USD from a freelance gig" — works only as a
+  hack via `savings deposit`; ③ "Tipped 5 USD at dinner" — fits
+  `expense` cleanly.
+- 🙏 **New tool `gratitude` (54th)** — daily gratitude practice
+  distinct from `journal`: short dated entries, day-level streak
+  (current + longest), `today` view with flames per streak day.
+  Tests verify streak after `parse_date` backfill ("10 days ago").
+- 📜 `recent` now picks up `gratitude` and `mileage` events.
+- 📄 `docs/SCHEMA.md` regenerated (67 tables).
+- 🎤 All three NL inputs now map cleanly; income-tracking gap noted
+  for next iteration.
+- **Tests:** 369 passing (+6); ruff clean.
+
+---
+
 ### Iteration 42 — Self-test → fixed `parse_date` & added `mileage` · 2026-05-23
 
 Agent-mode self-test caught **two real gaps** in one pass.

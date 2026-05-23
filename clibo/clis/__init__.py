@@ -24,6 +24,7 @@ from clibo.clis import (
     followup,
     gifts,
     goals,
+    gratitude,
     groceries,
     habit,
     home,
@@ -116,4 +117,5 @@ ALL = [
     books,
     films,
     mileage,
+    gratitude,
 ]

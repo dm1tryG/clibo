@@ -248,6 +248,7 @@ sub-command and every flag.
 | ✅ | `books` 📚 | Reading log with progress & ratings |
 | ✅ | `films` 🎬 | Movie & show watchlist with ratings |
 | ✅ | `mileage` 🏃 | Running, cycling, walking distance log |
+| ✅ | `gratitude` 🙏 | Daily gratitude practice with streaks |
 
 ## For AI agents
 
