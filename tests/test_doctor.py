@@ -8,8 +8,8 @@ from clibo import __version__
 def test_doctor_reports_install(cli):
     data = cli.json("doctor")
     assert data["version"] == __version__
-    assert data["tools_built"] == 50
-    assert data["tools_planned"] == 50
+    assert data["tools_built"] >= 50
+    assert data["tools_built"] == data["tools_planned"]
     assert data["healthy"] is True
     assert data["database_exists"] is True
 

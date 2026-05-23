@@ -2,7 +2,7 @@
 
 Auto-generated reference for every SQLite table clibo writes to. Regenerate with `python scripts/dump_schema.py`.
 
-_63 tables in total._
+_65 tables in total._
 
 ## Contents
 
@@ -12,6 +12,7 @@ _63 tables in total._
 - [Productivity & Work](#productivity--work)
 - [CRM & Relationships](#crm--relationships)
 - [Home & Life](#home--life)
+- [Hobbies & Culture](#hobbies--culture)
 
 ## Core
 
@@ -791,4 +792,36 @@ _63 tables in total._
 | `end_date` | `DATE` | — |
 | `budget` | `FLOAT` | NOT NULL, default |
 | `notes` | `VARCHAR` | — |
+| `created_at` | `DATETIME` | NOT NULL, default |
+
+## Hobbies & Culture
+
+### `books_book`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `INTEGER` | PK, NOT NULL |
+| `title` | `VARCHAR` | NOT NULL |
+| `author` | `VARCHAR` | — |
+| `status` | `VARCHAR` | NOT NULL, default |
+| `pages` | `INTEGER` | NOT NULL, default |
+| `pages_read` | `INTEGER` | NOT NULL, default |
+| `rating` | `INTEGER` | — |
+| `started` | `DATE` | — |
+| `finished` | `DATE` | — |
+| `note` | `VARCHAR` | — |
+| `created_at` | `DATETIME` | NOT NULL, default |
+
+### `films_film`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `INTEGER` | PK, NOT NULL |
+| `title` | `VARCHAR` | NOT NULL |
+| `kind` | `VARCHAR` | NOT NULL, default |
+| `year` | `INTEGER` | — |
+| `status` | `VARCHAR` | NOT NULL, default |
+| `rating` | `INTEGER` | — |
+| `watched_on` | `DATE` | — |
+| `note` | `VARCHAR` | — |
 | `created_at` | `DATETIME` | NOT NULL, default |

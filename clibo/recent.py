@@ -128,6 +128,11 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
     ("travel", "✈️", "travel_trip", ["name", "destination"],
      lambda r: f"trip: {r['name']}"
                 + (f" → {r['destination']}" if r["destination"] else "")),
+    ("books", "📚", "books_book", ["title", "author", "status"],
+     lambda r: f"{r['status']}: {r['title']}"
+                + (f" by {r['author']}" if r["author"] else "")),
+    ("films", "🎬", "films_film", ["title", "kind", "status"],
+     lambda r: f"{r['status']} {r['kind']}: {r['title']}"),
 ]
 
 

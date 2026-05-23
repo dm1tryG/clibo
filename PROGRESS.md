@@ -4,6 +4,38 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 41 — Beyond 50: agent-mode + books + films · 2026-05-23
+
+New direction from the maintainer: keep going past 50 tools, add what's
+genuinely useful, and use **me as the agent** that maps natural-language
+requests to clibo commands.
+
+- 🐛 **Fixed real install bug**: `clibo --version` returned an error; only
+  `clibo version` worked. Now both work, via a `--version`/`-V` callback.
+  Caught by literally typing `clibo --version` like a new user would.
+- 📚 **`books`** (51st tool) — reading log with `add` / `read N pages` /
+  `start` / `finish -r RATING` / `list -s STATUS` / `stats`. `read` auto-
+  promotes wishlist → reading and auto-finishes when pages_read ≥ total.
+- 🎬 **`films`** (52nd tool) — movie & show watchlist with `add` /
+  `watched -r RATING` / `rate` / `list -k movie|show` / `stats`.
+- 🎨 New catalog category **"Hobbies & Culture"** for tools beyond the
+  original 50 grouping.
+- 📜 `clibo recent` source list extended to pick up new books/films
+  events so they show in the activity feed.
+- 🎤 **Agent-mode demo** in the commit history: three natural-language
+  inputs ("I ate grilled chicken with rice for lunch", "I read 30 pages
+  of Atomic Habits", "I watched Oppenheimer, 5 stars") mapped to the
+  right CLI by reasoning about the request, estimating params and
+  invoking via subprocess. Worked end-to-end.
+- 📄 `docs/SCHEMA.md` regenerated (now 65 tables).
+- 🔄 README updated: header now reads "50+", new Hobbies & Culture
+  table appended.
+- 🧹 Lint and tests pass; new SKILL.md files for both tools document
+  the natural-language → command mappings agents should use.
+- **Tests:** 344 passing (+12).
+
+---
+
 ### Iteration 40 — `docs/PHILOSOPHY.md` + CHANGELOG catch-up · 2026-05-23
 
 Two pieces of honest documentation upkeep.

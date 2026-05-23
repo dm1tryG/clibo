@@ -8,6 +8,7 @@ from clibo.clis import (
     bills,
     birthdays,
     bookmark,
+    books,
     brag,
     budget,
     calorie,
@@ -18,6 +19,7 @@ from clibo.clis import (
     debt,
     events,
     expense,
+    films,
     focus,
     followup,
     gifts,
@@ -109,4 +111,7 @@ ALL = [
     home,
     pets,
     travel,
+    # ── beyond the original 50 ─────────────────────────────────────
+    books,
+    films,
 ]

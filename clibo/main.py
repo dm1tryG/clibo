@@ -33,7 +33,7 @@ app = typer.Typer(
     no_args_is_help=True,
     rich_markup_mode="rich",
     add_completion=True,
-    help="📦 [bold]clibo[/bold] — 50 local-first CLI tools for AI agents & humans.",
+    help="📦 [bold]clibo[/bold] — 50+ local-first CLI tools for AI agents & humans.",
 )
 
 # Register every built tool as a sub-command: `clibo calorie`, `clibo crm`, ...
@@ -41,8 +41,20 @@ for module in clis.ALL:
     app.add_typer(module.app, name=module.NAME, help=module.HELP)
 
 
+def _version_callback(value: bool) -> None:
+    if value:
+        console.print(f"clibo {__version__}")
+        raise typer.Exit()
+
+
 @app.callback()
-def _root() -> None:
+def _root(
+    _show_version: bool = typer.Option(
+        None, "--version", "-V",
+        callback=_version_callback, is_eager=True,
+        help="Show the clibo version and exit.",
+    ),
+) -> None:
     """Ensure the local database exists before any command runs."""
     init_db()
 

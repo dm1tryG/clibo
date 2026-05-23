@@ -2,7 +2,7 @@
 
 # 📦 clibo
 
-### 50 local-first CLI tools for AI agents — and humans
+### 50+ local-first CLI tools for AI agents — and humans
 
 *From a calorie tracker to a CRM. Everything in your terminal, everything in one local SQLite file.*
 
@@ -168,7 +168,7 @@ clibo --show-completion             # print the script (don't install)
 Then re-open the shell. You'll get tab-completion for every tool, every
 sub-command and every flag.
 
-## The 50 tools
+## The tools
 
 > 🎉 **All 50 tools are built.** Run `clibo info` for a live menu.
 
@@ -241,6 +241,12 @@ sub-command and every flag.
 | ✅ | `home` 🏠 | Home maintenance & repairs |
 | ✅ | `pets` 🐾 | Pet care, feeding & vet log |
 | ✅ | `travel` ✈️ | Trip planner & itinerary |
+
+### 🎨 Hobbies & Culture *(beyond the original 50)*
+| | Tool | What it does |
+|---|---|---|
+| ✅ | `books` 📚 | Reading log with progress & ratings |
+| ✅ | `films` 🎬 | Movie & show watchlist with ratings |
 
 ## For AI agents
 
