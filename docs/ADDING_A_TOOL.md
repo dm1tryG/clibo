@@ -63,4 +63,6 @@ YAML frontmatter (`name`, `description`) + a command table + examples + a
 ## 5. Finish
 
 `pytest` must be green. Smoke-test the commands. Tick the box in `PLAN.md`,
-log it in `PROGRESS.md`, update the README table, commit and push.
+log it in `PROGRESS.md`, update the README table, commit and push. Regenerate
+the schema reference: `python scripts/dump_schema.py` →
+[`docs/SCHEMA.md`](SCHEMA.md).

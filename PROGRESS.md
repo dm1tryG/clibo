@@ -4,6 +4,26 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 38 — `docs/SCHEMA.md` · 2026-05-23
+
+Real maintenance artifact for contributors and agents writing analytics:
+a single Markdown reference for all 63 tables clibo writes to.
+
+- 📜 `scripts/dump_schema.py` walks `SQLModel.metadata`, groups tables by
+  catalog category, and emits a tidy Markdown reference per column with
+  PK / NOT NULL / indexed / default / FK flags.
+- 📄 [`docs/SCHEMA.md`](docs/SCHEMA.md) — generated output (63 tables,
+  794 lines). Living reference whenever new tools are added; regenerate
+  with `python scripts/dump_schema.py`.
+- 🔗 `CONTRIBUTING.md` and `docs/ADDING_A_TOOL.md` both point at the
+  new reference and the regen command.
+- ✅ Smoke test (`tests/test_dump_schema.py`) runs the script as a
+  subprocess and checks that representative tables across categories
+  show up in the output — catches schema drift before it ships.
+- **Tests:** 332 passing (+1).
+
+---
+
 ### Iteration 37 — `clibo recent` · 2026-05-23
 
 Third integrating view — `today` is categorical, `week` is aggregate,

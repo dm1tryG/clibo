@@ -15,6 +15,8 @@ uv pip install --python .venv -e ".[dev]"
 The full developer guide for adding a new clibo tool lives at
 [`docs/ADDING_A_TOOL.md`](docs/ADDING_A_TOOL.md) — read it before you start.
 [`clibo/clis/calorie.py`](clibo/clis/calorie.py) is the canonical reference.
+[`docs/SCHEMA.md`](docs/SCHEMA.md) lists every existing table; regenerate it
+with `python scripts/dump_schema.py` after adding a new model.
 
 ## What a "done" tool looks like
 
