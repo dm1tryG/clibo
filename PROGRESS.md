@@ -4,6 +4,27 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 34 — `examples/` and a startup-time check · 2026-05-23
+
+Quality pass — measure performance, then add real, runnable examples.
+
+- ⏱️ **Startup time** measured at ~270 ms for `clibo --help` across five
+  runs. With 50 sub-apps loaded at import, that's well within "feels
+  instant" for a personal tool — no lazy-loading work needed.
+- 📁 New [`examples/`](examples/) directory with:
+  - `daily_brief.py` — Python subprocess pattern: calls `clibo today
+    --json` and `clibo week --json`, formats a Markdown brief.
+  - `daily_brief.sh` — same idea in Bash with `jq`.
+  - `find_and_act.py` — the search-then-act agent pattern, finds
+    everything matching a query and suggests a CRM follow-up.
+  - `README.md` explaining what's there and the contract they rely on.
+- All examples smoke-tested end-to-end against the real CLI.
+- README's "For AI agents" section now links to `examples/` alongside
+  `AGENTS.md` and `skills/`.
+- **Tests:** 319 passing (no source changes).
+
+---
+
 ### Iteration 33 — `clibo week` · 2026-05-23
 
 Sister command to `clibo today` — a 7-day rollup across the trackers

@@ -263,6 +263,9 @@ drop into an agent's skill set.
 the integrating commands (`today` / `search` / `export` / `doctor`), and
 copy-paste recipes for the most common things you'll want to do.
 
+[**`examples/`**](examples/) has working scripts that build on the contract:
+a daily-brief renderer (Python + Bash) and a `search`-then-act agent pattern.
+
 ## Tech
 
 Python · [Typer](https://typer.tiangolo.com/) · [SQLModel](https://sqlmodel.tiangolo.com/) · [Rich](https://rich.readthedocs.io/). One SQLite database. Zero external services.
