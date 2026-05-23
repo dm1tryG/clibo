@@ -4,6 +4,58 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 64 — `invest` (positions with cost basis + unrealized P/L) · 2026-05-23
+
+Agent-mode self-test: "I bought 5 shares of AAPL at $200" had no
+clean home. `networth` stores a single value per asset row; an
+investment portfolio needs *transactions* (buys + sells), and you
+want cost basis preserved across multiple buys at different prices.
+
+- 📈 **New tool `invest` (70th, Money & Finance)** — two tables:
+  `invest_transaction` (id, ticker, kind, action [buy/sell], shares,
+  price_per_share, txn_date, note) and `invest_latest_price` (ticker,
+  price, updated_at — for unrealized P/L).
+- 💰 **Cost basis & P/L done right:**
+  • Multiple buys at different prices roll up into a single position
+    using **average cost basis** (simplest defensible model — FIFO /
+    specific-lot is a future upgrade).
+  • Sells **validate** that you have enough shares first, then
+    compute realized P/L against avg cost and reduce the position
+    proportionally.
+  • Fully-sold positions disappear from `positions` but stay in
+    `history` and the lifetime realized-P/L total.
+- 🚫 **No live price feeds** — clibo is local-first. Update prices
+  manually with `invest price TICKER X` whenever you want a fresh
+  number. `positions` shows `—` for unpriced tickers.
+- Commands: `buy TICKER SHARES PRICE [-k KIND] [-d DATE]` /
+  `sell TICKER SHARES PRICE [-d DATE]` (with realized-P/L printout) /
+  `price TICKER PRICE` / **`positions`** (the headline, with avg cost,
+  market value and green/red P/L) / `history [-t TICKER]` / `show
+  TICKER` / `rm ID` / `stats` (active count, total invested basis,
+  realized lifetime P/L, unrealized P/L, by-kind basis split).
+- Six kinds supported: `stock`, `etf`, `crypto`, `bond`, `fund`,
+  `other`. Tickers normalised to uppercase.
+- 🔌 Integrated: `recent.py`, `search.py` (ticker + note indexed),
+  `catalog.py` (Money & Finance), README. Uses the shared
+  `money/currency` setting.
+- 📄 `docs/SCHEMA.md` regenerated (84 tables: 82 + 2 new tables).
+- 🧪 20 new tests covering buy/sell math, rollup of multiple buys at
+  different prices, sell validation (can't sell more than owned),
+  price updates and unrealized-P/L computation, by-kind basis,
+  history filtering, full show drill-down, and integration with
+  `search` + `recent`.
+- 🎤 NL flow verified:
+  • "Bought 5 AAPL at $200" → `invest buy AAPL 5 200` ✓
+  • "Bought 0.5 BTC at $42,000" →
+    `invest buy BTC 0.5 42000 -k crypto` ✓
+  • "Sold 2 AAPL at $250" → `invest sell AAPL 2 250` ✓
+    (prints realized P/L)
+  • "AAPL is at $220" → `invest price AAPL 220` ✓
+  • "What's my portfolio worth?" → `invest positions` ✓
+- **Tests:** 588 passing (+20); ruff clean.
+
+---
+
 ### Iteration 63 — `donations` (charitable giving with tax-year aggregation) · 2026-05-23
 
 Agent-mode self-test: "I donated $50 to Red Cross" — could go through

@@ -38,6 +38,7 @@ from clibo.clis import (
     home,
     ideas,
     income,
+    invest,
     invoice,
     jobs,
     journal,
@@ -148,4 +149,5 @@ ALL = [
     documents,
     challenge,
     donations,
+    invest,
 ]

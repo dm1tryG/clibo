@@ -27,6 +27,7 @@ from clibo.clis.gifts import Gift
 from clibo.clis.gratitude import GratitudeEntry
 from clibo.clis.ideas import Idea
 from clibo.clis.income import IncomeEntry
+from clibo.clis.invest import Transaction as InvestTransaction
 from clibo.clis.journal import JournalEntry
 from clibo.clis.lessons import Lesson
 from clibo.clis.meetings import Meeting
@@ -135,6 +136,9 @@ SOURCES: list[tuple] = [
     ("donations", Donation,
      [Donation.recipient, Donation.receipt, Donation.note],
      lambda d: f"{d.amount:.2f} to {d.recipient}"),
+    ("invest", InvestTransaction,
+     [InvestTransaction.ticker, InvestTransaction.note],
+     lambda t: f"{t.action} {t.shares:g} {t.ticker} @ {t.price_per_share:.2f}"),
 ]
 
 

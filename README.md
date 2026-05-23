@@ -215,6 +215,7 @@ sub-command and every flag.
 | ✅ | `income` 💵 | Income tracker — counterpart to expense |
 | ✅ | `tip` 🪙 | Tipping tracker — bill, tip %, venue, service rating |
 | ✅ | `donations` ❤️ | Charitable giving log with tax-year and recipient stats |
+| ✅ | `invest` 📈 | Investment positions — buys, sells, cost basis + unrealized P/L |
 
 ### ✅ Productivity & Work
 | | Tool | What it does |

@@ -176,6 +176,10 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
      ["recipient", "amount", "tax_deductible"],
      lambda r: f"{r['amount']:.2f} to {r['recipient']}"
                 + ("" if r["tax_deductible"] else " (non-deductible)")),
+    ("invest", "📈", "invest_transaction",
+     ["ticker", "action", "shares", "price_per_share"],
+     lambda r: f"{r['action']} {r['shares']:g} {r['ticker']} @ "
+                f"{r['price_per_share']:.2f}"),
 ]
 
 

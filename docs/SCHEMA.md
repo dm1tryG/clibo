@@ -2,7 +2,7 @@
 
 Auto-generated reference for every SQLite table clibo writes to. Regenerate with `python scripts/dump_schema.py`.
 
-_82 tables in total._
+_84 tables in total._
 
 ## Contents
 
@@ -288,6 +288,28 @@ _82 tables in total._
 | `source` | `VARCHAR` | NOT NULL |
 | `category` | `VARCHAR` | NOT NULL, default |
 | `entry_date` | `DATE` | NOT NULL, indexed, default |
+| `created_at` | `DATETIME` | NOT NULL, default |
+| `note` | `VARCHAR` | — |
+
+### `invest_latest_price`
+
+| Column | Type | Notes |
+|---|---|---|
+| `ticker` | `VARCHAR` | PK, NOT NULL |
+| `price` | `FLOAT` | NOT NULL |
+| `updated_at` | `DATETIME` | NOT NULL, default |
+
+### `invest_transaction`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `INTEGER` | PK, NOT NULL |
+| `ticker` | `VARCHAR` | NOT NULL, indexed |
+| `kind` | `VARCHAR` | NOT NULL, default |
+| `action` | `VARCHAR` | NOT NULL, default |
+| `shares` | `FLOAT` | NOT NULL |
+| `price_per_share` | `FLOAT` | NOT NULL |
+| `txn_date` | `DATE` | NOT NULL, indexed, default |
 | `created_at` | `DATETIME` | NOT NULL, default |
 | `note` | `VARCHAR` | — |
 
