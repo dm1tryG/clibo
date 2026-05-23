@@ -4,6 +4,25 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 33 — `clibo week` · 2026-05-23
+
+Sister command to `clibo today` — a 7-day rollup across the trackers
+with time-series data.
+
+- 🗓️ `clibo week` rolls up the last 7 days: avg sleep hours + quality,
+  calorie avg/day, water days that hit the goal, focus minutes &
+  sessions, mood average, habit progress vs each habit's weekly
+  target (with mini-bars), top expense category, tasks completed,
+  journal entries, worklog breakdown.
+- Sections are skipped when their tool has no data — the output stays
+  short on sparse weeks instead of showing a wall of dashes.
+- Same agent contract as the rest: rich panels in human mode, one
+  structured dict in `--json` mode.
+- README's Cross-tool commands table lists it next to `clibo today`.
+- **Tests:** 319 passing (+6).
+
+---
+
 ### Iteration 32 — `clibo init` · 2026-05-23
 
 Onboarding command — turns six per-tool `goal --set` calls into one.

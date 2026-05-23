@@ -144,6 +144,7 @@ A handful of root commands tie all 50 tools together:
 |---|---|
 | `clibo init` | Set common defaults in one call — currency, height (for BMI), calorie/water/focus/sleep/meditation goals. |
 | `clibo today` | A one-screen dashboard pulling from every tool — tasks, habits, meals, events, bills, water/calorie/focus progress, plants & chores due, today's birthdays. |
+| `clibo week` | 7-day rollup: sleep avg & quality, focus minutes, habit progress vs target, expenses by category, tasks completed, journal entries. |
 | `clibo backup [PATH]` | Copy the local SQLite database to a timestamped `.db` backup (default: `~/.clibo/backups/`). |
 | `clibo restore PATH` | Replace the live database with a backup. |
 | `clibo export [PATH]` | Dump every clibo table to one JSON file — ideal for an agent to read the whole local state in one go. |

@@ -24,6 +24,7 @@ from clibo.core.output import JsonOpt, _emit_json, console, fail, ok
 from clibo.core.settings import get_setting, set_setting
 from clibo.dashboard import render_today
 from clibo.search import search_all
+from clibo.weekly import render_week
 
 app = typer.Typer(
     name="clibo",
@@ -115,6 +116,12 @@ def version() -> None:
 def today(json_out: JsonOpt = False) -> None:
     """📅 Today across every clibo tool: tasks, habits, meals, bills…"""
     render_today(json_out=json_out)
+
+
+@app.command()
+def week(json_out: JsonOpt = False) -> None:
+    """🗓️  The last 7 days at a glance: sleep, focus, habits, spending, productivity."""
+    render_week(json_out=json_out)
 
 
 @app.command()
