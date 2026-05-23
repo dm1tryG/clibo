@@ -4,6 +4,31 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 35 — Stage `v1.1.0` in the changelog · 2026-05-23
+
+Honest natural stop. Eight polish iterations have landed on `main` since
+v1.0.0 — they're material enough to warrant a v1.1.0 release whenever the
+maintainer is ready to push the tag.
+
+- 📝 `CHANGELOG.md` gains an **`[Unreleased]` — staged for v1.1.0**
+  section above the v1.0.0 entry, listing every post-v1.0 addition:
+  `init`, `week`, `doctor`, `import`, `AGENTS.md`, `examples/`,
+  `CONTRIBUTING.md` + templates, the release workflow, attached
+  artifacts.
+- Cutting v1.1.0 is one command on a clean `main`: bump
+  `pyproject.toml` and `clibo/__init__.py` to `1.1.0`, rename the
+  Unreleased heading to `[1.1.0] — YYYY-MM-DD`, then
+  `git tag -a v1.1.0 -m "clibo v1.1.0" && git push origin main --follow-tags`.
+  The Release workflow handles the rest.
+- The build loop has now finished both PLAN's main phase (50 tools) and
+  its Polish phase, plus eight extra polish iterations. The remaining
+  open item (PyPI publishing) is blocked on a maintainer token.
+  Stopping the loop with `CronDelete 2b630fc4` is the intended next
+  step.
+- **Tests:** 319 passing (doc-only iteration).
+
+---
+
 ### Iteration 34 — `examples/` and a startup-time check · 2026-05-23
 
 Quality pass — measure performance, then add real, runnable examples.
