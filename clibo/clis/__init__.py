@@ -77,6 +77,7 @@ from clibo.clis import (
     wishlist,
     worklog,
     workout,
+    writing,
 )
 
 #: Every built tool module, in catalog order. Extended by the build loop.
@@ -154,4 +155,5 @@ ALL = [
     invest,
     packages,
     fasting,
+    writing,
 ]

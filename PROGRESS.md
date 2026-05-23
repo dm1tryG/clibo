@@ -4,6 +4,63 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 90 — new tool: ✍️ `writing` (word-count tracker) · 2026-05-24
+
+The 73rd tool. Writers track *words*, not minutes — minute-based
+tools (`focus`, `time`) lose the metric that matters most for
+novel/blog/essay work. `journal` stores content but doesn't
+aggregate counts. So there was a real gap and a real audience
+(NaNoWriMo runs 400k+ participants/year on a 1,667-words/day
+target).
+
+- ✍️ **`writing log PROJECT -w WORDS [-t MIN]`** — log a session;
+  pace (`wpm`) auto-computed when both flags set. Project defaults
+  to `"main"` if omitted, so `writing log -w 400` works for the
+  casual case. `add` is a friendlier alias.
+- ✍️ **`writing today`** — total words for the day with goal-bar
+  progress, per-project breakdown, current streak.
+- 🎯 **`writing goal N`** — set/show the daily word goal; stored in
+  shared `clibo_setting` table (scope=`writing`, key=`daily_words`,
+  default `500`). NaNoWriMo? `clibo writing goal 1667`.
+- 🔥 **`writing streak`** — consecutive-day streak, mirrors the
+  `gratitude` pattern. Yesterday counts if you haven't logged
+  today yet.
+- 📊 **`writing stats --days N`** — totals, avg wpm, days written,
+  best-ever day (`{"date","words"}`), top projects by word count.
+- 🏷️ **Name-resolve on `show`/`edit`/`rm`** — accepts entry ID *or*
+  project name with most-recent-wins preference (mirrors the
+  `gifts` / `income` / `donations` resolver pattern). So
+  `writing edit novel -w 1300` updates the latest novel session
+  without you knowing the ID.
+- 🎤 NL flow verified end-to-end:
+  • `writing log novel -w 1200 -t 45` → wpm=26.7, total_today=1200 ✓
+  • `writing log blog -w 400` → total_today bumps to 1600, 🎉 goal-hit ✓
+  • `writing goal 1667` → next `today` reflects the new goal ✓
+  • Backdated entries (2 days ago, yesterday, today) → 3-day streak ✓
+  • `writing stats --days 7` → correct top_projects, best_day, avg_wpm ✓
+- 🧪 **21 new tests**: session shape, goal/duration validation,
+  wpm computation only when duration set, today aggregation by
+  project, goal persist, goal rejects non-positive, streak
+  consecutive vs break-on-gap, list project filter, show/edit/rm
+  by project name, unknown name fails, stats top_projects +
+  best_day + avg_wpm.
+- 📚 **`skills/writing/SKILL.md`** — natural-language → command
+  table with 9 phrasings; for-agents section noting that `log`
+  returns `total_today` and `current_streak` in one call so agents
+  don't need a follow-up to confirm "you hit your goal".
+- 📚 **README** — new row in Hobbies & Culture table; bumped
+  "72" → "73" in five places (header, cross-tool intro, "all N
+  tools built" callout, code-layout block, `__init__.py` /
+  `pyproject.toml` descriptions).
+- 📚 **docs/SCHEMA.md** regenerated — `writing_session` (87 tables
+  total, up from 86).
+- **Tests:** 871 passing (+21); ruff clean.
+
+Tool count now 73/73. Hobbies & Culture grows from 9 → 10 — still
+the smallest category but the most varied in interest type.
+
+---
+
 ### Iteration 89 — `clibo doctor` upgrades: drift, settings, update-check · 2026-05-24
 
 Surfaced by a real user who ran `clibo info` and saw v1.0.0 / 50

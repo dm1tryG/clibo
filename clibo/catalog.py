@@ -109,6 +109,8 @@ CATALOG: list[Tool] = [
          "Shipment & parcel tracker — pending, late, by carrier"),
     Tool("fasting", "🕒", "Health & Wellness",
          "Intermittent-fasting tracker with running clock against target"),
+    Tool("writing", "✍️", "Hobbies & Culture",
+         "Daily word-count tracker with project breakdown and streak"),
 ]
 
 CATEGORIES: list[str] = list(dict.fromkeys(t.category for t in CATALOG))
