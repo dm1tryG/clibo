@@ -15,6 +15,7 @@ from clibo.clis.bookmark import Bookmark
 from clibo.clis.books import Book
 from clibo.clis.brag import Achievement
 from clibo.clis.caffeine import CaffeineEntry
+from clibo.clis.challenge import Challenge
 from clibo.clis.crm import Contact
 from clibo.clis.cv import CvEntry
 from clibo.clis.documents import Document
@@ -127,6 +128,9 @@ SOURCES: list[tuple] = [
     ("documents", Document,
      [Document.name, Document.kind, Document.number, Document.note],
      lambda d: f"{d.kind}: {d.name} (expires {d.expires})"),
+    ("challenge", Challenge,
+     [Challenge.name, Challenge.description],
+     lambda c: f"{c.status} {c.target_days}-day: {c.name}"),
 ]
 
 

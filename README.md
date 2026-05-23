@@ -229,6 +229,7 @@ sub-command and every flag.
 | ✅ | `worklog` 🗒️ | Work log & standup notes |
 | ✅ | `bookmark` 🔖 | Bookmarks & link saver |
 | ✅ | `ideas` 💡 | Idea capture with lifecycle |
+| ✅ | `challenge` 🚀 | Time-boxed challenges with daily check-ins (30-day, 100-day, …) |
 
 ### 🤝 CRM & Relationships
 | | Tool | What it does |

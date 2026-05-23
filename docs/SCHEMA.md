@@ -2,7 +2,7 @@
 
 Auto-generated reference for every SQLite table clibo writes to. Regenerate with `python scripts/dump_schema.py`.
 
-_79 tables in total._
+_81 tables in total._
 
 ## Contents
 
@@ -421,6 +421,31 @@ _79 tables in total._
 | `category` | `VARCHAR` | NOT NULL, default |
 | `favorite` | `BOOLEAN` | NOT NULL, default |
 | `note` | `VARCHAR` | — |
+| `created_at` | `DATETIME` | NOT NULL, default |
+
+### `challenge_checkin`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `INTEGER` | PK, NOT NULL |
+| `challenge_id` | `INTEGER` | NOT NULL, indexed |
+| `check_date` | `DATE` | NOT NULL, indexed |
+| `success` | `BOOLEAN` | NOT NULL, default |
+| `note` | `VARCHAR` | — |
+| `created_at` | `DATETIME` | NOT NULL, default |
+
+### `challenge_entry`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `INTEGER` | PK, NOT NULL |
+| `name` | `VARCHAR` | NOT NULL |
+| `description` | `VARCHAR` | — |
+| `start_date` | `DATE` | NOT NULL |
+| `target_days` | `INTEGER` | NOT NULL |
+| `miss_budget` | `INTEGER` | NOT NULL, default |
+| `status` | `VARCHAR` | NOT NULL, default |
+| `finished_at` | `DATE` | — |
 | `created_at` | `DATETIME` | NOT NULL, default |
 
 ### `events_event`

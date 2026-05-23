@@ -170,6 +170,8 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
      lambda r: f"{r['drink']} ({r['mg']} mg)"),
     ("documents", "📑", "document_entry", ["name", "kind", "expires"],
      lambda r: f"{r['kind']}: {r['name']} (expires {r['expires']})"),
+    ("challenge", "🚀", "challenge_entry", ["name", "target_days", "status"],
+     lambda r: f"{r['status']} {r['target_days']}-day: {r['name']}"),
 ]
 
 

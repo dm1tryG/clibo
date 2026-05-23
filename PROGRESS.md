@@ -4,6 +4,56 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 62 — `challenge` (30-day, 100-day, … with miss budget) + v1.1.1 to PyPI · 2026-05-23
+
+User asked to "release to pypi" mid-iteration. Done — v1.1.1 is live
+at https://pypi.org/project/clibo/1.1.1/. `pip install clibo` works.
+Token wired into `PYPI_API_TOKEN` repo secret; `.github/workflows/
+publish.yml` will auto-publish every future GitHub release.
+
+README install instructions promoted to the very top of the file.
+
+Then back to the build loop. Agent-mode self-test surfaced
+"Starting 30 days of no sugar today" with no home. `habit` is for
+open-ended commitments (streaks count up indefinitely); a challenge
+has a target duration and a binary pass/fail outcome — different
+shape.
+
+- 🚀 **New tool `challenge` (68th, Productivity & Work)** — two
+  tables: `challenge_entry` (name, start, target_days, miss_budget,
+  status, finished_at) and `challenge_checkin` (daily success/miss
+  with optional note).
+- 🎯 **Miss budget** — `--miss-budget/-m N` lets you survive N
+  missed days (default 0 = strict). Exceed it and the tool
+  auto-marks the challenge `failed`.
+- ✨ **Auto-finalization** — every read (`status` / `list` / `show` /
+  `stats`) checks if the end date is past (→ `completed`) or if
+  misses exceed the budget (→ `failed`) and updates the row. No
+  manual "close" step needed.
+- Commands: `start NAME --days N [-m MISSES] [-D DESC]` /
+  `check ID [--missed]` (idempotent — re-checking the same day
+  overwrites) / **`status [ID]`** (progress bars + miss budget) /
+  **`today`** (pending check-ins only) / `list [--all]` (active by
+  default) / `show ID` (full history) / `abandon ID` / `rm` /
+  `stats` (completion rate over finalised challenges).
+- 🔌 Integrated: `recent.py`, `search.py` (name + description
+  indexed), `catalog.py` (Productivity & Work), README.
+- 📄 `docs/SCHEMA.md` regenerated (81 tables: 79 + 2 from challenge).
+- 🧪 19 new tests covering start validation, check success/miss
+  paths, idempotent re-checks, miss-budget tolerance, auto-fail when
+  exceeded, abandon, list filtering, cascade-delete of check-ins,
+  stats math, and integration with `search` + `recent`.
+- 🎤 NL flow verified:
+  • "30 days of no sugar" → `challenge start "no sugar" --days 30` ✓
+  • "100 days of code, 5 cheat days" →
+    `challenge start "100 days of code" --days 100 -m 5` ✓
+  • "I cheated today" →
+    `challenge check 1 --missed -n "had cake"` ✓
+  • "How am I doing?" → `challenge status` ✓
+- **Tests:** 554 passing (+19); ruff clean.
+
+---
+
 ### Iteration 61 — polish: workout `--calories`, books `log` alias, forward-compat migration · 2026-05-23
 
 Agent-mode self-test surfaced the same persistent gap for the third

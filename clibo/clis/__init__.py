@@ -14,6 +14,7 @@ from clibo.clis import (
     caffeine,
     calorie,
     car,
+    challenge,
     chores,
     clients,
     crm,
@@ -144,4 +145,5 @@ ALL = [
     steps,
     caffeine,
     documents,
+    challenge,
 ]
