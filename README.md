@@ -252,6 +252,7 @@ sub-command and every flag.
 | ✅ | `mileage` 🏃 | Running, cycling, walking distance log |
 | ✅ | `gratitude` 🙏 | Daily gratitude practice with streaks |
 | ✅ | `quotes` 💬 | A commonplace book of quotes worth keeping |
+| ✅ | `flashcards` 🃏 | Spaced-repetition flashcards (Leitner-style) |
 
 ## For AI agents
 

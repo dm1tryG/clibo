@@ -4,6 +4,28 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 47 — `flashcards` (spaced repetition) · 2026-05-23
+
+Closing the third gap from iter 46's self-test ("Spanish: día = day").
+
+- 🃏 **New tool `flashcards` (58th)** — Leitner-style spaced
+  repetition. Boxes 0-4 with intervals 1/3/7/14/30 days. `right`
+  promotes; `wrong` resets to box 0.
+- Commands: `add FRONT BACK -d DECK` / `due [-d DECK]` / `grade ID
+  right|wrong` / `list [-d DECK]` / `decks` (counts per deck with
+  due count) / `rm` / `stats` (box distribution + accuracy).
+- Agent flow documented in SKILL.md: `due --json` → loop with the
+  user → `grade ID right|wrong`.
+- 📜 `recent` picks up new cards as `[deck] front → back`.
+- 📄 `docs/SCHEMA.md` regenerated (71 tables).
+- 🎤 NL mapping verified end-to-end:
+  • "Spanish vocab: día = day" → `flashcards add "día" "day" -d spanish`
+  • "Let's review my Spanish"  → `flashcards due -d spanish`
+  • "Got that right"           → `flashcards grade <id> right` (→ box 1, due in 3d)
+- **Tests:** 394 passing (+7); ruff clean.
+
+---
+
 ### Iteration 46 — `quotes` (commonplace book) · 2026-05-23
 
 Self-test surfaced three new gaps (quotes, lessons, flashcards); closing

@@ -144,6 +144,8 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
     ("quotes", "💬", "quotes_quote", ["text", "author"],
      lambda r: f"\"{r['text'][:60]}{'…' if len(r['text']) > 60 else ''}\""
                 + (f" — {r['author']}" if r["author"] else "")),
+    ("flashcards", "🃏", "flashcards_card", ["front", "back", "deck"],
+     lambda r: f"[{r['deck']}] {r['front']} → {r['back']}"),
 ]
 
 

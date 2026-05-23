@@ -20,6 +20,7 @@ from clibo.clis import (
     events,
     expense,
     films,
+    flashcards,
     focus,
     followup,
     gifts,
@@ -124,4 +125,5 @@ ALL = [
     income,
     ideas,
     quotes,
+    flashcards,
 ]
