@@ -199,6 +199,7 @@ sub-command and every flag.
 | ✅ | `invoice` 📄 | Freelance invoice generator |
 | ✅ | `split` 🤝 | Split shared expenses with people |
 | ✅ | `wishlist` ⭐ | Things-to-buy wishlist with prices |
+| ✅ | `income` 💵 | Income tracker — counterpart to expense |
 
 ### ✅ Productivity & Work
 | | Tool | What it does |

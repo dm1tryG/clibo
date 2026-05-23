@@ -4,6 +4,31 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 44 — Closed the income gap · 2026-05-23
+
+Last iteration's self-test flagged "Got 500 USD from freelance gig" had
+no real home (`savings deposit` was a hack). Closing that now.
+
+- 💵 **New tool `income` (55th)** — counterpart to `expense`. Tracks
+  money coming in by source + category (salary / freelance / gift /
+  refund / dividend / other). Same shape as `expense`: `add`, `list`,
+  `month` with share bars, `show`, `edit`, `rm`, `stats`.
+- Shares the `money/currency` setting so amounts render consistently
+  with the rest of the money group.
+- 📁 Filed under **💰 Money & Finance** in the catalog (not Hobbies)
+  — it's a true money tool, just expanding the original 10-per-cat
+  symmetry.
+- 📜 `recent` picks up income events with a different verb ("received
+  N from …") so you can spot inflow vs outflow at a glance.
+- 📄 `docs/SCHEMA.md` regenerated (68 tables).
+- 🎤 All three NL inputs map cleanly:
+  • "Got 500 USD from freelance gig" → `income add "freelance gig" -a 500 -c freelance`
+  • "Salary landed: 3200"            → `income add salary -a 3200 -c salary`
+  • "Mom sent 100 for my birthday"   → `income add "Mom — birthday" -a 100 -c gift`
+- **Tests:** 374 passing (+5); ruff clean.
+
+---
+
 ### Iteration 43 — Self-test → added `gratitude` · 2026-05-23
 
 Agent self-test of 3 NL inputs surfaced two gaps; closing the first one.

@@ -52,6 +52,8 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
      )),
     ("expense", "💸", "expense_entry", ["description", "amount", "category"],
      lambda r: f"spent {r['amount']:g} on {r['description']} ({r['category']})"),
+    ("income", "💵", "income_entry", ["source", "amount", "category"],
+     lambda r: f"received {r['amount']:g} from {r['source']} ({r['category']})"),
     ("bills", "🧾", "bills_bill", ["name", "amount", "paid"],
      lambda r: ("paid " if r["paid"] else "added bill ") + r["name"]),
     ("savings", "🐷", "savings_deposit", ["amount", "goal_id"],

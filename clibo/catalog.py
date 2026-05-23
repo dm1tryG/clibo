@@ -43,6 +43,7 @@ CATALOG: list[Tool] = [
     Tool("invoice", "📄", "Money & Finance", "Freelance invoice generator"),
     Tool("split", "🤝", "Money & Finance", "Split shared expenses with people"),
     Tool("wishlist", "⭐", "Money & Finance", "Things-to-buy wishlist with prices"),
+    Tool("income", "💵", "Money & Finance", "Income tracker — counterpart to expense"),
     # ── ✅ Productivity & Work ────────────────────────────────────────────
     Tool("todo", "✅", "Productivity & Work", "Task & to-do manager"),
     Tool("notes", "📝", "Productivity & Work", "Quick searchable notes"),
