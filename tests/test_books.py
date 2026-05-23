@@ -48,3 +48,14 @@ def test_stats(cli):
 def test_invalid_rating_fails(cli):
     result = cli.run("books", "add", "Bad", "-r", "9")
     assert result.exit_code != 0
+
+
+def test_log_is_alias_for_read(cli):
+    """`books log 30 <title>` is the natural-language form of `books read`."""
+    read_help = cli.run("books", "read", "--help")
+    log_help = cli.run("books", "log", "--help")
+    assert read_help.exit_code == 0 and "Usage:" in read_help.output
+    assert log_help.exit_code == 0 and "Usage:" in log_help.output
+    cli.run("books", "add", "Atomic Habits", "-a", "James Clear")
+    data = cli.json("books", "log", "Atomic Habits", "30")
+    assert data["pages_read"] == 30

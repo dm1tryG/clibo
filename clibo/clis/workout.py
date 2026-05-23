@@ -27,6 +27,7 @@ class Workout(SQLModel, table=True):
     reps: int = 0
     weight_kg: float = 0.0
     duration_min: int = 0
+    kcal_burned: int | None = None     # calories burned in this session
     entry_date: date = Field(default_factory=date.today, index=True)
     created_at: datetime = Field(default_factory=datetime.now)
     note: str | None = None
@@ -49,6 +50,7 @@ def _row(entry: Workout) -> dict:
         "reps": entry.reps,
         "weight_kg": entry.weight_kg,
         "duration_min": entry.duration_min,
+        "kcal_burned": entry.kcal_burned,
         "volume_kg": _volume(entry),
         "note": entry.note,
     }
@@ -61,17 +63,22 @@ def log(
     reps: int = typer.Option(0, "--reps", "-r", help="Reps per set"),
     weight_kg: float = typer.Option(0, "--weight", "-w", help="Weight per rep, kg"),
     duration_min: int = typer.Option(0, "--duration", "-t", help="Duration in minutes (cardio)"),
+    calories: int = typer.Option(None, "--calories", "-c",
+                                  help="Calories burned (kcal) — typical for cardio"),
     on: str = typer.Option("today", "--date", "-d", help="Date performed"),
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
 ) -> None:
-    """🏋️ Log an exercise — strength sets or a cardio session."""
+    """🏋️ Log an exercise — strength sets, cardio session, or both."""
+    if calories is not None and calories < 0:
+        fail("Calories must be non-negative", json_out=json_out)
     entry = Workout(
         exercise=exercise,
         sets=sets,
         reps=reps,
         weight_kg=weight_kg,
         duration_min=duration_min,
+        kcal_burned=calories,
         entry_date=parse_date(on),
         note=note,
     )
@@ -82,8 +89,12 @@ def log(
         data = _row(entry)
     if duration_min:
         detail = f"{duration_min} min"
-    else:
+    elif sets or reps or weight_kg:
         detail = f"{sets}×{reps} @ {weight_kg:g}kg"
+    else:
+        detail = "logged"
+    if calories:
+        detail += f" · {calories} kcal"
     ok(f"Logged {EMOJI} {exercise} — {detail}", json_out=json_out, data=data)
 
 
@@ -111,6 +122,7 @@ def today(json_out: JsonOpt = False) -> None:
                 "exercises": rows,
                 "total_volume_kg": round(sum(r["volume_kg"] for r in rows), 1),
                 "total_minutes": sum(r["duration_min"] for r in rows),
+                "total_kcal": sum(r["kcal_burned"] or 0 for r in rows),
             },
             json_out=True,
         )
@@ -126,10 +138,12 @@ def today(json_out: JsonOpt = False) -> None:
     if rows:
         volume = round(sum(r["volume_kg"] for r in rows), 1)
         minutes = sum(r["duration_min"] for r in rows)
-        console.print(
-            f"  💪 [bold]{len(rows)}[/bold] exercises    "
-            f"🏋️ {volume:g}kg volume    ⏱️ {minutes} min"
-        )
+        kcal = sum(r["kcal_burned"] or 0 for r in rows)
+        line = (f"  💪 [bold]{len(rows)}[/bold] exercises    "
+                f"🏋️ {volume:g}kg volume    ⏱️ {minutes} min")
+        if kcal:
+            line += f"    🔥 {kcal} kcal"
+        console.print(line)
 
 
 @app.command(name="list")
@@ -198,6 +212,7 @@ def stats(
         "exercises_logged": len(entries),
         "total_volume_kg": round(sum(_volume(e) for e in entries), 1),
         "total_minutes": sum(e.duration_min for e in entries),
+        "total_kcal_burned": sum(e.kcal_burned or 0 for e in entries),
         "top_exercises": [{"exercise": name, "count": count} for name, count in top],
     }
     render_record(data, json_out=json_out, title=f"📊 Workout stats · last {days}d")

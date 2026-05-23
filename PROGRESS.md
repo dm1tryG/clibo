@@ -4,6 +4,42 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 61 — polish: workout `--calories`, books `log` alias, forward-compat migration · 2026-05-23
+
+Agent-mode self-test surfaced the same persistent gap for the third
+iteration in a row — "I burned 350 kcal jogging" had nowhere to go on
+the `workout` tool. Plus "I read 30 pages of Atomic Habits" failed
+because the agent kept trying `books log`, but the real verb was
+`books read`. Finally cleared both.
+
+- 🔥 **`workout log --calories/-c`** — new nullable `kcal_burned`
+  column on `workout_entry`. `today` includes `🔥 N kcal` in its
+  summary line; `today --json` adds `total_kcal`; `stats` adds
+  `total_kcal_burned`. Validates non-negative.
+- 📖 **`books log`** is now an alias for `books read` — natural
+  agent translation of "I read N pages today". Same one-line
+  `app.command(name="log")(read)` pattern.
+- 🛠️ **Forward-compatible migrations** — `init_db()` now runs
+  `_add_missing_columns()` after `create_all()`. For every existing
+  table, it ALTERs in any columns the model declares but the DB is
+  missing (nullable or default-having columns only — SQLite refuses
+  NOT NULL without default for safety). This is leverage: every
+  future column-add benefits automatically.
+- 🧪 3 new tests pin migration behaviour: adds a missing nullable
+  column, is idempotent (re-running doesn't dup), skips unknown
+  tables. Plus 5 new workout tests for the calories field and 1
+  for the books log alias.
+- 📄 `docs/SCHEMA.md` regenerated (still 79 tables — column added
+  to existing one).
+- 🎤 NL flow re-verified:
+  • "I burned 350 kcal jogging for 30 min" →
+    `workout log jogging -t 30 -c 350` ✓
+  • "I read 30 pages of Atomic Habits" →
+    `books log "Atomic Habits" 30` ✓
+- **Tests:** 535 passing (+10); ruff clean.
+
+---
+
 ### Iteration 60 — `documents` (expiry tracker for passport, license, etc.) · 2026-05-23
 
 Agent-mode self-test: "My passport expires June 2030" had no home.

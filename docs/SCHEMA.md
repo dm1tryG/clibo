@@ -201,6 +201,7 @@ _79 tables in total._
 | `reps` | `INTEGER` | NOT NULL, default |
 | `weight_kg` | `FLOAT` | NOT NULL, default |
 | `duration_min` | `INTEGER` | NOT NULL, default |
+| `kcal_burned` | `INTEGER` | — |
 | `entry_date` | `DATE` | NOT NULL, indexed, default |
 | `created_at` | `DATETIME` | NOT NULL, default |
 | `note` | `VARCHAR` | — |

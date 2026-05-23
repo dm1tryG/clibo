@@ -134,6 +134,11 @@ def read(
        json_out=json_out, data=data)
 
 
+# `log` is a friendlier alias for `read` — agents naturally translate
+# "I read 30 pages today" to `books log 30`.
+app.command(name="log", help="Alias for `read` — log a reading session")(read)
+
+
 @app.command()
 def start(
     book: str = typer.Argument(..., help="Book title or ID"),
