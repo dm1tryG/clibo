@@ -177,6 +177,17 @@ def compare(json_out: JsonOpt = False) -> None:
 
 
 @app.command()
+def streaks(json_out: JsonOpt = False) -> None:
+    """🔥 Every active streak across the suite, in one view.
+
+    Aggregates habits, gratitude, step-goal, fasting target-hits and
+    challenges. Sorted current-desc so the longest live streak is first.
+    """
+    from clibo.streaks import render_streaks
+    render_streaks(json_out=json_out)
+
+
+@app.command()
 def checkin(json_out: JsonOpt = False) -> None:
     """📋 Pending daily check-ins across every actively-tracked tool.
 
