@@ -72,9 +72,15 @@ from clibo.models import (
 )
 
 
-def collect_today() -> TodaySnapshot:
-    """Gather a snapshot of everything actionable today."""
-    today = date.today()
+def collect_today(on: date | None = None) -> TodaySnapshot:
+    """Gather a snapshot of everything actionable on ``on`` (default: today).
+
+    Passing a past date renders a retrospective day-view — useful for
+    "how did yesterday go?" or auditing a past day from JSON via an agent.
+    Forward-looking data (pending tasks, late packages, expiring documents,
+    upcoming bills) is always relative to the requested date.
+    """
+    today = on or date.today()
     soon = today + timedelta(days=2)
     week = today + timedelta(days=7)
     with session() as db:
@@ -343,14 +349,22 @@ def _section(title: str, items: list, render_item) -> None:
         console.print(f"  {render_item(item)}")
 
 
-def render_today(json_out: bool) -> None:
-    """Render the dashboard to stdout."""
-    data: TodaySnapshot = collect_today()
+def render_today(json_out: bool, on: date | None = None) -> None:
+    """Render the dashboard to stdout — for ``on`` if given, else today."""
+    data: TodaySnapshot = collect_today(on=on)
     if json_out:
         _emit_json(data)
         return
 
-    console.print(f"\n📅 [bold]Today[/bold] · {data.date:%A %d %B %Y}\n")
+    # Header reads "Today" only when it really is today; otherwise show
+    # the date so the user knows they're looking at a past day.
+    if data.date == date.today():
+        header = "Today"
+    elif data.date == date.today() - timedelta(days=1):
+        header = "Yesterday"
+    else:
+        header = data.date.strftime("%A")
+    console.print(f"\n📅 [bold]{header}[/bold] · {data.date:%A %d %B %Y}\n")
 
     # 🎂 Birthdays first — easy to miss
     if data.birthdays:

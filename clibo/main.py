@@ -128,9 +128,29 @@ def version() -> None:
 
 
 @app.command()
-def today(json_out: JsonOpt = False) -> None:
-    """📅 Today across every clibo tool: tasks, habits, meals, bills…"""
-    render_today(json_out=json_out)
+def today(
+    on: str = typer.Option(
+        None, "--on", "-d",
+        help="Snapshot for this date instead of today (any parse_date form)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """📅 Today across every clibo tool: tasks, habits, meals, bills…
+
+    Pass ``--on yesterday`` (or any date string parse_date accepts) to look
+    at a past day instead. ``clibo yesterday`` is a thin alias for that.
+    """
+    from clibo.core.base import parse_date
+    target = parse_date(on) if on else None
+    render_today(json_out=json_out, on=target)
+
+
+@app.command()
+def yesterday(json_out: JsonOpt = False) -> None:
+    """📅 Shortcut for `clibo today --on yesterday`."""
+    from datetime import date as _date
+    from datetime import timedelta as _td
+    render_today(json_out=json_out, on=_date.today() - _td(days=1))
 
 
 @app.command()

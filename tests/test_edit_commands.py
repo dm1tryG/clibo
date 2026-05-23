@@ -10,7 +10,6 @@ most recently inserted row), with field-level optional flags.
 
 from __future__ import annotations
 
-
 # ──────────────────────────────────────────────────────────────────────
 # ⚖️ weight
 # ──────────────────────────────────────────────────────────────────────

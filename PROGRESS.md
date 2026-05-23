@@ -4,6 +4,35 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 74 — `today --on DATE` + `clibo yesterday` shortcut · 2026-05-23
+
+Agent-mode self-test: "Show me what I logged yesterday" had no
+matching command. The `today` view was hardcoded to `date.today()`,
+so a user wanting to audit a past day had to read the raw JSON
+sources or scan `clibo recent`.
+
+- 🆕 **`today --on DATE`** — accepts any string `parse_date` knows
+  (`yesterday`, `3 days ago`, `2026-05-15`, `last Friday`, …). Falls
+  back to today when omitted.
+- 🆕 **`clibo yesterday`** — thin one-word alias for the natural-
+  language case. Same renderer, same JSON shape.
+- 🎯 **Smart header** — title reads "Today" / "Yesterday" / "Friday"
+  / etc. depending on how close the requested date is to today, so
+  the user instantly sees what they're looking at.
+- 🔧 **`collect_today(on: date | None = None)`** is now the typed
+  signature; `render_today(json_out, on=None)` threads it through.
+  All forward-looking sections (pending tasks, late packages,
+  expiring documents) compute relative to the requested date.
+- 🧪 4 new tests pin the new behaviours: `today --on yesterday`
+  surfaces yesterday's mood, ISO dates work, the default still
+  targets today, `clibo yesterday` is the proper alias.
+- 🎤 NL flow verified:
+  • "Show me what I logged yesterday" → `clibo yesterday` ✓
+  • "How did I do on May 15?" → `clibo today --on 2026-05-15` ✓
+- **Tests:** 690 passing (+4); ruff clean.
+
+---
+
 ### Iteration 73 — `edit ID|last` on six daily trackers · 2026-05-23
 
 Agent-mode self-test surfaced the user's exact words:

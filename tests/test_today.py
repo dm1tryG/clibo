@@ -155,3 +155,46 @@ def test_today_documents_expiring_within_30_days(cli):
     data = cli.json("today")
     names = {d["name"] for d in data["documents_expiring"]}
     assert names == {"Passport"}
+
+
+# ──────────────────────────────────────────────────────────────────────
+# `today --on DATE` and `clibo yesterday` (iter 74).
+# ──────────────────────────────────────────────────────────────────────
+
+
+def test_today_on_yesterday_shows_yesterdays_logs(cli):
+    from datetime import date as date_
+    from datetime import timedelta
+    cli.run("mood", "log", "3", "-e", "tired", "-d", "yesterday")
+    cli.run("mood", "log", "5", "-e", "great")  # today's entry
+    data = cli.json("today", "--on", "yesterday")
+    assert data["date"] == str(date_.today() - timedelta(days=1))
+    assert data["mood"] is not None
+    assert data["mood"]["score"] == 3
+
+
+def test_today_default_still_targets_today(cli):
+    from datetime import date as date_
+    data = cli.json("today")
+    assert data["date"] == str(date_.today())
+
+
+def test_today_on_iso_date(cli):
+    """ISO date strings work too."""
+    from datetime import date as date_
+    from datetime import timedelta
+    yesterday = date_.today() - timedelta(days=1)
+    cli.run("steps", "log", "8500", "-d", "yesterday")
+    data = cli.json("today", "--on", str(yesterday))
+    assert data["date"] == str(yesterday)
+    assert data["steps"]["total"] == 8500
+
+
+def test_yesterday_command(cli):
+    """`clibo yesterday` is the alias for `today --on yesterday`."""
+    from datetime import date as date_
+    from datetime import timedelta
+    cli.run("water", "drink", "500", "-d", "yesterday")
+    data = cli.json("yesterday")
+    assert data["date"] == str(date_.today() - timedelta(days=1))
+    assert data["water"]["total_ml"] == 500
