@@ -354,9 +354,95 @@ def _human_size(num: int) -> str:
     return f"{num:.1f} GB"
 
 
+def _check_pypi_latest(timeout: float = 3.0) -> str | None:
+    """Best-effort fetch of clibo's latest version on PyPI.
+
+    Returns ``None`` on any failure — no network, DNS error, PyPI down,
+    parse problem. Doctor never fails because of update-check.
+    """
+    import json as _json
+    import urllib.error
+    import urllib.request
+    try:
+        req = urllib.request.Request(
+            "https://pypi.org/pypi/clibo/json",
+            headers={"User-Agent": f"clibo-doctor/{__version__}"},
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            payload = _json.load(resp)
+        return payload.get("info", {}).get("version")
+    except (urllib.error.URLError, TimeoutError, ValueError, KeyError):
+        return None
+
+
+def _version_tuple(v: str) -> tuple[int, ...]:
+    """Parse a dotted version into a comparable tuple. Non-int parts coerce to 0."""
+    parts: list[int] = []
+    for chunk in v.split("."):
+        digits = "".join(c for c in chunk if c.isdigit())
+        parts.append(int(digits) if digits else 0)
+    return tuple(parts)
+
+
+def _detect_schema_drift(db_path: Path) -> list[dict]:
+    """Find model columns that aren't present in the live SQLite tables.
+
+    Returns ``[{"table": str, "missing_columns": [str, ...]}]`` for any
+    table where the live schema lags the current SQLModel definition.
+    ``_add_missing_columns`` normally heals these at startup, so a hit
+    here usually means a NOT-NULL-no-default column that can't be added
+    safely — worth flagging to the user.
+    """
+    from sqlmodel import SQLModel
+    drift: list[dict] = []
+    if not db_path.exists():
+        return drift
+    with sqlite3.connect(str(db_path)) as conn:
+        existing_tables = {
+            name for (name,) in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall()
+        }
+        for table in SQLModel.metadata.sorted_tables:
+            if table.name not in existing_tables:
+                continue
+            live_cols = {
+                row[1] for row in conn.execute(
+                    f'PRAGMA table_info("{table.name}")'
+                ).fetchall()
+            }
+            missing = [c.name for c in table.columns if c.name not in live_cols]
+            if missing:
+                drift.append({"table": table.name, "missing_columns": missing})
+    return drift
+
+
+def _unconfigured_settings() -> list[dict]:
+    """List ``_INIT_SETTINGS`` entries the user hasn't filled in yet."""
+    out: list[dict] = []
+    for cli_key, (scope, key, _, label) in _INIT_SETTINGS.items():
+        if get_setting(scope, key) is None:
+            out.append({"setting": cli_key, "label": label})
+    return out
+
+
 @app.command()
-def doctor(json_out: JsonOpt = False) -> None:
-    """🩺 Health check — verify the install and inspect the local database."""
+def doctor(
+    check_updates: bool = typer.Option(
+        False, "--check-updates",
+        help="Also query PyPI for the latest version (opt-in; needs network).",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """🩺 Health check — verify the install and inspect the local database.
+
+    Reports:
+      • version, Python, tool count
+      • database location, size, rows-per-table
+      • schema drift (model columns not yet in the DB)
+      • settings you haven't configured with ``clibo init``
+      • with ``--check-updates``: whether a newer clibo is on PyPI
+    """
     db_path = config.db_path()
     db_exists = db_path.exists()
     db_size = db_path.stat().st_size if db_exists else 0
@@ -372,7 +458,34 @@ def doctor(json_out: JsonOpt = False) -> None:
                     f'SELECT COUNT(*) FROM "{name}"'
                 ).fetchone()[0]
     total_rows = sum(rows_per_table.values())
-    healthy = db_exists and len(clis.ALL) == len(CATALOG)
+    schema_drift = _detect_schema_drift(db_path)
+    unconfigured = _unconfigured_settings()
+
+    latest_version: str | None = None
+    update_available = False
+    if check_updates:
+        latest_version = _check_pypi_latest()
+        if latest_version and _version_tuple(latest_version) > _version_tuple(__version__):
+            update_available = True
+
+    warnings: list[str] = []
+    if not db_exists:
+        warnings.append("Database file does not exist yet.")
+    if len(clis.ALL) != len(CATALOG):
+        warnings.append(
+            f"Tool count drift: {len(clis.ALL)} built vs {len(CATALOG)} in catalog."
+        )
+    for entry in schema_drift:
+        cols = ", ".join(entry["missing_columns"])
+        warnings.append(f"Schema drift in {entry['table']}: missing {cols}.")
+    if update_available:
+        warnings.append(
+            f"Newer clibo on PyPI: {latest_version} (you have {__version__}). "
+            f"Upgrade with: pipx upgrade clibo  ·  pip install -U clibo"
+        )
+
+    healthy = not warnings
+
     data = {
         "version": __version__,
         "python": sys.version.split()[0],
@@ -384,6 +497,11 @@ def doctor(json_out: JsonOpt = False) -> None:
         "tables": len(rows_per_table),
         "total_rows": total_rows,
         "rows_per_table": rows_per_table,
+        "schema_drift": schema_drift,
+        "unconfigured_settings": unconfigured,
+        "latest_version": latest_version,
+        "update_available": update_available,
+        "warnings": warnings,
         "healthy": healthy,
     }
     if json_out:
@@ -391,10 +509,15 @@ def doctor(json_out: JsonOpt = False) -> None:
         return
     status = ("[bold green]✓ healthy[/bold green]" if healthy
               else "[bold yellow]⚠ check warnings below[/bold yellow]")
+    version_line = f"  Version       [bold]{__version__}[/bold]"
+    if update_available:
+        version_line += f"   [yellow](upgrade available: {latest_version})[/yellow]"
+    elif latest_version:
+        version_line += "   [green](latest)[/green]"
     console.print(
         Panel(
             f"🩺 [bold]clibo doctor[/bold]   {status}\n\n"
-            f"  Version       [bold]{__version__}[/bold]\n"
+            f"{version_line}\n"
             f"  Python        {sys.version.split()[0]}\n"
             f"  Tools built   [bold]{len(clis.ALL)}[/bold] / {len(CATALOG)}\n"
             f"  Database      [dim]{db_path}[/dim]\n"
@@ -418,6 +541,18 @@ def doctor(json_out: JsonOpt = False) -> None:
             for name, count in top:
                 table.add_row(name, str(count))
             console.print(table)
+    if warnings:
+        console.print()
+        console.print("[bold yellow]⚠ Warnings[/bold yellow]")
+        for msg in warnings:
+            console.print(f"  • {msg}")
+    if unconfigured:
+        console.print()
+        console.print(
+            f"[dim]💡 {len(unconfigured)} setting(s) unconfigured — run "
+            f"[bold]clibo init[/bold] to set them: "
+            f"{', '.join(u['setting'] for u in unconfigured)}[/dim]"
+        )
     console.print()
 
 

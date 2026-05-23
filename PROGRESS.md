@@ -4,6 +4,58 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 89 — `clibo doctor` upgrades: drift, settings, update-check · 2026-05-24
+
+Surfaced by a real user who ran `clibo info` and saw v1.0.0 / 50
+tools — they'd been on a pipx install for weeks with no signal
+that nine versions and 22 tools had shipped behind them. The fix
+was a one-line `pipx upgrade`, but doctor should have flagged it.
+
+Three new checks on `clibo doctor`:
+
+- 🆕 **`--check-updates`** — opt-in PyPI query (`pypi.org/pypi/
+  clibo/json`, 3s timeout). If a newer version exists, doctor
+  surfaces it as a warning with the exact upgrade commands. Default
+  off: clibo stays local-first; you ask before it phones home.
+  Network failures fail silently (no crashed doctor).
+- 🆕 **Schema drift detection** — for every table that already
+  exists, compare the model's declared columns against the live
+  SQLite `PRAGMA table_info`. If anything's missing (which means
+  `_add_missing_columns` couldn't safely add a NOT-NULL no-default
+  column), it lands in `schema_drift` and the warnings list. New
+  helper `_detect_schema_drift(db_path)` is also importable.
+- 🆕 **Unconfigured settings list** — walks `_INIT_SETTINGS` and
+  flags every key the user hasn't set. Shown as a footer hint
+  ("💡 5 settings unconfigured — run clibo init …") so first-time
+  users don't have to know what `clibo init` covers. Auto-shrinks
+  as you set each via `clibo init --currency …`.
+- 🆕 **`warnings: [str]`** field — single canonical list of all
+  human-readable issues. `healthy = bool(no warnings)`. Easy for
+  agents to consume: `if doctor.warnings: handle()`.
+- 🎤 Verified end-to-end:
+  • Fresh sandbox → `clibo doctor` ✓ healthy, 7 unconfigured settings hint
+  • After `clibo init --currency USD --height-cm 180` → hint shrinks to 5
+  • With `--check-updates` against actual PyPI: latest fetched, no
+    upgrade needed since we're on 1.9.0
+  • Schema drift against a truncated `films_film` table: correctly
+    flags missing `season` + `episode` from iter 87
+- 🧪 **9 new tests**: warnings-field shape, unconfigured listing &
+  shrink-on-init, no-drift baseline, drift detection unit test
+  (with `_detect_schema_drift` against an undersized table),
+  update-check skipped by default, update-check with stub finds
+  upgrade, PyPI-unreachable still healthy, version-tuple
+  comparison.
+- 📦 **GitHub repo description** — refreshed from "67+" to
+  "72 local-first CLI tools" (was last updated at iter ~80).
+- **Tests:** 850 passing (+9); ruff clean.
+
+`clibo doctor` is now a single-call self-check that catches the
+exact friction that triggered this iter: stale installs with no
+nudge, plus latent schema/settings gaps. Agents can read
+`warnings[]` to surface issues, humans see them inline.
+
+---
+
 ### Iteration 88 — `workout pr` (personal records) + name-resolve · 2026-05-24
 
 Agent-mode self-test on "Hit a new bench-press PR of 90kg" surfaced
