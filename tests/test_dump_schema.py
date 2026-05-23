@@ -15,7 +15,6 @@ REPO = Path(__file__).resolve().parent.parent
 def test_dump_schema_runs(tmp_path, monkeypatch):
     """The script writes a SCHEMA.md that mentions all known table prefixes."""
     monkeypatch.setenv("CLIBO_HOME", str(tmp_path))
-    out = tmp_path / "SCHEMA.md"
     monkeypatch.chdir(REPO)
     # Run via a sub-process so it exercises the script's main() end-to-end.
     result = subprocess.run(

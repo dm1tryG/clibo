@@ -8,8 +8,9 @@ agents. Tools never print directly; they hand data to the helpers here.
 from __future__ import annotations
 
 import json as _json
+from collections.abc import Callable
 from datetime import date, datetime
-from typing import Annotated, Any, Callable
+from typing import Annotated, Any
 
 import typer
 from rich.box import ROUNDED

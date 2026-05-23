@@ -10,7 +10,11 @@ cd clibo
 uv venv .venv             # or python -m venv .venv
 uv pip install --python .venv -e ".[dev]"
 ./.venv/bin/pytest        # 300+ tests
+./.venv/bin/ruff check    # lint
 ```
+
+CI runs both `ruff check` and `pytest` — keep both green locally before opening
+a PR. Ruff config lives in `pyproject.toml`.
 
 The full developer guide for adding a new clibo tool lives at
 [`docs/ADDING_A_TOOL.md`](docs/ADDING_A_TOOL.md) — read it before you start.

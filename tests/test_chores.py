@@ -16,7 +16,7 @@ def test_new_chore_is_due(cli):
 
 
 def test_done_pushes_next_due(cli):
-    chore = cli.json("chores", "add", "Mop", "-e", "5")
+    cli.run("chores", "add", "Mop", "-e", "5")
     done = cli.json("chores", "done", "Mop")
     assert done["status"] == "upcoming"
     assert done["last_done"] is not None

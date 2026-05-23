@@ -208,7 +208,6 @@ def stats(json_out: JsonOpt = False) -> None:
     with session() as db:
         jobs = list(db.exec(select(JobApplication)).all())
     active = [j for j in jobs if j.status in ("applied", "interviewing", "offer")]
-    decided = [j for j in jobs if j.status in ("offer", "accepted", "rejected")]
     positive = [j for j in jobs if j.status in ("offer", "accepted", "interviewing")]
     data = {
         "total": len(jobs),

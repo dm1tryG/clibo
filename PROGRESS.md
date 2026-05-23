@@ -4,6 +4,26 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 39 — Ruff lint config + CI step · 2026-05-23
+
+Maintenance: 50 cli modules can drift in style fast without a linter.
+Adding ruff catches that *and* surfaced 12 real issues on the first run.
+
+- 🧹 Added `ruff>=0.5` to `[project.optional-dependencies.dev]`.
+- ⚙️ `[tool.ruff]` config in `pyproject.toml`: line length 100,
+  Python 3.10 target, rules `E/W/F/I/UP/B/SIM` enabled, with the
+  opinionated `SIM108`/`B007`/`B008` and unfair `E501` disabled.
+- 🔧 Fixed 12 real issues ruff caught: 8 unused imports across 6 cli
+  modules (auto-fix), 1 unused local in `jobs.py` stats, 2 unused
+  test locals, 1 `typing.Callable` → `collections.abc.Callable`
+  upgrade, 1 import sort issue.
+- 🤖 New `Lint with ruff` step in `.github/workflows/ci.yml` runs
+  before pytest on every push/PR.
+- 📝 `CONTRIBUTING.md` quick-setup now includes `ruff check`.
+- **Tests:** 332 passing; ruff clean.
+
+---
+
 ### Iteration 38 — `docs/SCHEMA.md` · 2026-05-23
 
 Real maintenance artifact for contributors and agents writing analytics:

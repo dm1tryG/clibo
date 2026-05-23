@@ -44,7 +44,7 @@ Issues = "https://github.com/dm1tryG/clibo/issues"
 clibo = "clibo.main:main"
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0.0"]
+dev = ["pytest>=8.0.0", "ruff>=0.5"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["clibo"]
@@ -52,3 +52,14 @@ packages = ["clibo"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+# E/W pycodestyle · F pyflakes · I isort · UP pyupgrade · B bugbear · SIM simplify.
+select = ["E", "W", "F", "I", "UP", "B", "SIM"]
+# Long lines, opinionated ternary swaps, and the patterns ``noqa`` already
+# documents around SQLAlchemy comparisons.
+ignore = ["E501", "B007", "B008", "SIM108"]

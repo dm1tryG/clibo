@@ -53,8 +53,8 @@ from clibo.clis import (
     water,
     weight,
     wishlist,
-    workout,
     worklog,
+    workout,
 )
 
 #: Every built tool module, in catalog order. Extended by the build loop.

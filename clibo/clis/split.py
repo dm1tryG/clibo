@@ -7,7 +7,7 @@ from datetime import date, datetime
 import typer
 from sqlmodel import Field, SQLModel, select
 
-from clibo.clis.expense import get_currency, money
+from clibo.clis.expense import money
 from clibo.core.base import parse_date
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, console, fail, ok, render_record, render_rows

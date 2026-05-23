@@ -9,7 +9,7 @@ from sqlmodel import Field, SQLModel, select
 
 from clibo.core.base import parse_date
 from clibo.core.db import session
-from clibo.core.output import JsonOpt, console, fail, ok, render_record, render_rows
+from clibo.core.output import JsonOpt, fail, ok, render_record, render_rows
 
 NAME = "meds"
 HELP = "💊 Medication log & dosage reminders"

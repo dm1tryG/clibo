@@ -10,7 +10,7 @@ from sqlmodel import Field, SQLModel, select
 from clibo.clis.expense import get_currency, money
 from clibo.core.base import humanize_delta, parse_date
 from clibo.core.db import session
-from clibo.core.output import JsonOpt, console, fail, ok, render_record, render_rows
+from clibo.core.output import JsonOpt, fail, ok, render_record, render_rows
 
 NAME = "bills"
 HELP = "🧾 Bills & due-date reminders"
