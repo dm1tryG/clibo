@@ -4,6 +4,48 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 86 — `split owe` / `split lent`: direct IOU verbs · 2026-05-24
+
+Agent-mode self-test surfaced a real friction on `split`: when the
+user says "I owe Anna $50", the agent has to invent a fake $100
+two-person bill where Anna paid, then count on equal-split to
+arrive at the right balance. That's correct math but indirect
+modelling — and not what the user said.
+
+- 🤝 **`split owe PERSON AMOUNT`** — direct IOU: "I owe PERSON".
+  Recorded as a 1-participant `SplitExpense` (PERSON paid the full
+  amount, I'm the lone participant), so it flows through
+  `balances`, `who`, and `settle` exactly like any other split.
+- 🤝 **`split lent PERSON AMOUNT`** — the inverse: "PERSON owes
+  me". 1-participant split where I paid, they're the participant.
+- **Ledger identity** — both verbs accept `--me NAME` (default
+  `"me"`) for users who prefer their real name in the balances
+  table.
+- **Optional `--for DESC`** — defaults to a readable
+  `IOU: me owes Anna` (or `IOU: Bob owes me`) so the row reads
+  cleanly in `split list`.
+- 🎤 NL flow verified end-to-end:
+  `clibo split owe Anna 50 --for dinner` →
+  `clibo split lent Bob 20 --for coffee` →
+  `split balances` shows Anna +50, Bob -20, me -30 →
+  `split who` suggests `me → Anna $30` and `Bob → Anna $20` →
+  `split settle me Anna 50` clears Anna's balance. All without
+  ever inventing a fake bill.
+- 🧪 **10 new tests**: owe/lent shape, balance flow, custom
+  `--me` name, combined-net correctness, settle interop, default
+  description, negative-amount rejection.
+- 📚 **SKILL.md** — added a "Natural language → command" table
+  covering the 6 most common phrasings ("I owe …", "Bob owes me
+  …", "We split a $90 dinner …", "How much do I owe?", …) so
+  agents pick the right verb on the first try.
+- **Tests:** 817 passing (+10); ruff clean.
+
+This closes the last common money-flow gap I could find in
+agent-mode probing: every natural English phrasing about who-owes-
+whom now has a one-line command that maps to it directly.
+
+---
+
 ### Iteration 85 — name resolution on six transactional tools · 2026-05-24
 
 Iter 81-84 closed the entity-tool ID barrier. Agent-mode self-test

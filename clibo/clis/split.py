@@ -113,6 +113,72 @@ def add(
        f"{money(data['per_person'])} each", json_out=json_out, data=data)
 
 
+@app.command()
+def owe(
+    person: str = typer.Argument(..., help="Who you owe"),
+    amount: float = typer.Argument(..., help="How much you owe them"),
+    me: str = typer.Option("me", "--me", help="Your name in the ledger"),
+    description: str = typer.Option(None, "--for", "-f",
+                                     help="What for (default: 'IOU')"),
+    on: str = typer.Option("today", "--date", "-d", help="Date"),
+    note: str = typer.Option(None, "--note", "-n", help="Optional note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🤝 Quick IOU — 'I owe PERSON AMOUNT'.
+
+    Stored as a 1-participant split (they paid, you're the lone
+    participant), so it flows through `balances`, `who`, and `settle`
+    like any shared expense — no fake bill needed.
+    """
+    if amount <= 0:
+        fail("Amount must be positive", json_out=json_out)
+    exp = SplitExpense(
+        description=description or f"IOU: {me} owes {person}",
+        amount=amount, paid_by=person, participants=me,
+        entry_date=parse_date(on), note=note,
+    )
+    with session() as db:
+        db.add(exp)
+        db.flush()
+        db.refresh(exp)
+        data = _expense_row(exp)
+    ok(f"Logged {EMOJI} {me} owes {person} {money(amount)}",
+       json_out=json_out, data=data)
+
+
+@app.command()
+def lent(
+    person: str = typer.Argument(..., help="Who you lent to"),
+    amount: float = typer.Argument(..., help="How much you lent them"),
+    me: str = typer.Option("me", "--me", help="Your name in the ledger"),
+    description: str = typer.Option(None, "--for", "-f",
+                                     help="What for (default: 'IOU')"),
+    on: str = typer.Option("today", "--date", "-d", help="Date"),
+    note: str = typer.Option(None, "--note", "-n", help="Optional note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🤝 Quick IOU — 'I lent PERSON AMOUNT' (they owe you).
+
+    Mirror of `owe`: you're recorded as the payer, the other person
+    is the lone participant, so the running balance shows them owing
+    you the full amount.
+    """
+    if amount <= 0:
+        fail("Amount must be positive", json_out=json_out)
+    exp = SplitExpense(
+        description=description or f"IOU: {person} owes {me}",
+        amount=amount, paid_by=me, participants=person,
+        entry_date=parse_date(on), note=note,
+    )
+    with session() as db:
+        db.add(exp)
+        db.flush()
+        db.refresh(exp)
+        data = _expense_row(exp)
+    ok(f"Logged {EMOJI} {person} owes {me} {money(amount)}",
+       json_out=json_out, data=data)
+
+
 @app.command(name="list")
 def list_expenses(json_out: JsonOpt = False) -> None:
     """🤝 List all shared expenses."""

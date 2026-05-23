@@ -12,6 +12,8 @@ Split shared expenses with people. Local SQLite. Every command accepts `--json`.
 | Command | What it does |
 |---|---|
 | `clibo split add DESC -a AMOUNT -b PAYER -w PEOPLE` | Log a shared expense |
+| `clibo split owe PERSON AMOUNT` | Quick IOU: **I owe** PERSON |
+| `clibo split lent PERSON AMOUNT` | Quick IOU: PERSON **owes me** (I lent them) |
 | `clibo split list` | All shared expenses |
 | `clibo split rm ID` | Delete a shared expense |
 | `clibo split balances` | Each person's net balance |
@@ -22,14 +24,30 @@ Split shared expenses with people. Local SQLite. Every command accepts `--json`.
 expense is split equally among them). A positive balance means a person is
 owed money; negative means they owe.
 
+**`owe` and `lent`** are direct IOU shortcuts — use these when the user
+says "I owe X $Y" or "Bob owes me $Z" without modeling a full bill.
+Both default the ledger name to "me"; override with `--me NAME`.
+
+## Natural language → command
+
+| User says | Command |
+|---|---|
+| "I owe Anna $50 for dinner" | `clibo split owe Anna 50 --for dinner` |
+| "Bob owes me $20" | `clibo split lent Bob 20` |
+| "We split a $90 dinner three ways, Alice paid" | `clibo split add "dinner" -a 90 -b Alice -w "Alice,Bob,me"` |
+| "I just paid Anna back the $50" | `clibo split settle me Anna 50` |
+| "How much do I owe in total?" | `clibo split balances` |
+| "What's the simplest way to settle up?" | `clibo split who` |
+
 ## Examples
 
 ```bash
 clibo split add "Dinner" -a 90 -b Alice -w "Alice,Bob,Carol"
-clibo split add "Taxi" -a 30 -b Bob -w "Alice,Bob,Carol"
+clibo split owe Anna 50 --for dinner
+clibo split lent Bob 20 --for coffee
 clibo split balances
 clibo split who
-clibo split settle Carol Alice 40
+clibo split settle me Anna 50
 ```
 
 ## For agents

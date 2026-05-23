@@ -37,3 +37,81 @@ def test_who_suggests_payments(cli):
 def test_negative_amount_fails(cli):
     result = cli.run("split", "add", "Bad", "-a", "-5", "-b", "Alice", "-w", "Alice,Bob")
     assert result.exit_code != 0
+
+
+# ── direct IOU verbs: owe / lent (iter 86) ──
+
+
+def test_owe_records_iou(cli):
+    """`split owe Anna 50` — I owe Anna $50."""
+    data = cli.json("split", "owe", "Anna", "50")
+    assert data["amount"] == 50.0
+    assert data["paid_by"] == "Anna"
+    assert data["participants"] == ["me"]
+    assert data["per_person"] == 50.0
+
+
+def test_owe_flows_into_balances(cli):
+    cli.run("split", "owe", "Anna", "50")
+    balances = {r["person"]: r["balance"] for r in cli.json("split", "balances")}
+    assert balances["Anna"] == 50.0
+    assert balances["me"] == -50.0
+
+
+def test_lent_records_reverse_iou(cli):
+    """`split lent Bob 20` — Bob owes me $20."""
+    data = cli.json("split", "lent", "Bob", "20")
+    assert data["amount"] == 20.0
+    assert data["paid_by"] == "me"
+    assert data["participants"] == ["Bob"]
+
+
+def test_lent_flows_into_balances(cli):
+    cli.run("split", "lent", "Bob", "20")
+    balances = {r["person"]: r["balance"] for r in cli.json("split", "balances")}
+    assert balances["Bob"] == -20.0
+    assert balances["me"] == 20.0
+
+
+def test_owe_and_lent_combine_correctly(cli):
+    """A combination should produce the right net balance."""
+    cli.run("split", "owe", "Anna", "50")
+    cli.run("split", "lent", "Bob", "20")
+    balances = {r["person"]: r["balance"] for r in cli.json("split", "balances")}
+    assert balances["Anna"] == 50.0
+    assert balances["Bob"] == -20.0
+    assert balances["me"] == -30.0  # net: owe Anna 50, lent Bob 20 → -30
+
+
+def test_owe_custom_me_name(cli):
+    """`--me` switches the ledger identity."""
+    data = cli.json("split", "owe", "Anna", "50", "--me", "Dmitrii")
+    assert data["participants"] == ["Dmitrii"]
+    balances = {r["person"]: r["balance"] for r in cli.json("split", "balances")}
+    assert balances["Dmitrii"] == -50.0
+
+
+def test_owe_settles_through_settle(cli):
+    """An IOU recorded via `owe` can be cleared via `settle`."""
+    cli.run("split", "owe", "Anna", "50")
+    cli.run("split", "settle", "me", "Anna", "50")
+    balances = {r["person"]: r["balance"] for r in cli.json("split", "balances")}
+    assert balances["Anna"] == 0.0
+    assert balances["me"] == 0.0
+
+
+def test_owe_negative_amount_fails(cli):
+    result = cli.run("split", "owe", "Anna", "-5")
+    assert result.exit_code != 0
+
+
+def test_lent_negative_amount_fails(cli):
+    result = cli.run("split", "lent", "Bob", "-5")
+    assert result.exit_code != 0
+
+
+def test_owe_default_description(cli):
+    """Description defaults to a descriptive 'IOU: …' string."""
+    data = cli.json("split", "owe", "Anna", "50")
+    assert "owes" in data["description"]
+    assert "Anna" in data["description"]
