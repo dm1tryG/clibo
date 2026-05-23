@@ -160,6 +160,15 @@ class WritingToday(_BaseSnapshot):
     current_streak: int
 
 
+class SymptomToday(_BaseSnapshot):
+    """Symptom events today — count, worst score, distinct conditions."""
+
+    episodes: int
+    worst_intensity: int
+    worst_name: str | None
+    names: list[str]
+
+
 class BooksToday(_BaseSnapshot):
     """Reading sessions today — pages, minutes, and which book(s)."""
 
@@ -204,6 +213,7 @@ class TodaySnapshot(_BaseSnapshot):
     documents_expiring: list[DocumentExpiring]
     writing: WritingToday
     books: BooksToday
+    symptoms: SymptomToday
     checkins: list[CheckinStatus]
 
 
@@ -356,6 +366,15 @@ class BooksWeek(_BaseSnapshot):
     books: list[str]
 
 
+class SymptomWeek(_BaseSnapshot):
+    episodes: int
+    days_affected: int
+    avg_intensity: float | None
+    worst_intensity: int
+    worst_name: str | None
+    top_symptoms: list[CategoryTotal]   # name → episode count
+
+
 class WeekSnapshot(_BaseSnapshot):
     start: date
     end: date
@@ -381,6 +400,7 @@ class WeekSnapshot(_BaseSnapshot):
     donations: DonationsWeek
     writing: WritingWeek
     books: BooksWeek
+    symptoms: SymptomWeek
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -521,6 +541,17 @@ class HobbiesMonth(_BaseSnapshot):
     reading: ReadingMonth
 
 
+class SymptomMonth(_BaseSnapshot):
+    """Aggregate of symptom episodes across a calendar month."""
+
+    episodes: int
+    days_affected: int
+    avg_intensity: float | None
+    worst_intensity: int
+    worst_name: str | None
+    top_symptoms: list[CategoryTotal]   # name → episode count
+
+
 class MonthSnapshot(_BaseSnapshot):
     year: int
     month: int
@@ -542,6 +573,7 @@ class MonthSnapshot(_BaseSnapshot):
     mood: MoodWeek
     productivity: ProductivityMonth
     hobbies: HobbiesMonth
+    symptoms: SymptomMonth
 
 
 # ──────────────────────────────────────────────────────────────────────

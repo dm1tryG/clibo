@@ -249,3 +249,26 @@ def test_today_books_aggregates_sessions(cli):
     assert b["pages"] == 50
     assert b["minutes"] == 75
     assert sorted(b["books"]) == ["Atomic Habits", "Range"]
+
+
+# ── symptom block on today (iter 96) ──
+
+
+def test_today_includes_symptoms_block(cli):
+    data = cli.json("today")
+    assert "symptoms" in data
+    s = data["symptoms"]
+    assert s["episodes"] == 0
+    assert s["worst_intensity"] == 0
+    assert s["worst_name"] is None
+
+
+def test_today_symptoms_aggregates_episodes(cli):
+    cli.run("symptom", "log", "back pain", "-i", "7")
+    cli.run("symptom", "log", "migraine", "-i", "9")
+    cli.run("symptom", "log", "back pain", "-i", "5", "-d", "yesterday")
+    s = cli.json("today")["symptoms"]
+    assert s["episodes"] == 2  # today only
+    assert s["worst_intensity"] == 9
+    assert s["worst_name"] == "migraine"
+    assert sorted(s["names"]) == ["back pain", "migraine"]

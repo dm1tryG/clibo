@@ -193,3 +193,29 @@ def test_week_books_aggregates_sessions(cli):
     assert b["pages"] == 55
     assert b["days_read"] == 2
     assert b["books"] == ["Atomic Habits"]
+
+
+# ── symptom block on week (iter 96) ──
+
+
+def test_week_includes_symptoms_block(cli):
+    data = cli.json("week")
+    assert "symptoms" in data
+    s = data["symptoms"]
+    assert s["episodes"] == 0
+    assert s["worst_name"] is None
+
+
+def test_week_symptoms_aggregates_across_days(cli):
+    cli.run("symptom", "log", "back pain", "-i", "7")
+    cli.run("symptom", "log", "back pain", "-i", "5", "-d", "yesterday")
+    cli.run("symptom", "log", "migraine", "-i", "9", "-d", "2 days ago")
+    s = cli.json("week")["symptoms"]
+    assert s["episodes"] == 3
+    assert s["days_affected"] == 3
+    assert s["avg_intensity"] == 7.0
+    assert s["worst_intensity"] == 9
+    assert s["worst_name"] == "migraine"
+    top = {row["category"]: row["amount"] for row in s["top_symptoms"]}
+    assert top["back pain"] == 2
+    assert top["migraine"] == 1

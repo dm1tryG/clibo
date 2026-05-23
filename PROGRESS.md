@@ -4,6 +4,53 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 96 — wire `symptom` into today/week/month/recent · 2026-05-24
+
+Iter 95 shipped the new `symptom` tool. Mirroring the writing+books
+wire-up arc (iter 93+94), the new tool now needs cross-tool
+visibility. Otherwise it lives invisibly in the DB.
+
+- 📅 **`clibo today`** — new `symptoms` block.
+  Fields: `episodes`, `worst_intensity`, `worst_name`, `names[]`.
+  Rendered as `🤒 Symptoms 2 episodes · worst 9/10 (migraine) ·
+  back pain, migraine`. Worst-score coloured by 1-10 bucket
+  (green / yellow / red / bold red).
+- 📅 **`clibo week`** — new `symptoms` block.
+  Fields: `episodes`, `days_affected`, `avg_intensity`,
+  `worst_intensity`, `worst_name`, `top_symptoms[]`. Gets its
+  own `[bold]🤒 Symptoms[/bold]` section in the rendered week
+  view with the top condition's episode count.
+- 📅 **`clibo month`** — new `symptoms` block at the bottom of
+  the month rollup. Same shape as week. Empty-state guard updated
+  so a month with only symptoms (no money/health/productivity)
+  still shows them instead of falling to "nothing logged".
+- 🌀 **`clibo recent`** — new `symptom` source in the activity
+  feed reading from `symptom_entry`. Renders as
+  `🤒 back pain 7/10 (lumbar)` or `🤒 headache 4/10` when location
+  is missing.
+- 🆕 **Three Pydantic models**: `SymptomToday`, `SymptomWeek`,
+  `SymptomMonth`. The week + month shapes are identical so future
+  views can share rendering helpers if it becomes worth extracting.
+- 🎤 NL flow verified end-to-end with three sample episodes (today:
+  back pain 7/10, migraine 9/10; 2 days ago: back pain 5/10):
+  • `today` → 2 episodes, worst 9/10 ✓
+  • `week --json` → episodes=3, days_affected=2, top_symptoms[back pain=2, migraine=1] ✓
+  • `month --json` → same shape ✓
+  • `recent` → all three episodes appear with intensity + location ✓
+- 🧪 **8 new tests** across `test_today` / `test_week` /
+  `test_month` / `test_recent`: empty-state shape on all three,
+  episode aggregation across days, top_symptoms ordering, recent
+  feed includes location when set and omits parens when not.
+- **Tests:** 930 passing (+8); ruff clean.
+
+The post-symptom visibility loop closes. All four cross-tool
+dashboards (today / week / month / recent) now cover **every**
+of the 74 tools. Three iterations (93, 94, 96) of *"wire new
+things into existing views"* completed the post-v1.10.0 dashboard
+integration.
+
+---
+
 ### Iteration 95 — new tool: 🤒 `symptom` (pain & symptom tracker) · 2026-05-24
 
 Agent-mode self-test on *"My back's been hurting all day — about

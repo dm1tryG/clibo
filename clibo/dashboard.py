@@ -43,6 +43,7 @@ from clibo.clis.mood import MoodLog
 from clibo.clis.packages import Package
 from clibo.clis.plants import Plant
 from clibo.clis.steps import StepEntry
+from clibo.clis.symptom import Symptom
 from clibo.clis.todo import Task
 from clibo.clis.water import WaterLog
 from clibo.clis.workout import Workout
@@ -68,6 +69,7 @@ from clibo.models import (
     MoodToday,
     NamedItem,
     PackagesBlock,
+    SymptomToday,
     TasksBlock,
     TaskSummary,
     TodaySnapshot,
@@ -306,6 +308,18 @@ def collect_today(on: date | None = None) -> TodaySnapshot:
             book_titles.get(s.book_id, "?") for s in book_sessions_today
         })
 
+        # 🤒 Symptoms — today's flare-ups
+        symptoms_today = list(
+            db.exec(
+                select(Symptom).where(Symptom.entry_date == today)
+            ).all()
+        )
+        worst_sym = (
+            max(symptoms_today, key=lambda s: s.intensity)
+            if symptoms_today else None
+        )
+        symptom_names_today = sorted({s.name for s in symptoms_today})
+
         # 📊 Daily check-ins — every actively-used tracker with today's status
         daily_checkins = collect_checkins(db, today=today)
 
@@ -393,6 +407,12 @@ def collect_today(on: date | None = None) -> TodaySnapshot:
             minutes=sum(s.duration_min for s in book_sessions_today),
             sessions=len(book_sessions_today),
             books=books_today_titles,
+        ),
+        symptoms=SymptomToday(
+            episodes=len(symptoms_today),
+            worst_intensity=worst_sym.intensity if worst_sym else 0,
+            worst_name=worst_sym.name if worst_sym else None,
+            names=symptom_names_today,
         ),
         checkins=daily_checkins,
     )
@@ -540,6 +560,25 @@ def render_today(json_out: bool, on: date | None = None) -> None:
             f"📖 Reading  {bk.pages}p"
             f"   ·   {bk.sessions} session{'s' if bk.sessions != 1 else ''}"
             f"{min_part}{title_part}"
+        )
+    sym = data.symptoms
+    if sym.episodes:
+        # Colour-code by worst intensity in line with the standard 1-10 scale.
+        colour = (
+            "green" if sym.worst_intensity <= 3
+            else "yellow" if sym.worst_intensity <= 6
+            else "red" if sym.worst_intensity <= 9
+            else "bold red"
+        )
+        names_part = ""
+        if sym.names:
+            shown = sym.names[:2]
+            more = f" + {len(sym.names) - 2} more" if len(sym.names) > 2 else ""
+            names_part = f"   ·   [dim]{', '.join(shown)}{more}[/dim]"
+        today_lines.append(
+            f"🤒 Symptoms {sym.episodes} episode{'s' if sym.episodes != 1 else ''}"
+            f"   ·   worst [{colour}]{sym.worst_intensity}/10[/{colour}]"
+            f" ({sym.worst_name}){names_part}"
         )
     if today_lines:
         for line in today_lines:

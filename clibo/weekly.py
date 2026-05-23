@@ -27,6 +27,7 @@ from clibo.clis.mood import MoodLog
 from clibo.clis.sleep import SleepLog
 from clibo.clis.steps import StepEntry
 from clibo.clis.stretches import StretchSession
+from clibo.clis.symptom import Symptom
 from clibo.clis.todo import Task
 from clibo.clis.water import WaterLog
 from clibo.clis.worklog import WorkLogEntry
@@ -52,6 +53,7 @@ from clibo.models import (
     MoodWeek,
     SleepWeek,
     StepsWeek,
+    SymptomWeek,
     TasksWeek,
     TimedActivityWeek,
     WaterWeek,
@@ -181,6 +183,13 @@ def collect_week(start: date | None = None) -> WeekSnapshot:
             ).all()
         )
         book_titles = {b.id: b.title for b in db.exec(select(Book)).all()}
+        symptoms_in_week = list(
+            db.exec(
+                select(Symptom)
+                .where(Symptom.entry_date >= start)
+                .where(Symptom.entry_date <= today)
+            ).all()
+        )
 
     # Sleep
     sleep_summary = SleepWeek(
@@ -389,6 +398,29 @@ def collect_week(start: date | None = None) -> WeekSnapshot:
         days_read=len(book_days),
         books=week_book_titles,
     )
+    # 🤒 Symptoms — episode totals, days affected, top conditions
+    sym_by_name: dict[str, int] = {}
+    for s in symptoms_in_week:
+        sym_by_name[s.name] = sym_by_name.get(s.name, 0) + 1
+    sym_top = sorted(sym_by_name.items(), key=lambda kv: kv[1], reverse=True)[:3]
+    worst_sym_week = (
+        max(symptoms_in_week, key=lambda s: s.intensity)
+        if symptoms_in_week else None
+    )
+    symptoms_summary = SymptomWeek(
+        episodes=len(symptoms_in_week),
+        days_affected=len({s.entry_date for s in symptoms_in_week}),
+        avg_intensity=(
+            _round(sum(s.intensity for s in symptoms_in_week)
+                   / len(symptoms_in_week))
+            if symptoms_in_week else None
+        ),
+        worst_intensity=worst_sym_week.intensity if worst_sym_week else 0,
+        worst_name=worst_sym_week.name if worst_sym_week else None,
+        top_symptoms=[
+            CategoryTotal(category=n, amount=c) for n, c in sym_top
+        ],
+    )
 
     return WeekSnapshot(
         start=start,
@@ -415,6 +447,7 @@ def collect_week(start: date | None = None) -> WeekSnapshot:
         donations=donation_summary,
         writing=writing_summary,
         books=books_summary,
+        symptoms=symptoms_summary,
     )
 
 
@@ -616,6 +649,30 @@ def render_week(json_out: bool) -> None:
         )
         console.print()
 
+    # 🤒 Symptoms — episodes, top, worst
+    sym = data.symptoms
+    if sym.episodes:
+        # Colour the worst score by the standard 1-10 bucket.
+        worst_colour = (
+            "green" if sym.worst_intensity <= 3
+            else "yellow" if sym.worst_intensity <= 6
+            else "red" if sym.worst_intensity <= 9
+            else "bold red"
+        )
+        top_part = ""
+        if sym.top_symptoms:
+            t = sym.top_symptoms[0]
+            top_part = f"   [dim]top: {t.category} ({t.amount:g}×)[/dim]"
+        console.print("[bold]🤒 Symptoms[/bold]")
+        console.print(
+            f"  {sym.episodes} episode{'s' if sym.episodes != 1 else ''}  "
+            f"[dim]across {sym.days_affected} day"
+            f"{'s' if sym.days_affected != 1 else ''}[/dim]   "
+            f"worst [{worst_colour}]{sym.worst_intensity}/10[/{worst_colour}]"
+            f" ({sym.worst_name}){top_part}"
+        )
+        console.print()
+
     if not metric_lines and not data.habits.tracked and not money_lines \
-            and not has_productivity and not bk.sessions:
+            and not has_productivity and not bk.sessions and not sym.episodes:
         console.print("  [dim]Nothing logged in the last 7 days yet.[/dim]\n")

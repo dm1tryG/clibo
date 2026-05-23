@@ -206,6 +206,10 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
      ["book_id", "pages", "duration_min"],
      lambda r: f"read {r['pages']}p of {_book_title(r)}"
                 + (f" ({r['duration_min']} min)" if r["duration_min"] else "")),
+    ("symptom", "🤒", "symptom_entry",
+     ["name", "intensity", "location"],
+     lambda r: f"{r['name']} {r['intensity']}/10"
+                + (f" ({r['location']})" if r["location"] else "")),
 ]
 
 

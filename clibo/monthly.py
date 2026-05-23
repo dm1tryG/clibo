@@ -39,6 +39,7 @@ from clibo.clis.steps import StepEntry
 from clibo.clis.stretches import StretchSession
 from clibo.clis.subs import Subscription
 from clibo.clis.subs import _monthly as _sub_monthly
+from clibo.clis.symptom import Symptom
 from clibo.clis.todo import Task
 from clibo.clis.water import WaterLog
 from clibo.clis.workout import Workout
@@ -68,6 +69,7 @@ from clibo.models import (
     ReadingMonth,
     SleepWeek,
     StepsMonth,
+    SymptomMonth,
     TimedActivityWeek,
     WaterWeek,
     WorkoutWeek,
@@ -294,6 +296,14 @@ def collect_month(year: int | None = None, month: int | None = None) -> MonthSna
             ).all()
         )
         all_book_titles = {b.id: b.title for b in db.exec(select(Book)).all()}
+        # 🤒 Symptoms this month
+        symptoms_in_month = list(
+            db.exec(
+                select(Symptom)
+                .where(Symptom.entry_date >= start)
+                .where(Symptom.entry_date <= end)
+            ).all()
+        )
 
     # ── Money rollups ──────────────────────────────────────────────
     income_total = round(sum(i.amount for i in incomes), 2)
@@ -511,6 +521,30 @@ def collect_month(year: int | None = None, month: int | None = None) -> MonthSna
         reading=reading_summary,
     )
 
+    # 🤒 Symptom month rollup
+    sym_by_name: dict[str, int] = {}
+    for s in symptoms_in_month:
+        sym_by_name[s.name] = sym_by_name.get(s.name, 0) + 1
+    sym_top = sorted(sym_by_name.items(), key=lambda kv: kv[1], reverse=True)[:3]
+    worst_sym = (
+        max(symptoms_in_month, key=lambda s: s.intensity)
+        if symptoms_in_month else None
+    )
+    symptoms_summary = SymptomMonth(
+        episodes=len(symptoms_in_month),
+        days_affected=len({s.entry_date for s in symptoms_in_month}),
+        avg_intensity=(
+            _round(sum(s.intensity for s in symptoms_in_month)
+                   / len(symptoms_in_month))
+            if symptoms_in_month else None
+        ),
+        worst_intensity=worst_sym.intensity if worst_sym else 0,
+        worst_name=worst_sym.name if worst_sym else None,
+        top_symptoms=[
+            CategoryTotal(category=n, amount=c) for n, c in sym_top
+        ],
+    )
+
     return MonthSnapshot(
         year=year,
         month=month,
@@ -532,6 +566,7 @@ def collect_month(year: int | None = None, month: int | None = None) -> MonthSna
         mood=mood_summary,
         productivity=productivity,
         hobbies=hobbies,
+        symptoms=symptoms_summary,
     )
 
 
@@ -741,9 +776,33 @@ def render_month(
             )
         console.print()
 
+    # 🤒 Symptoms
+    sym = data.symptoms
+    if sym.episodes:
+        worst_colour = (
+            "green" if sym.worst_intensity <= 3
+            else "yellow" if sym.worst_intensity <= 6
+            else "red" if sym.worst_intensity <= 9
+            else "bold red"
+        )
+        top_part = ""
+        if sym.top_symptoms:
+            t = sym.top_symptoms[0]
+            top_part = f"   [dim]top: {t.category} ({t.amount:g}×)[/dim]"
+        console.print("[bold]🤒 Symptoms[/bold]")
+        console.print(
+            f"  Episodes:           [bold]{sym.episodes}[/bold]   ·   "
+            f"{sym.days_affected} day"
+            f"{'s' if sym.days_affected != 1 else ''} affected   ·   "
+            f"avg [bold]{sym.avg_intensity}[/bold]/10   ·   "
+            f"worst [{worst_colour}]{sym.worst_intensity}/10[/{worst_colour}]"
+            f" ({sym.worst_name}){top_part}"
+        )
+        console.print()
+
     # Empty state
     has_anything = any([
-        money_lines, health_lines, prod_lines, has_hobbies,
+        money_lines, health_lines, prod_lines, has_hobbies, sym.episodes,
     ])
     if not has_anything:
         console.print(f"  [dim]Nothing logged in {data.month_name}.[/dim]\n")

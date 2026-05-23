@@ -152,3 +152,25 @@ def test_month_reading_sessions_aggregate(cli):
     assert r["minutes"] == 75
     assert r["days_read"] == 2
     assert r["books"] == ["Atomic Habits"]
+
+
+# ── symptom block on month (iter 96) ──
+
+
+def test_month_includes_symptoms_block(cli):
+    data = cli.json("month")
+    assert "symptoms" in data
+    s = data["symptoms"]
+    assert s["episodes"] == 0
+    assert s["worst_intensity"] == 0
+
+
+def test_month_symptoms_aggregates(cli):
+    cli.run("symptom", "log", "back pain", "-i", "7")
+    cli.run("symptom", "log", "back pain", "-i", "5", "-d", "2 days ago")
+    cli.run("symptom", "log", "migraine", "-i", "9", "-d", "5 days ago")
+    s = cli.json("month")["symptoms"]
+    assert s["episodes"] == 3
+    assert s["days_affected"] == 3
+    assert s["worst_intensity"] == 9
+    assert s["worst_name"] == "migraine"

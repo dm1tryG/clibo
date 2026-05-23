@@ -77,3 +77,24 @@ def test_recent_includes_reading_sessions(cli):
     assert len(reading) == 1
     assert "30p" in reading[0]["summary"]
     assert "Atomic Habits" in reading[0]["summary"]
+
+
+# ── symptom events in the activity feed (iter 96) ──
+
+
+def test_recent_includes_symptom_events(cli):
+    cli.run("symptom", "log", "back pain", "-i", "7", "-l", "lumbar")
+    events = cli.json("recent")["events"]
+    syms = [e for e in events if e["source"] == "symptom"]
+    assert len(syms) == 1
+    assert "back pain" in syms[0]["summary"]
+    assert "7/10" in syms[0]["summary"]
+    assert "lumbar" in syms[0]["summary"]
+
+
+def test_recent_symptom_omits_location_when_missing(cli):
+    cli.run("symptom", "log", "headache", "-i", "4")
+    events = cli.json("recent")["events"]
+    syms = [e for e in events if e["source"] == "symptom"]
+    assert len(syms) == 1
+    assert "(" not in syms[0]["summary"]  # no empty parens
