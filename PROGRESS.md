@@ -4,6 +4,44 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 69 — `week` view now surfaces every post-v1.0 tool too · 2026-05-23
+
+Parallel polish to iter 68: the `clibo today` fix exposed that
+`clibo week` had the same structural gap. Sleep, focus, mood, water,
+habits, expenses, journal, worklog, tasks — that's where the rollup
+stopped. Steps, workouts, caffeine, fasting, meditate, stretches,
+mileage, gratitude, donations all had no weekly story.
+
+- 🛠️ **`clibo/weekly.py` extended** to aggregate + render 9 more
+  trackers, with sensible 7-day rollups for each:
+  • 👟 **steps** — days hit goal, daily avg, weekly total
+  • 🏋️ **workouts** — sessions, days active, total minutes, 🔥 kcal
+  • ☕ **caffeine** — total mg, avg/day, over-limit days (red)
+  • 🕒 **fasting** — completed count, total + longest hours, target
+    hit rate
+  • 🧘 **meditate** — sessions across days, total minutes
+  • 🧎 **stretches** — sessions across days, total minutes
+  • 🏃 **mileage** — total km + by-activity breakdown (run/cycle/walk)
+  • 🙏 **gratitude** — entries + days logged (productivity block)
+  • ❤️ **donations** — total + deductible total + recipient count
+    (sits next to expenses in a new "💰 Money" block)
+- ✨ **All conditional** — empty entries stay hidden, so a user who
+  doesn't track caffeine doesn't see a "0 mg" line.
+- 🎨 **Money block** introduced — expenses and donations now share a
+  bordered heading, since they're conceptually a money rollup. Old
+  empty-state check updated to consider the new sources.
+- 🧪 9 new tests pin every new aggregation field. Existing 6 week
+  tests untouched.
+- 🎤 Visual smoke on a populated 7-day database — every metric line
+  shows up correctly with proper units and conditional rendering.
+- **Tests:** 652 passing (+9); ruff clean.
+
+The pair (iter 68 today + iter 69 week) closes the loop: every tool
+added since v1.0 now surfaces in both daily and weekly aggregation
+views without users having to discover them one at a time.
+
+---
+
 ### Iteration 68 — `today` view now surfaces every post-v1.0 tool · 2026-05-23
 
 Agent-mode self-test exposed a structural gap: I'd added 17+ tools

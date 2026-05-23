@@ -63,3 +63,91 @@ def test_week_water_goal_reached(cli):
     data = cli.json("week")
     assert data["water"]["days_logged"] == 1
     assert data["water"]["days_goal_reached"] == 1
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Post-v1.0 tools surfaced in `week` (iter 69).
+# ──────────────────────────────────────────────────────────────────────
+
+
+def test_week_steps_aggregates(cli):
+    cli.run("steps", "log", "6500")
+    cli.run("steps", "log", "11000", "-d", "yesterday")
+    data = cli.json("week")
+    assert data["steps"]["days_logged"] == 2
+    assert data["steps"]["total"] == 17500
+    assert data["steps"]["days_goal_reached"] == 1  # only yesterday hit 10k
+
+
+def test_week_workouts_aggregates(cli):
+    cli.run("workout", "log", "running", "-t", "30", "-c", "350")
+    cli.run("workout", "log", "stretching", "-t", "15")
+    data = cli.json("week")
+    assert data["workouts"]["sessions"] == 2
+    assert data["workouts"]["total_minutes"] == 45
+    assert data["workouts"]["total_kcal_burned"] == 350
+
+
+def test_week_caffeine_aggregates(cli):
+    cli.run("caffeine", "log", "espresso")  # 63
+    cli.run("caffeine", "log", "coffee")    # 95
+    data = cli.json("week")
+    assert data["caffeine"]["drinks"] == 2
+    assert data["caffeine"]["total_mg"] == 158
+
+
+def test_week_fasting_aggregates(cli):
+    cli.run("fasting", "start", "-T", "16", "-t", "3 days ago 08:00")
+    cli.run("fasting", "stop", "-t", "3 days ago 22:00")     # 14h
+    cli.run("fasting", "start", "-T", "16", "-t", "yesterday 06:00")
+    cli.run("fasting", "stop", "-t", "yesterday 22:00")      # 16h hit
+    data = cli.json("week")
+    assert data["fasting"]["completed"] == 2
+    assert data["fasting"]["total_hours"] == 30.0
+    assert data["fasting"]["longest_hours"] == 16.0
+    assert data["fasting"]["target_hits"] == 1
+
+
+def test_week_meditate_aggregates(cli):
+    cli.run("meditate", "log", "10")
+    cli.run("meditate", "log", "15", "-d", "yesterday")
+    data = cli.json("week")
+    assert data["meditate"]["sessions"] == 2
+    assert data["meditate"]["days"] == 2
+    assert data["meditate"]["total_minutes"] == 25
+
+
+def test_week_stretches_aggregates(cli):
+    cli.run("stretches", "log", "hips", "-m", "10")
+    cli.run("stretches", "log", "back", "-m", "5", "-d", "yesterday")
+    data = cli.json("week")
+    assert data["stretches"]["sessions"] == 2
+    assert data["stretches"]["total_minutes"] == 15
+
+
+def test_week_mileage_aggregates(cli):
+    cli.run("mileage", "log", "5", "-a", "run")
+    cli.run("mileage", "log", "10", "-a", "cycle", "-d", "yesterday")
+    data = cli.json("week")
+    assert data["mileage"]["sessions"] == 2
+    assert data["mileage"]["total_km"] == 15.0
+    assert data["mileage"]["by_activity"]["run"] == 5.0
+    assert data["mileage"]["by_activity"]["cycle"] == 10.0
+
+
+def test_week_gratitude_aggregates(cli):
+    cli.run("gratitude", "add", "coffee")
+    cli.run("gratitude", "add", "sunshine", "-d", "yesterday")
+    data = cli.json("week")
+    assert data["gratitude"]["entries"] == 2
+    assert data["gratitude"]["days_logged"] == 2
+
+
+def test_week_donations_aggregates(cli):
+    cli.run("donations", "log", "Red Cross", "-a", "50")
+    cli.run("donations", "log", "PAC", "-a", "100", "--no-deductible")
+    data = cli.json("week")
+    assert data["donations"]["entries"] == 2
+    assert data["donations"]["total"] == 150.0
+    assert data["donations"]["deductible_total"] == 50.0
+    assert data["donations"]["recipients"] == 2
