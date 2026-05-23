@@ -35,6 +35,7 @@ from clibo.clis import (
     meditate,
     meds,
     meetings,
+    mileage,
     mood,
     network,
     networth,
@@ -114,4 +115,5 @@ ALL = [
     # ── beyond the original 50 ─────────────────────────────────────
     books,
     films,
+    mileage,
 ]

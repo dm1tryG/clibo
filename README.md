@@ -247,6 +247,7 @@ sub-command and every flag.
 |---|---|---|
 | ✅ | `books` 📚 | Reading log with progress & ratings |
 | ✅ | `films` 🎬 | Movie & show watchlist with ratings |
+| ✅ | `mileage` 🏃 | Running, cycling, walking distance log |
 
 ## For AI agents
 

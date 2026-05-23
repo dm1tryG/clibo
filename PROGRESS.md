@@ -4,6 +4,29 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 42 — Self-test → fixed `parse_date` & added `mileage` · 2026-05-23
+
+Agent-mode self-test caught **two real gaps** in one pass.
+
+- 🎤 Self-tested 4 natural-language inputs: ① "Met Sarah at PyCon
+  7 days ago" — failed because `parse_date` didn't know `"N days ago"`;
+  ② "I owe Anna 50 USD" — worked via `debt`; ③ "I ran 5km this morning"
+  — silently lost the distance (workout has no km field); ④ "Cycled
+  12km yesterday" — same problem.
+- 🛠️ **Fixed `parse_date`** to accept relative phrasings: `"N days ago"`,
+  `"N weeks from now"`, `"last week"`, `"next month"`, etc. Covers
+  days/weeks/months/years × ago/from now × singular/plural. 7 new
+  unit tests in `test_parse_date.py`.
+- 🏃 **New tool `mileage` (53rd)** — distance-based activity log:
+  run/walk/cycle/hike/swim with auto-computed pace, weekly distance
+  goal with progress bar, per-activity breakdown.
+- 📜 `recent` now picks up books, films, mileage.
+- 📄 `docs/SCHEMA.md` regenerated (66 tables).
+- 🎤 **All 4 NL inputs now map cleanly** end-to-end on the second pass.
+- **Tests:** 357 passing (+13); ruff clean.
+
+---
+
 ### Iteration 41 — Beyond 50: agent-mode + books + films · 2026-05-23
 
 New direction from the maintainer: keep going past 50 tools, add what's
