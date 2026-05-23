@@ -37,3 +37,28 @@ def test_remove(cli):
     conn = cli.json("network", "add", "Temp")
     removed = cli.json("network", "rm", str(conn["id"]))
     assert removed["deleted"] == conn["id"]
+
+
+# ── name resolution + edit (iter 84) ──
+
+
+def test_network_show_by_name(cli):
+    cli.run("network", "add", "Sarah", "-w", "PyCon")
+    data = cli.json("network", "show", "Sarah")
+    assert data["name"] == "Sarah"
+
+
+def test_network_edit_by_name(cli):
+    cli.run("network", "add", "Sarah", "-w", "PyCon")
+    cli.run("network", "edit", "Sarah", "-c", "Stripe",
+            "-x", "joined Stripe payments team")
+    data = cli.json("network", "show", "Sarah")
+    assert data["company"] == "Stripe"
+    assert data["context"] == "joined Stripe payments team"
+
+
+def test_network_rm_by_name(cli):
+    cli.run("network", "add", "Sarah", "-w", "PyCon")
+    cli.run("network", "rm", "Sarah")
+    listing = cli.json("network", "list")
+    assert not any(c["name"] == "Sarah" for c in listing)

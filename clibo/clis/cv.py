@@ -115,44 +115,50 @@ def add(
        json_out=json_out, data=data)
 
 
+def _resolve_cv(db, ident: str) -> CvEntry | None:
+    from clibo.core.base import lookup_by_id_or_name
+    return lookup_by_id_or_name(db, CvEntry, ident, CvEntry.title)
+
+
 @app.command()
 def achieve(
-    entry_id: int = typer.Argument(..., help="CV entry ID"),
+    entry: str = typer.Argument(..., help="CV entry ID or title (fuzzy)"),
     bullet: str = typer.Argument(..., help="The accomplishment to add"),
     json_out: JsonOpt = False,
 ) -> None:
     """📜 Append a single accomplishment bullet to a CV entry."""
     with session() as db:
-        entry = db.get(CvEntry, entry_id)
-        if not entry:
-            fail(f"No CV entry #{entry_id}", json_out=json_out)
-        existing = (entry.achievements or "").rstrip()
-        entry.achievements = f"{existing}\n{bullet}" if existing else bullet
-        db.add(entry)
+        target = _resolve_cv(db, entry)
+        if not target:
+            fail(f"No CV entry matching {entry!r}", json_out=json_out)
+        existing = (target.achievements or "").rstrip()
+        target.achievements = f"{existing}\n{bullet}" if existing else bullet
+        db.add(target)
         db.flush()
-        data = _row(entry)
-    ok(f"Added bullet to '{entry.title}': {bullet}", json_out=json_out, data=data)
+        data = _row(target)
+    ok(f"Added bullet to '{target.title}': {bullet}",
+       json_out=json_out, data=data)
 
 
 @app.command()
 def end(
-    entry_id: int = typer.Argument(..., help="CV entry ID"),
+    entry: str = typer.Argument(..., help="CV entry ID or title (fuzzy)"),
     on: str = typer.Option("today", "--on", help="End date (YYYY-MM or YYYY-MM-DD)"),
     json_out: JsonOpt = False,
 ) -> None:
     """📜 Close out a currently-running entry."""
     with session() as db:
-        entry = db.get(CvEntry, entry_id)
-        if not entry:
-            fail(f"No CV entry #{entry_id}", json_out=json_out)
+        target = _resolve_cv(db, entry)
+        if not target:
+            fail(f"No CV entry matching {entry!r}", json_out=json_out)
         ed = _parse_month(on)
-        if entry.start_date and ed and ed < entry.start_date:
+        if target.start_date and ed and ed < target.start_date:
             fail("End must be on or after start", json_out=json_out)
-        entry.end_date = ed
-        db.add(entry)
+        target.end_date = ed
+        db.add(target)
         db.flush()
-        data = _row(entry)
-    ok(f"Ended '{entry.title}' on {ed}", json_out=json_out, data=data)
+        data = _row(target)
+    ok(f"Ended '{target.title}' on {ed}", json_out=json_out, data=data)
 
 
 @app.command(name="list")
@@ -197,26 +203,30 @@ def current(json_out: JsonOpt = False) -> None:
 
 
 @app.command()
-def show(entry_id: int = typer.Argument(..., help="Entry ID"), json_out: JsonOpt = False) -> None:
+def show(
+    entry: str = typer.Argument(..., help="Entry ID or title (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
     """📜 Show one CV entry pretty-printed."""
     with session() as db:
-        entry = db.get(CvEntry, entry_id)
-        if not entry:
-            fail(f"No CV entry #{entry_id}", json_out=json_out)
-        data = _row(entry) | {"period": _period(entry)}
+        target = _resolve_cv(db, entry)
+        if not target:
+            fail(f"No CV entry matching {entry!r}", json_out=json_out)
+        entry_obj = target
+        data = _row(entry_obj) | {"period": _period(entry_obj)}
     if json_out:
         render_record(data, json_out=True)
         return
-    title = f"{entry.title}" + (f" — [bold]{entry.org}[/bold]" if entry.org else "")
-    console.print(f"\n📜 [bold cyan]{entry.kind.title()}[/bold cyan]   [dim]{_period(entry)}[/dim]\n")
+    title = f"{entry_obj.title}" + (f" — [bold]{entry_obj.org}[/bold]" if entry_obj.org else "")
+    console.print(f"\n📜 [bold cyan]{entry_obj.kind.title()}[/bold cyan]   [dim]{_period(entry_obj)}[/dim]\n")
     console.print(f"  {title}")
-    if entry.location:
-        console.print(f"  [dim]{entry.location}[/dim]")
-    if entry.description:
-        console.print(f"\n  {entry.description}")
-    if entry.achievements:
+    if entry_obj.location:
+        console.print(f"  [dim]{entry_obj.location}[/dim]")
+    if entry_obj.description:
+        console.print(f"\n  {entry_obj.description}")
+    if entry_obj.achievements:
         console.print("\n  [bold]Highlights[/bold]")
-        for bullet in entry.achievements.split("\n"):
+        for bullet in entry_obj.achievements.split("\n"):
             if bullet.strip():
                 console.print(f"  · {bullet.strip()}")
     console.print()
@@ -251,7 +261,7 @@ def timeline(json_out: JsonOpt = False) -> None:
 
 @app.command()
 def edit(
-    entry_id: int = typer.Argument(..., help="Entry ID"),
+    entry: str = typer.Argument(..., help="Entry ID or title (fuzzy)"),
     title: str = typer.Option(None, "--title"),
     org: str = typer.Option(None, "--org", "-o"),
     description: str = typer.Option(None, "--desc", "-D"),
@@ -259,30 +269,34 @@ def edit(
     tag: str = typer.Option(None, "--tag", "-t"),
     json_out: JsonOpt = False,
 ) -> None:
-    """📜 Edit a CV entry."""
+    """📜 Edit a CV entry. Accepts a numeric ID or a title."""
     with session() as db:
-        entry = db.get(CvEntry, entry_id)
-        if not entry:
-            fail(f"No CV entry #{entry_id}", json_out=json_out)
+        target = _resolve_cv(db, entry)
+        if not target:
+            fail(f"No CV entry matching {entry!r}", json_out=json_out)
         for field, value in {"title": title, "org": org, "description": description,
                              "location": location, "tags": tag}.items():
             if value is not None:
-                setattr(entry, field, value)
-        db.add(entry)
+                setattr(target, field, value)
+        db.add(target)
         db.flush()
-        data = _row(entry)
-    ok(f"Updated CV entry #{entry_id}", json_out=json_out, data=data)
+        data = _row(target)
+    ok(f"Updated CV entry #{target.id}", json_out=json_out, data=data)
 
 
 @app.command()
-def rm(entry_id: int = typer.Argument(..., help="Entry ID"), json_out: JsonOpt = False) -> None:
+def rm(
+    entry: str = typer.Argument(..., help="Entry ID or title (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
     """📜 Delete a CV entry."""
     with session() as db:
-        entry = db.get(CvEntry, entry_id)
-        if not entry:
-            fail(f"No CV entry #{entry_id}", json_out=json_out)
-        db.delete(entry)
-    ok(f"Deleted CV entry #{entry_id}", json_out=json_out, data={"deleted": entry_id})
+        target = _resolve_cv(db, entry)
+        if not target:
+            fail(f"No CV entry matching {entry!r}", json_out=json_out)
+        eid = target.id
+        db.delete(target)
+    ok(f"Deleted CV entry #{eid}", json_out=json_out, data={"deleted": eid})
 
 
 @app.command()

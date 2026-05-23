@@ -99,12 +99,16 @@ def list_achievements(
 
 
 @app.command()
-def show(achievement_id: int = typer.Argument(..., help="Achievement ID"), json_out: JsonOpt = False) -> None:
-    """🏆 Show one achievement in detail."""
+def show(
+    achievement: str = typer.Argument(..., help="Achievement ID or title (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🏆 Show one achievement in detail. Accepts a numeric ID or a title."""
+    from clibo.core.base import lookup_by_id_or_name
     with session() as db:
-        ach = db.get(Achievement, achievement_id)
+        ach = lookup_by_id_or_name(db, Achievement, achievement, Achievement.title)
         if not ach:
-            fail(f"No achievement #{achievement_id}", json_out=json_out)
+            fail(f"No achievement matching {achievement!r}", json_out=json_out)
         data = _row(ach) | {"created_at": ach.created_at}
     render_record(data, json_out=json_out, title=f"🏆 {data['title']}")
 
@@ -170,15 +174,19 @@ def since(
 
 
 @app.command()
-def rm(achievement_id: int = typer.Argument(..., help="Achievement ID"), json_out: JsonOpt = False) -> None:
-    """🏆 Delete an achievement."""
+def rm(
+    achievement: str = typer.Argument(..., help="Achievement ID or title (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🏆 Delete an achievement. Accepts a numeric ID or a title."""
+    from clibo.core.base import lookup_by_id_or_name
     with session() as db:
-        ach = db.get(Achievement, achievement_id)
+        ach = lookup_by_id_or_name(db, Achievement, achievement, Achievement.title)
         if not ach:
-            fail(f"No achievement #{achievement_id}", json_out=json_out)
+            fail(f"No achievement matching {achievement!r}", json_out=json_out)
+        aid = ach.id
         db.delete(ach)
-    ok(f"Deleted achievement #{achievement_id}", json_out=json_out,
-       data={"deleted": achievement_id})
+    ok(f"Deleted achievement #{aid}", json_out=json_out, data={"deleted": aid})
 
 
 @app.command()

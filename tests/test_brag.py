@@ -37,3 +37,19 @@ def test_stats(cli):
     stats = cli.json("brag", "stats")
     assert stats["total"] == 2
     assert stats["by_category"]["work"] == 1
+
+
+# ── name resolution (iter 84) ──
+
+
+def test_brag_show_by_title(cli):
+    cli.run("brag", "add", "Shipped auth refactor")
+    data = cli.json("brag", "show", "auth")
+    assert "auth" in data["title"].lower()
+
+
+def test_brag_rm_by_title(cli):
+    cli.run("brag", "add", "Shipped auth refactor")
+    cli.run("brag", "rm", "auth")
+    listing = cli.json("brag", "list")
+    assert not any("auth" in a["title"].lower() for a in listing)

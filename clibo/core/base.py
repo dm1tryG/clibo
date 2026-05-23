@@ -186,6 +186,32 @@ def humanize_delta(d: date) -> str:
     return f"in {days}d" if days > 0 else f"{-days}d ago"
 
 
+def lookup_by_id_or_name(db, model_class, ident: str, field):
+    """Resolve a CLI string to a model row by ID or fuzzy field match.
+
+    Generalised version of the per-tool ``_resolve`` helpers in
+    ``books.py``, ``crm.py``, etc. Tries:
+
+    1. Numeric ID — ``db.get(model_class, int(ident))``.
+    2. Exact case-insensitive match on ``field``.
+    3. Substring case-insensitive match on ``field``.
+
+    Returns the matched row or ``None``. ``field`` should be the SQLModel
+    column expression (e.g. ``Achievement.title``).
+    """
+    from sqlmodel import select
+    if ident.isdigit():
+        row = db.get(model_class, int(ident))
+        if row:
+            return row
+    exact = db.exec(select(model_class).where(field.ilike(ident))).first()
+    if exact:
+        return exact
+    return db.exec(
+        select(model_class).where(field.ilike(f"%{ident}%"))
+    ).first()
+
+
 def resolve_id(target: str, model_class, db, order_by=None):
     """Resolve a CLI argument to a model instance.
 

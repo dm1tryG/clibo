@@ -71,3 +71,29 @@ def test_end_before_start_fails(cli):
     cli.run("cv", "add", "X", "--start", "2024-01")
     result = cli.run("cv", "end", "1", "--on", "2023-01")
     assert result.exit_code != 0
+
+
+# ── name resolution (iter 84) ──
+
+
+def test_cv_show_by_title(cli):
+    cli.run("cv", "add", "Staff Engineer", "-o", "Acme", "-k", "job",
+            "--start", "2020-01")
+    data = cli.json("cv", "show", "Staff")
+    assert "Staff" in data["title"]
+
+
+def test_cv_end_by_title(cli):
+    cli.run("cv", "add", "Staff Engineer", "-o", "Acme", "-k", "job",
+            "--start", "2020-01")
+    cli.run("cv", "end", "Staff", "--on", "2024-06")
+    data = cli.json("cv", "show", "Staff")
+    assert data["end_date"] is not None
+
+
+def test_cv_achieve_by_title(cli):
+    cli.run("cv", "add", "Staff Engineer", "-o", "Acme", "-k", "job",
+            "--start", "2020-01")
+    cli.run("cv", "achieve", "Staff", "Led the migration to event-driven arch")
+    data = cli.json("cv", "show", "Staff")
+    assert "migration" in (data.get("achievements") or "")

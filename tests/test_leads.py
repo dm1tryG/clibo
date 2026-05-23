@@ -39,3 +39,19 @@ def test_stats_win_rate(cli):
 def test_invalid_stage_fails(cli):
     result = cli.run("leads", "add", "Bad", "-s", "negotiating")
     assert result.exit_code != 0
+
+
+# ── name resolution (iter 84) ──
+
+
+def test_leads_show_by_name(cli):
+    cli.run("leads", "add", "BigCorp deal", "-v", "50000", "-s", "qualified")
+    data = cli.json("leads", "show", "BigCorp")
+    assert "BigCorp" in data["name"]
+
+
+def test_leads_move_by_name(cli):
+    cli.run("leads", "add", "BigCorp deal", "-v", "50000")
+    cli.run("leads", "move", "BigCorp", "won")
+    data = cli.json("leads", "show", "BigCorp")
+    assert data["stage"] == "won"

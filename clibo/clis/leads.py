@@ -116,20 +116,28 @@ def list_leads(
     )
 
 
+def _resolve_lead(db, ident: str) -> Lead | None:
+    from clibo.core.base import lookup_by_id_or_name
+    return lookup_by_id_or_name(db, Lead, ident, Lead.name)
+
+
 @app.command()
-def show(lead_id: int = typer.Argument(..., help="Deal ID"), json_out: JsonOpt = False) -> None:
-    """🧲 Show one deal."""
+def show(
+    lead: str = typer.Argument(..., help="Deal ID or name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🧲 Show one deal. Accepts a numeric ID or a name."""
     with session() as db:
-        lead = db.get(Lead, lead_id)
-        if not lead:
-            fail(f"No deal #{lead_id}", json_out=json_out)
-        data = _row(lead) | {"created_at": lead.created_at}
+        target = _resolve_lead(db, lead)
+        if not target:
+            fail(f"No deal matching {lead!r}", json_out=json_out)
+        data = _row(target) | {"created_at": target.created_at}
     render_record(data, json_out=json_out, title=f"🧲 {data['name']}")
 
 
 @app.command()
 def move(
-    lead_id: int = typer.Argument(..., help="Deal ID"),
+    lead: str = typer.Argument(..., help="Deal ID or name (fuzzy)"),
     stage: str = typer.Argument(..., help=f"New stage: {', '.join(STAGES)}"),
     json_out: JsonOpt = False,
 ) -> None:
@@ -138,54 +146,58 @@ def move(
     if stage not in STAGES:
         fail(f"Stage must be one of: {', '.join(STAGES)}", json_out=json_out)
     with session() as db:
-        lead = db.get(Lead, lead_id)
-        if not lead:
-            fail(f"No deal #{lead_id}", json_out=json_out)
-        lead.stage = stage
-        db.add(lead)
+        target = _resolve_lead(db, lead)
+        if not target:
+            fail(f"No deal matching {lead!r}", json_out=json_out)
+        target.stage = stage
+        db.add(target)
         db.flush()
-        data = _row(lead)
+        data = _row(target)
     flair = " 🎉" if stage == "won" else ""
-    ok(f"Moved '{lead.name}' to {stage}{flair}", json_out=json_out, data=data)
+    ok(f"Moved '{target.name}' to {stage}{flair}", json_out=json_out, data=data)
 
 
 @app.command()
 def edit(
-    lead_id: int = typer.Argument(..., help="Deal ID"),
+    lead: str = typer.Argument(..., help="Deal ID or name (fuzzy)"),
     name: str = typer.Option(None, "--name", help="New name"),
     value: float = typer.Option(None, "--value", "-v", help="New value"),
     contact: str = typer.Option(None, "--contact", "-c"),
     note: str = typer.Option(None, "--note", "-n"),
     json_out: JsonOpt = False,
 ) -> None:
-    """🧲 Edit a deal."""
+    """🧲 Edit a deal. Accepts a numeric ID or a name."""
     with session() as db:
-        lead = db.get(Lead, lead_id)
-        if not lead:
-            fail(f"No deal #{lead_id}", json_out=json_out)
+        target = _resolve_lead(db, lead)
+        if not target:
+            fail(f"No deal matching {lead!r}", json_out=json_out)
         if name is not None:
-            lead.name = name
+            target.name = name
         if value is not None:
-            lead.value = value
+            target.value = value
         if contact is not None:
-            lead.contact = contact
+            target.contact = contact
         if note is not None:
-            lead.notes = note
-        db.add(lead)
+            target.notes = note
+        db.add(target)
         db.flush()
-        data = _row(lead)
-    ok(f"Updated deal #{lead_id}", json_out=json_out, data=data)
+        data = _row(target)
+    ok(f"Updated deal #{target.id}", json_out=json_out, data=data)
 
 
 @app.command()
-def rm(lead_id: int = typer.Argument(..., help="Deal ID"), json_out: JsonOpt = False) -> None:
+def rm(
+    lead: str = typer.Argument(..., help="Deal ID or name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
     """🧲 Delete a deal."""
     with session() as db:
-        lead = db.get(Lead, lead_id)
-        if not lead:
-            fail(f"No deal #{lead_id}", json_out=json_out)
-        db.delete(lead)
-    ok(f"Deleted deal #{lead_id}", json_out=json_out, data={"deleted": lead_id})
+        target = _resolve_lead(db, lead)
+        if not target:
+            fail(f"No deal matching {lead!r}", json_out=json_out)
+        lid = target.id
+        db.delete(target)
+    ok(f"Deleted deal #{lid}", json_out=json_out, data={"deleted": lid})
 
 
 @app.command()

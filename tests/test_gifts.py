@@ -37,3 +37,38 @@ def test_stats_counts_spending(cli):
 def test_negative_price_fails(cli):
     result = cli.run("gifts", "add", "X", "thing", "-p", "-5")
     assert result.exit_code != 0
+
+
+# ── name resolution by recipient (iter 84) ──
+
+
+def test_gifts_show_by_recipient(cli):
+    cli.run("gifts", "add", "Anna", "book")
+    data = cli.json("gifts", "show", "Anna")
+    assert data["recipient"] == "Anna"
+
+
+def test_gifts_bought_by_recipient(cli):
+    cli.run("gifts", "add", "Anna", "book")
+    cli.run("gifts", "bought", "Anna")
+    data = cli.json("gifts", "show", "Anna")
+    assert data["status"] == "bought"
+
+
+def test_gifts_rm_by_recipient(cli):
+    cli.run("gifts", "add", "Anna", "book")
+    cli.run("gifts", "rm", "Anna")
+    listing = cli.json("gifts", "list")
+    assert not any(g["recipient"] == "Anna" for g in listing)
+
+
+def test_gifts_resolves_most_recent_when_multiple(cli):
+    """A recipient with multiple gifts: ID-less lookup picks the latest one."""
+    cli.run("gifts", "add", "Anna", "book")
+    cli.run("gifts", "add", "Anna", "scarf")
+    cli.run("gifts", "given", "Anna")
+    listing = cli.json("gifts", "list")
+    annas = [g for g in listing if g["recipient"] == "Anna"]
+    given = [g for g in annas if g["status"] == "given"]
+    # Most-recent (scarf) should be the one marked given.
+    assert any(g["idea"] == "scarf" for g in given)

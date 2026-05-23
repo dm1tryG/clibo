@@ -4,6 +4,52 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 84 — name resolution on six more entity tools · 2026-05-24
+
+Closing the entity-tool name-resolution gap. Iter 81-83 covered crm,
+clients, jobs, followup, plants, pets. This iteration finishes the
+remaining six: network, leads, gifts, birthdays, brag, cv.
+
+- 🆕 **`lookup_by_id_or_name(db, model, ident, field)`** in
+  `clibo/core/base.py` — generalised version of the per-tool
+  `_resolve` helpers. Tries numeric ID first, then exact
+  case-insensitive match on `field`, then substring fallback.
+  Standardises the pattern so future tools don't reinvent it.
+- 🏆 **`brag show/rm <title>`** — finds achievements by fuzzy title.
+  `clibo brag rm "auth"` removes the `Shipped auth refactor` row.
+- 🌐 **`network show/edit/rm <name>`** + **new `edit` subcommand**.
+  Was missing entirely; now lets you append company/context after
+  the fact (`clibo network edit Sarah -c Stripe -x "joined payments"`).
+- 🧲 **`leads show/move/edit/rm <name>`** — deals resolve by name
+  via a tiny `_resolve_lead` wrapper.
+- 🎂 **`birthdays edit/rm <person>`** + **new `edit` subcommand**.
+  Was missing; now lets you fix dates ("wrong date") and change
+  kind, person name, or note.
+- 📜 **`cv show/end/edit/rm/achieve <title>`** — every mutating
+  subcommand on `cv` now accepts the entry title as well as the ID.
+- 🎁 **`gifts show/bought/given/rm <recipient>`** — Gifts have
+  many-to-one with recipients (one person, many gifts), so the
+  resolver prefers the **most-recently-added** gift to that
+  recipient when looking up by name. Pinned by
+  `test_gifts_resolves_most_recent_when_multiple`.
+- 🧪 16 new tests across six files cover every new resolution path,
+  plus the gifts most-recent-wins behaviour.
+- 🎤 NL flows verified end-to-end:
+  • "Delete my brag about auth" → `brag rm auth` ✓
+  • "Update Sarah — she joined Stripe" → `network edit Sarah -c Stripe` ✓
+  • "Move BigCorp lead to won" → `leads move BigCorp won` ✓
+  • "Dad's birthday is March 15 not 12" → `birthdays edit Dad -d "March 15"` ✓
+  • "Add bullet to my Staff Engineer entry" → `cv achieve Staff "…"` ✓
+  • "Mark Anna's gift as bought" → `gifts bought Anna` ✓
+- **Tests:** 770 passing (+16); ruff clean.
+
+The entity-tool name-resolution rollout is now **complete**. Every
+tool with a natural-name lookup accepts either an ID or a fuzzy
+name match: books, crm, clients, jobs, followup, plants, pets,
+network, leads, gifts, birthdays, brag, cv.
+
+---
+
 ### Iteration 83 — pets polish: optional summary + `edit` + name-by-rm · 2026-05-23
 
 Agent-mode self-test surfaced two real frictions on `pets`:

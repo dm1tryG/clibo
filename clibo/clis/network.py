@@ -98,14 +98,49 @@ def list_connections(
 
 
 @app.command()
-def show(connection_id: int = typer.Argument(..., help="Connection ID"), json_out: JsonOpt = False) -> None:
-    """🌐 Show one connection in detail."""
+def show(
+    connection: str = typer.Argument(..., help="Connection ID or name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🌐 Show one connection in detail. Accepts a numeric ID or a name."""
+    from clibo.core.base import lookup_by_id_or_name
     with session() as db:
-        conn = db.get(Connection, connection_id)
+        conn = lookup_by_id_or_name(db, Connection, connection, Connection.name)
         if not conn:
-            fail(f"No connection #{connection_id}", json_out=json_out)
+            fail(f"No connection matching {connection!r}", json_out=json_out)
         data = _row(conn) | {"created_at": conn.created_at}
     render_record(data, json_out=json_out, title=f"🌐 {data['name']}")
+
+
+@app.command()
+def edit(
+    connection: str = typer.Argument(..., help="Connection ID or name (fuzzy)"),
+    name: str = typer.Option(None, "--name", help="New name"),
+    company: str = typer.Option(None, "--company", "-c", help="New company"),
+    met_where: str = typer.Option(None, "--where", "-w",
+                                    help="Where you met"),
+    context: str = typer.Option(None, "--context", "-x",
+                                  help="New context note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🌐 Edit a connection. Accepts a numeric ID or a name."""
+    from clibo.core.base import lookup_by_id_or_name
+    with session() as db:
+        conn = lookup_by_id_or_name(db, Connection, connection, Connection.name)
+        if not conn:
+            fail(f"No connection matching {connection!r}", json_out=json_out)
+        if name is not None:
+            conn.name = name
+        if company is not None:
+            conn.company = company
+        if met_where is not None:
+            conn.met_where = met_where
+        if context is not None:
+            conn.context = context
+        db.add(conn)
+        db.flush()
+        data = _row(conn)
+    ok(f"Updated connection #{conn.id}", json_out=json_out, data=data)
 
 
 @app.command()
@@ -139,14 +174,19 @@ def search(
 
 
 @app.command()
-def rm(connection_id: int = typer.Argument(..., help="Connection ID"), json_out: JsonOpt = False) -> None:
+def rm(
+    connection: str = typer.Argument(..., help="Connection ID or name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
     """🌐 Delete a connection."""
+    from clibo.core.base import lookup_by_id_or_name
     with session() as db:
-        conn = db.get(Connection, connection_id)
+        conn = lookup_by_id_or_name(db, Connection, connection, Connection.name)
         if not conn:
-            fail(f"No connection #{connection_id}", json_out=json_out)
+            fail(f"No connection matching {connection!r}", json_out=json_out)
+        cid = conn.id
         db.delete(conn)
-    ok(f"Deleted connection #{connection_id}", json_out=json_out, data={"deleted": connection_id})
+    ok(f"Deleted connection #{cid}", json_out=json_out, data={"deleted": cid})
 
 
 @app.command()

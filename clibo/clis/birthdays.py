@@ -186,15 +186,62 @@ def upcoming(
     )
 
 
+def _resolve_occasion(db, ident: str) -> Occasion | None:
+    from clibo.core.base import lookup_by_id_or_name
+    return lookup_by_id_or_name(db, Occasion, ident, Occasion.person)
+
+
 @app.command()
-def rm(occasion_id: int = typer.Argument(..., help="Occasion ID"), json_out: JsonOpt = False) -> None:
+def edit(
+    occasion: str = typer.Argument(..., help="Occasion ID or person name"),
+    on: str = typer.Option(None, "--date", "-d",
+                            help="New date (MM-DD, YYYY-MM-DD, or 'March 15')"),
+    kind: str = typer.Option(None, "--kind", "-k",
+                              help="birthday / anniversary"),
+    note: str = typer.Option(None, "--note", "-n", help="New note"),
+    person: str = typer.Option(None, "--person",
+                                 help="Rename the person"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🎂 Edit an occasion. Accepts a numeric ID or a person name."""
+    with session() as db:
+        target = _resolve_occasion(db, occasion)
+        if not target:
+            fail(f"No occasion matching {occasion!r}", json_out=json_out)
+        if on is not None:
+            month, day, year = _parse_md(on)
+            target.month, target.day = month, day
+            if year is not None:
+                target.year = year
+        if kind is not None:
+            if kind.lower() not in KINDS:
+                fail(f"Kind must be one of: {', '.join(KINDS)}",
+                     json_out=json_out)
+            target.kind = kind.lower()
+        if note is not None:
+            target.note = note
+        if person is not None:
+            target.person = person
+        db.add(target)
+        db.flush()
+        data = _row(target)
+    ok(f"Updated occasion #{target.id} — {target.person}",
+       json_out=json_out, data=data)
+
+
+@app.command()
+def rm(
+    occasion: str = typer.Argument(..., help="Occasion ID or person name"),
+    json_out: JsonOpt = False,
+) -> None:
     """🎂 Delete an occasion."""
     with session() as db:
-        occasion = db.get(Occasion, occasion_id)
-        if not occasion:
-            fail(f"No occasion #{occasion_id}", json_out=json_out)
-        db.delete(occasion)
-    ok(f"Deleted occasion #{occasion_id}", json_out=json_out, data={"deleted": occasion_id})
+        target = _resolve_occasion(db, occasion)
+        if not target:
+            fail(f"No occasion matching {occasion!r}", json_out=json_out)
+        oid = target.id
+        db.delete(target)
+    ok(f"Deleted occasion #{oid}", json_out=json_out, data={"deleted": oid})
 
 
 @app.command()

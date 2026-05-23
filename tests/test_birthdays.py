@@ -53,3 +53,21 @@ def test_add_with_month_name_date(cli):
     data = cli.json("birthdays", "add", "Sister", "-d", "Mar 12 1985")
     assert data["date"] == "03-12"
     assert data["turning"] is not None
+
+
+# ── new edit + rm by person (iter 84) ──
+
+
+def test_birthdays_edit_by_person(cli):
+    cli.run("birthdays", "add", "Dad", "-d", "March 12")
+    cli.run("birthdays", "edit", "Dad", "-d", "March 15")
+    data = cli.json("birthdays", "list")
+    dad = next(o for o in data if o["person"] == "Dad")
+    assert dad["date"] == "03-15"
+
+
+def test_birthdays_rm_by_person(cli):
+    cli.run("birthdays", "add", "Dad", "-d", "March 12")
+    cli.run("birthdays", "rm", "Dad")
+    listing = cli.json("birthdays", "list")
+    assert not any(o["person"] == "Dad" for o in listing)
