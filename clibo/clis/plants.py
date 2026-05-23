@@ -34,12 +34,20 @@ app = typer.Typer(no_args_is_help=True, help=HELP)
 
 
 def _resolve(db, ident: str) -> Plant | None:
-    """Look up a plant by numeric ID or by (case-insensitive) name."""
+    """Look up a plant by numeric ID or (case-insensitive) name match.
+
+    Tries exact name first, then substring so `Bas` finds `Basil`.
+    """
     if ident.isdigit():
         plant = db.get(Plant, int(ident))
         if plant:
             return plant
-    return db.exec(select(Plant).where(Plant.name.ilike(ident))).first()
+    exact = db.exec(select(Plant).where(Plant.name.ilike(ident))).first()
+    if exact:
+        return exact
+    return db.exec(
+        select(Plant).where(Plant.name.ilike(f"%{ident}%"))
+    ).first()
 
 
 def _next_water(plant: Plant) -> date:
@@ -161,14 +169,49 @@ def thirsty(json_out: JsonOpt = False) -> None:
 
 
 @app.command()
-def rm(plant_id: int = typer.Argument(..., help="Plant ID"), json_out: JsonOpt = False) -> None:
+def edit(
+    plant: str = typer.Argument(..., help="Plant name or ID"),
+    name: str = typer.Option(None, "--name", help="New name"),
+    location: str = typer.Option(None, "--location", "-l", help="New location"),
+    water_every: int = typer.Option(None, "--water-every", "-w",
+                                     help="Water every N days"),
+    note: str = typer.Option(None, "--note", "-n", help="New note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🪴 Edit a plant. Accepts a numeric ID or a name."""
+    with session() as db:
+        target = _resolve(db, plant)
+        if not target:
+            fail(f"No plant matching {plant!r}", json_out=json_out)
+        if name is not None:
+            target.name = name
+        if location is not None:
+            target.location = location
+        if water_every is not None:
+            if water_every <= 0:
+                fail("Water-every must be positive", json_out=json_out)
+            target.water_every_days = water_every
+        if note is not None:
+            target.note = note
+        db.add(target)
+        db.flush()
+        data = _row(target)
+    ok(f"Updated plant #{target.id}", json_out=json_out, data=data)
+
+
+@app.command()
+def rm(
+    plant: str = typer.Argument(..., help="Plant name or ID"),
+    json_out: JsonOpt = False,
+) -> None:
     """🪴 Delete a plant."""
     with session() as db:
-        plant = db.get(Plant, plant_id)
-        if not plant:
-            fail(f"No plant #{plant_id}", json_out=json_out)
-        db.delete(plant)
-    ok(f"Deleted plant #{plant_id}", json_out=json_out, data={"deleted": plant_id})
+        target = _resolve(db, plant)
+        if not target:
+            fail(f"No plant matching {plant!r}", json_out=json_out)
+        pid = target.id
+        db.delete(target)
+    ok(f"Deleted plant #{pid}", json_out=json_out, data={"deleted": pid})
 
 
 @app.command()

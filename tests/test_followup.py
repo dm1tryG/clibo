@@ -45,3 +45,41 @@ def test_stats(cli):
     stats = cli.json("followup", "stats")
     assert stats["pending"] == 1
     assert stats["overdue"] == 1
+
+
+# ── name resolution by person (iter 82) ──
+
+
+def test_followup_done_by_person_name(cli):
+    cli.run("followup", "add", "Alice", "--due", "in 3 days")
+    cli.run("followup", "done", "Alice")
+    listing = cli.json("followup", "list", "--all")  # include done
+    alice = next(f for f in listing if f["person"] == "Alice")
+    assert alice["done"] is True
+
+
+def test_followup_done_prefers_pending(cli):
+    """Done resolves to the first pending follow-up for that person."""
+    cli.run("followup", "add", "Alice", "--due", "in 3 days")
+    cli.run("followup", "done", "Alice")
+    cli.run("followup", "add", "Alice", "--due", "in 7 days")
+    cli.run("followup", "done", "Alice")
+    listing = cli.json("followup", "list", "--all")
+    alices = [f for f in listing if f["person"] == "Alice"]
+    assert len(alices) == 2
+    assert all(f["done"] for f in alices)
+
+
+def test_followup_snooze_by_name(cli):
+    cli.run("followup", "add", "Bob", "--due", "in 3 days")
+    cli.run("followup", "snooze", "Bob", "--days", "14")
+    listing = cli.json("followup", "list")
+    bob = next(f for f in listing if f["person"] == "Bob")
+    assert bob["due_date"]  # populated
+
+
+def test_followup_rm_by_name(cli):
+    cli.run("followup", "add", "Bob", "--due", "in 3 days")
+    cli.run("followup", "rm", "Bob")
+    listing = cli.json("followup", "list", "--all")
+    assert not any(f["person"] == "Bob" for f in listing)

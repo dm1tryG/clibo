@@ -50,12 +50,20 @@ app = typer.Typer(no_args_is_help=True, help=HELP)
 
 
 def _resolve(db, ident: str) -> Client | None:
-    """Look up a client by numeric ID or by (case-insensitive) name."""
+    """Look up a client by numeric ID or by (case-insensitive) name match.
+
+    Tries exact name first (handles short-name shadows), then substring.
+    """
     if ident.isdigit():
         client = db.get(Client, int(ident))
         if client:
             return client
-    return db.exec(select(Client).where(Client.name.ilike(ident))).first()
+    exact = db.exec(select(Client).where(Client.name.ilike(ident))).first()
+    if exact:
+        return exact
+    return db.exec(
+        select(Client).where(Client.name.ilike(f"%{ident}%"))
+    ).first()
 
 
 def _hours(db, client_id: int) -> float:
@@ -195,45 +203,49 @@ def show(
 
 @app.command()
 def edit(
-    client_id: int = typer.Argument(..., help="Client ID"),
+    client: str = typer.Argument(..., help="Client name or ID"),
     rate: float = typer.Option(None, "--rate", "-r", help="New hourly rate"),
     status: str = typer.Option(None, "--status", "-s", help="New status"),
     email: str = typer.Option(None, "--email", "-e"),
     note: str = typer.Option(None, "--note", "-n"),
     json_out: JsonOpt = False,
 ) -> None:
-    """🧑‍💼 Edit a client."""
+    """🧑‍💼 Edit a client. Accepts a numeric ID or a name."""
     if status and status.lower() not in STATUSES:
         fail(f"Status must be one of: {', '.join(STATUSES)}", json_out=json_out)
     with session() as db:
-        client = db.get(Client, client_id)
-        if not client:
-            fail(f"No client #{client_id}", json_out=json_out)
+        target = _resolve(db, client)
+        if not target:
+            fail(f"No client matching {client!r}", json_out=json_out)
         if rate is not None:
-            client.hourly_rate = rate
+            target.hourly_rate = rate
         if status is not None:
-            client.status = status.lower()
+            target.status = status.lower()
         if email is not None:
-            client.email = email
+            target.email = email
         if note is not None:
-            client.notes = note
-        db.add(client)
+            target.notes = note
+        db.add(target)
         db.flush()
-        data = _row(db, client)
-    ok(f"Updated client #{client_id}", json_out=json_out, data=data)
+        data = _row(db, target)
+    ok(f"Updated client #{target.id}", json_out=json_out, data=data)
 
 
 @app.command()
-def rm(client_id: int = typer.Argument(..., help="Client ID"), json_out: JsonOpt = False) -> None:
+def rm(
+    client: str = typer.Argument(..., help="Client name or ID"),
+    json_out: JsonOpt = False,
+) -> None:
     """🧑‍💼 Delete a client and their hours log."""
     with session() as db:
-        client = db.get(Client, client_id)
-        if not client:
-            fail(f"No client #{client_id}", json_out=json_out)
-        for row in db.exec(select(ClientHours).where(ClientHours.client_id == client_id)).all():
+        target = _resolve(db, client)
+        if not target:
+            fail(f"No client matching {client!r}", json_out=json_out)
+        cid = target.id
+        for row in db.exec(select(ClientHours).where(ClientHours.client_id == cid)).all():
             db.delete(row)
-        db.delete(client)
-    ok(f"Deleted client #{client_id}", json_out=json_out, data={"deleted": client_id})
+        db.delete(target)
+    ok(f"Deleted client #{cid}", json_out=json_out, data={"deleted": cid})
 
 
 @app.command()

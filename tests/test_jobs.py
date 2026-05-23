@@ -44,3 +44,26 @@ def test_stats(cli):
 def test_invalid_status_fails(cli):
     result = cli.run("jobs", "add", "Bad", "Role", "-s", "ghosted")
     assert result.exit_code != 0
+
+
+# ── name resolution by company (iter 82) ──
+
+
+def test_jobs_show_by_company_name(cli):
+    cli.run("jobs", "add", "Stripe", "Senior Engineer")
+    data = cli.json("jobs", "show", "Stripe")
+    assert data["company"] == "Stripe"
+
+
+def test_jobs_move_by_company_name(cli):
+    cli.run("jobs", "add", "Stripe", "Senior Engineer")
+    cli.run("jobs", "move", "Stripe", "interviewing")
+    data = cli.json("jobs", "show", "Stripe")
+    assert data["status"] == "interviewing"
+
+
+def test_jobs_rm_by_company_name(cli):
+    cli.run("jobs", "add", "Stripe", "Senior Engineer")
+    cli.run("jobs", "rm", "Stripe")
+    listing = cli.json("jobs", "list")
+    assert not any(j["company"] == "Stripe" for j in listing)

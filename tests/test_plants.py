@@ -41,3 +41,27 @@ def test_stats(cli):
 def test_invalid_frequency_fails(cli):
     result = cli.run("plants", "add", "Bad", "-w", "0")
     assert result.exit_code != 0
+
+
+# ── edit by name + plant edit command (iter 82) ──
+
+
+def test_plants_edit_by_name(cli):
+    cli.run("plants", "add", "Basil", "-w", "2", "-l", "living room")
+    cli.run("plants", "edit", "Basil", "-l", "kitchen")
+    data = cli.json("plants", "list")
+    basil = next(p for p in data if p["name"] == "Basil")
+    assert basil["location"] == "kitchen"
+
+
+def test_plants_rm_by_name(cli):
+    cli.run("plants", "add", "Basil", "-w", "2")
+    cli.run("plants", "rm", "Basil")
+    data = cli.json("plants", "list")
+    assert not any(p["name"] == "Basil" for p in data)
+
+
+def test_plants_edit_rejects_zero_frequency(cli):
+    cli.run("plants", "add", "Basil", "-w", "2")
+    result = cli.run("plants", "edit", "Basil", "-w", "0")
+    assert result.exit_code != 0

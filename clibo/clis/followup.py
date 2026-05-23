@@ -34,6 +34,33 @@ class FollowUp(SQLModel, table=True):
 app = typer.Typer(no_args_is_help=True, help=HELP)
 
 
+def _resolve(db, ident: str) -> FollowUp | None:
+    """Look up a follow-up by numeric ID or by person name.
+
+    For names, prefers a pending (not-done) follow-up; falls back to the
+    most-recently-due one. People with multiple follow-ups: pass the ID
+    to disambiguate.
+    """
+    if ident.isdigit():
+        fu = db.get(FollowUp, int(ident))
+        if fu:
+            return fu
+    # Pending follow-ups first.
+    pending = db.exec(
+        select(FollowUp)
+        .where(FollowUp.person.ilike(f"%{ident}%"))
+        .where(FollowUp.done == False)  # noqa: E712
+        .order_by(FollowUp.due_date)
+    ).first()
+    if pending:
+        return pending
+    return db.exec(
+        select(FollowUp)
+        .where(FollowUp.person.ilike(f"%{ident}%"))
+        .order_by(FollowUp.due_date.desc())
+    ).first()
+
+
 def _status(fu: FollowUp) -> str:
     if fu.done:
         return "done"
@@ -110,12 +137,15 @@ def list_followups(
 
 
 @app.command()
-def done(followup_id: int = typer.Argument(..., help="Follow-up ID"), json_out: JsonOpt = False) -> None:
-    """🔔 Mark a follow-up as done."""
+def done(
+    followup: str = typer.Argument(..., help="Follow-up ID or person name"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🔔 Mark a follow-up as done. Accepts a numeric ID or a person name."""
     with session() as db:
-        fu = db.get(FollowUp, followup_id)
+        fu = _resolve(db, followup)
         if not fu:
-            fail(f"No follow-up #{followup_id}", json_out=json_out)
+            fail(f"No follow-up matching {followup!r}", json_out=json_out)
         fu.done = True
         fu.done_at = date.today()
         db.add(fu)
@@ -153,31 +183,36 @@ def due(
 
 @app.command()
 def snooze(
-    followup_id: int = typer.Argument(..., help="Follow-up ID"),
+    followup: str = typer.Argument(..., help="Follow-up ID or person name"),
     days: int = typer.Option(7, "--days", help="Push the due date out by this many days"),
     json_out: JsonOpt = False,
 ) -> None:
     """😴 Push a follow-up's due date later."""
     with session() as db:
-        fu = db.get(FollowUp, followup_id)
+        fu = _resolve(db, followup)
         if not fu:
-            fail(f"No follow-up #{followup_id}", json_out=json_out)
+            fail(f"No follow-up matching {followup!r}", json_out=json_out)
         fu.due_date = date.today() + timedelta(days=days)
         db.add(fu)
         db.flush()
         data = _row(fu)
-    ok(f"Snoozed follow-up with {fu.person} to {fu.due_date}", json_out=json_out, data=data)
+    ok(f"Snoozed follow-up with {fu.person} to {fu.due_date}",
+       json_out=json_out, data=data)
 
 
 @app.command()
-def rm(followup_id: int = typer.Argument(..., help="Follow-up ID"), json_out: JsonOpt = False) -> None:
+def rm(
+    followup: str = typer.Argument(..., help="Follow-up ID or person name"),
+    json_out: JsonOpt = False,
+) -> None:
     """🔔 Delete a follow-up."""
     with session() as db:
-        fu = db.get(FollowUp, followup_id)
+        fu = _resolve(db, followup)
         if not fu:
-            fail(f"No follow-up #{followup_id}", json_out=json_out)
+            fail(f"No follow-up matching {followup!r}", json_out=json_out)
+        fid = fu.id
         db.delete(fu)
-    ok(f"Deleted follow-up #{followup_id}", json_out=json_out, data={"deleted": followup_id})
+    ok(f"Deleted follow-up #{fid}", json_out=json_out, data={"deleted": fid})
 
 
 @app.command()

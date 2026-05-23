@@ -37,6 +37,17 @@ class JobApplication(SQLModel, table=True):
 app = typer.Typer(no_args_is_help=True, help=HELP)
 
 
+def _resolve(db, ident: str) -> JobApplication | None:
+    """Look up an application by numeric ID or by company (case-insensitive)."""
+    if ident.isdigit():
+        job = db.get(JobApplication, int(ident))
+        if job:
+            return job
+    return db.exec(
+        select(JobApplication).where(JobApplication.company.ilike(f"%{ident}%"))
+    ).first()
+
+
 def _row(job: JobApplication) -> dict:
     return {
         "id": job.id,
@@ -115,19 +126,23 @@ def list_jobs(
 
 
 @app.command()
-def show(job_id: int = typer.Argument(..., help="Application ID"), json_out: JsonOpt = False) -> None:
-    """💼 Show one job application."""
+def show(
+    job: str = typer.Argument(..., help="Application ID or company name"),
+    json_out: JsonOpt = False,
+) -> None:
+    """💼 Show one job application. Accepts a numeric ID or a company name."""
     with session() as db:
-        job = db.get(JobApplication, job_id)
-        if not job:
-            fail(f"No application #{job_id}", json_out=json_out)
-        data = _row(job) | {"created_at": job.created_at}
-    render_record(data, json_out=json_out, title=f"💼 {data['role']} @ {data['company']}")
+        target = _resolve(db, job)
+        if not target:
+            fail(f"No application matching {job!r}", json_out=json_out)
+        data = _row(target) | {"created_at": target.created_at}
+    render_record(data, json_out=json_out,
+                  title=f"💼 {data['role']} @ {data['company']}")
 
 
 @app.command()
 def move(
-    job_id: int = typer.Argument(..., help="Application ID"),
+    job: str = typer.Argument(..., help="Application ID or company name"),
     status: str = typer.Argument(..., help=f"New status: {', '.join(STATUSES)}"),
     json_out: JsonOpt = False,
 ) -> None:
@@ -136,20 +151,21 @@ def move(
     if status not in STATUSES:
         fail(f"Status must be one of: {', '.join(STATUSES)}", json_out=json_out)
     with session() as db:
-        job = db.get(JobApplication, job_id)
-        if not job:
-            fail(f"No application #{job_id}", json_out=json_out)
-        job.status = status
-        db.add(job)
+        target = _resolve(db, job)
+        if not target:
+            fail(f"No application matching {job!r}", json_out=json_out)
+        target.status = status
+        db.add(target)
         db.flush()
-        data = _row(job)
+        data = _row(target)
     flair = " 🎉" if status in ("offer", "accepted") else ""
-    ok(f"Moved {job.role} @ {job.company} to {status}{flair}", json_out=json_out, data=data)
+    ok(f"Moved {target.role} @ {target.company} to {status}{flair}",
+       json_out=json_out, data=data)
 
 
 @app.command()
 def edit(
-    job_id: int = typer.Argument(..., help="Application ID"),
+    job: str = typer.Argument(..., help="Application ID or company name"),
     role: str = typer.Option(None, "--role", help="New role"),
     salary: str = typer.Option(None, "--salary", help="New salary"),
     location: str = typer.Option(None, "--location", "-l"),
@@ -159,28 +175,32 @@ def edit(
 ) -> None:
     """💼 Edit a job application."""
     with session() as db:
-        job = db.get(JobApplication, job_id)
-        if not job:
-            fail(f"No application #{job_id}", json_out=json_out)
+        target = _resolve(db, job)
+        if not target:
+            fail(f"No application matching {job!r}", json_out=json_out)
         for field, value in {"role": role, "salary": salary, "location": location,
                              "url": url, "notes": note}.items():
             if value is not None:
-                setattr(job, field, value)
-        db.add(job)
+                setattr(target, field, value)
+        db.add(target)
         db.flush()
-        data = _row(job)
-    ok(f"Updated application #{job_id}", json_out=json_out, data=data)
+        data = _row(target)
+    ok(f"Updated application #{target.id}", json_out=json_out, data=data)
 
 
 @app.command()
-def rm(job_id: int = typer.Argument(..., help="Application ID"), json_out: JsonOpt = False) -> None:
+def rm(
+    job: str = typer.Argument(..., help="Application ID or company name"),
+    json_out: JsonOpt = False,
+) -> None:
     """💼 Delete a job application."""
     with session() as db:
-        job = db.get(JobApplication, job_id)
-        if not job:
-            fail(f"No application #{job_id}", json_out=json_out)
-        db.delete(job)
-    ok(f"Deleted application #{job_id}", json_out=json_out, data={"deleted": job_id})
+        target = _resolve(db, job)
+        if not target:
+            fail(f"No application matching {job!r}", json_out=json_out)
+        jid = target.id
+        db.delete(target)
+    ok(f"Deleted application #{jid}", json_out=json_out, data={"deleted": jid})
 
 
 @app.command()

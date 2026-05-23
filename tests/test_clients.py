@@ -43,3 +43,26 @@ def test_stats_total_earnings(cli):
 def test_log_unknown_client_fails(cli):
     result = cli.run("clients", "log", "Ghost", "5")
     assert result.exit_code != 0
+
+
+# ── name resolution on edit / rm (iter 82) ──
+
+
+def test_clients_edit_by_name(cli):
+    cli.run("clients", "add", "Acme Corp", "-r", "150")
+    cli.run("clients", "edit", "Acme", "-r", "200")
+    data = cli.json("clients", "show", "Acme Corp")
+    assert data["hourly_rate"] == 200.0
+
+
+def test_clients_rm_by_name(cli):
+    cli.run("clients", "add", "Acme Corp", "-r", "150")
+    cli.run("clients", "rm", "Acme")
+    listing = cli.json("clients", "list")
+    assert not any(c["name"] == "Acme Corp" for c in listing)
+
+
+def test_clients_edit_unknown_name_fails(cli):
+    cli.run("clients", "add", "Real Co", "-r", "100")
+    result = cli.run("clients", "edit", "Ghost", "-r", "200")
+    assert result.exit_code != 0

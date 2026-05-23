@@ -4,6 +4,42 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 82 — name resolution on clients, jobs, followup, plants · 2026-05-23
+
+Iter 81 added name-resolve to `crm` (the most-asked tool) but noted
+10 others had the same gap. This iteration extends the pattern to
+the next-most-used entity tools.
+
+- 👥 **`clients edit/rm`** — now accept name or ID (already had it on
+  `show`/`log`).
+- 💼 **`jobs show/move/edit/rm`** — resolve by **company name**
+  ("Stripe") not just integer ID. New `_resolve` finds by
+  case-insensitive substring match on `company`.
+- 🔔 **`followup done/snooze/rm`** — resolve by **person name** with
+  pending-first preference. When a person has multiple follow-ups,
+  `clibo followup done Alice` picks the soonest pending one
+  automatically. Pinned by `test_followup_done_prefers_pending`.
+- 🪴 **`plants edit/rm`** — name resolution + a new `edit` subcommand
+  (was previously missing — "move Basil to kitchen" had no command).
+- 🔧 **`_resolve` updated in clients + plants** — was using
+  `ilike(ident)` (exact match) only. Now tries exact first, then
+  substring fallback. So `clients edit Acme` finds `Acme Corp`.
+- 🧪 13 new tests pin every refactored path: name-resolution,
+  fuzzy substring, unknown-name failure, followup-done prefers
+  pending, plants new edit command rejects bad inputs.
+- 🎤 Confirmed NL flows end-to-end:
+  • `clibo plants edit Basil -l kitchen` ✓
+  • `clibo clients edit Acme -r 200` ✓
+  • `clibo jobs move Stripe interviewing` ✓
+  • `clibo followup done Alice` ✓ (the pending one)
+- **Tests:** 747 passing (+13); ruff clean.
+
+Remaining entity tools without name-resolve: `network`, `pets`,
+`leads`, `birthdays`, `brag`, `gifts`, `cv`. Same `_resolve` pattern
+when they're asked for next.
+
+---
+
 ### Iteration 81 — `crm show/edit/rm/touch <name>` (name-based resolution) · 2026-05-23
 
 Persistent gap from agent-mode self-test: "Edit my CRM — Bob got
