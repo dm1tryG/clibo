@@ -4,6 +4,40 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 60 — `documents` (expiry tracker for passport, license, etc.) · 2026-05-23
+
+Agent-mode self-test: "My passport expires June 2030" had no home.
+`events` is for one-off dates, `bills` is recurring due dates with
+amounts — neither fits "things that quietly expire and ruin a trip if
+you miss them". A real high-cost-of-failure gap.
+
+- 📑 **New tool `documents` (67th, Home & Life)** — registry of
+  expiring documents (passport / license / id / insurance / cert /
+  visa / membership / warranty / lease / other). Stores name, kind,
+  optional issued + serial number + note, and a required expiry date.
+- ⏳ **`expiring` subcommand** — the headline view. Lists documents
+  expiring within N days (default 90), sorted soonest first, with
+  urgency colour coding: 🔴 critical (≤ 30d), 🟡 soon (≤ 90d),
+  watch (≤ 1y), 🟢 ok (> 1y).
+- `expired` — separate view for anything already past.
+- Validates that `issued` (if given) is before `expires`.
+- 📅 **Free natural-language dates** thanks to iter 57: `-e "June 15 2030"`,
+  `-e "next March"`, `-e "in 14 days"` all just work. Pinned by a
+  dedicated test.
+- 🔌 Integrated: `recent.py`, `search.py` (name + kind + number +
+  note indexed — so searching by policy number finds the document),
+  `catalog.py` (Home & Life — 11 tools now).
+- 📄 `docs/SCHEMA.md` regenerated (79 tables).
+- 🎤 NL flow verified:
+  • "My passport expires June 15 2030" →
+    `documents add Passport -e "June 15 2030" -k passport` ✓
+  • "Insurance #POL-9999 expires in 2 weeks" →
+    `documents add "Travel insurance" -e "in 14 days" -k insurance -# POL-9999` ✓
+  • "What's expiring soon?" → `documents expiring --days 90` ✓
+- **Tests:** 525 passing (+16); ruff clean.
+
+---
+
 ### Iteration 59 — `caffeine` (intake tracker with bedtime-residual model) · 2026-05-23
 
 Agent-mode self-test: "Had a coffee at 9am" had nowhere to go.

@@ -248,6 +248,7 @@ sub-command and every flag.
 | ✅ | `home` 🏠 | Home maintenance & repairs |
 | ✅ | `pets` 🐾 | Pet care, feeding & vet log |
 | ✅ | `travel` ✈️ | Trip planner & itinerary |
+| ✅ | `documents` 📑 | Important documents with expiry tracking |
 
 ### 🎨 Hobbies & Culture *(beyond the original 50)*
 | | Tool | What it does |

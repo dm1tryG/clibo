@@ -97,6 +97,8 @@ CATALOG: list[Tool] = [
          "Daily step-count tracker — goal, streak, by-source totals"),
     Tool("caffeine", "☕", "Health & Wellness",
          "Caffeine intake with bedtime-residual estimate (half-life model)"),
+    Tool("documents", "📑", "Home & Life",
+         "Important documents with expiry tracking (passport, license, …)"),
 ]
 
 CATEGORIES: list[str] = list(dict.fromkeys(t.category for t in CATALOG))

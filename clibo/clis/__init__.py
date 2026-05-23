@@ -20,6 +20,7 @@ from clibo.clis import (
     cv,
     dashboard,
     debt,
+    documents,
     dreams,
     events,
     expense,
@@ -142,4 +143,5 @@ ALL = [
     tip,
     steps,
     caffeine,
+    documents,
 ]

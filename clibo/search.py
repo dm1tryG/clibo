@@ -17,6 +17,7 @@ from clibo.clis.brag import Achievement
 from clibo.clis.caffeine import CaffeineEntry
 from clibo.clis.crm import Contact
 from clibo.clis.cv import CvEntry
+from clibo.clis.documents import Document
 from clibo.clis.dreams import Dream
 from clibo.clis.expense import Expense
 from clibo.clis.films import Film
@@ -123,6 +124,9 @@ SOURCES: list[tuple] = [
     ("caffeine", CaffeineEntry,
      [CaffeineEntry.drink, CaffeineEntry.note],
      lambda c: f"{c.drink} ({c.mg} mg)"),
+    ("documents", Document,
+     [Document.name, Document.kind, Document.number, Document.note],
+     lambda d: f"{d.kind}: {d.name} (expires {d.expires})"),
 ]
 
 

@@ -168,6 +168,8 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
                 + (f" ({r['source']})" if r["source"] else "")),
     ("caffeine", "☕", "caffeine_entry", ["drink", "mg"],
      lambda r: f"{r['drink']} ({r['mg']} mg)"),
+    ("documents", "📑", "document_entry", ["name", "kind", "expires"],
+     lambda r: f"{r['kind']}: {r['name']} (expires {r['expires']})"),
 ]
 
 
