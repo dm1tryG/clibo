@@ -253,6 +253,7 @@ sub-command and every flag.
 | ✅ | `gratitude` 🙏 | Daily gratitude practice with streaks |
 | ✅ | `quotes` 💬 | A commonplace book of quotes worth keeping |
 | ✅ | `flashcards` 🃏 | Spaced-repetition flashcards (Leitner-style) |
+| ✅ | `lessons` 📓 | Lessons learned — context + takeaway |
 
 ## For AI agents
 

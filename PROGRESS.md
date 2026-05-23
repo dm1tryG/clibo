@@ -4,6 +4,33 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 48 — `lessons` (structured takeaways) · 2026-05-23
+
+Self-test pass: "Lesson: retry logic should always have max-attempts"
+ended up in `journal` with a tag — workable but unstructured. Closing
+the gap with a tool that has dedicated `takeaway` + `context` fields.
+
+- 📓 **New tool `lessons` (59th)** — structured takeaway + context.
+  Distinct from `brag` (achievements, positive) and `journal`
+  (free-form daily). Pretty-printed `show` separates the lesson
+  from the situation it came from.
+- Commands: `add TAKEAWAY -x CONTEXT -c CATEGORY -t TAG` / `list
+  [--days N] [-c CATEGORY]` / `show` (formatted) / `search` (across
+  takeaway/context/tags) / `random` (re-encounter) / `rm` /
+  `stats`.
+- 🐛 Ruff caught `E741 Ambiguous variable name 'l'` × 4 in
+  comprehensions; renamed to `ls`. Real find — `l` ambiguous with
+  the digit `1`.
+- 📜 `recent` picks up lessons as `[category] takeaway`.
+- 📄 `docs/SCHEMA.md` regenerated (72 tables).
+- 🎤 NL mapping verified:
+  • "Lesson: always set max-attempts" → `lessons add "always set max-attempts"`
+  • "From prod incident: small batches" → `lessons add "ship small batches" -x "prod incident"`
+  • "Show me a random lesson" → `lessons random`
+- **Tests:** 401 passing (+7); ruff clean.
+
+---
+
 ### Iteration 47 — `flashcards` (spaced repetition) · 2026-05-23
 
 Closing the third gap from iter 46's self-test ("Spanish: día = day").

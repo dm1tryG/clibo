@@ -35,6 +35,7 @@ from clibo.clis import (
     jobs,
     journal,
     leads,
+    lessons,
     meals,
     meditate,
     meds,
@@ -126,4 +127,5 @@ ALL = [
     ideas,
     quotes,
     flashcards,
+    lessons,
 ]
