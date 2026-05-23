@@ -52,16 +52,43 @@ def _row(entry: CarEntry) -> dict:
 
 @app.command()
 def fuel(
-    odometer: int = typer.Argument(..., help="Odometer reading (km or mi)"),
     volume: float = typer.Argument(..., help="Volume filled (litres or gallons)"),
+    extra: float = typer.Argument(
+        None,
+        help="(Deprecated) Old positional form was `ODOMETER VOLUME` — if a "
+             "second number is passed it is interpreted as the volume and the "
+             "first as the odometer.",
+        hidden=True,
+    ),
+    odometer: int = typer.Option(None, "--odometer", "-o",
+                                  help="Odometer reading (km or mi) — optional, "
+                                       "but needed for economy stats"),
     cost: float = typer.Option(0, "--cost", "-c", help="Total cost"),
     on: str = typer.Option("today", "--date", "-d", help="Date"),
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
 ) -> None:
-    """⛽ Log a fuel fill-up."""
-    if volume <= 0 or odometer < 0 or cost < 0:
-        fail("Volume, odometer and cost must be non-negative", json_out=json_out)
+    """⛽ Log a fuel fill-up.
+
+    Volume is required; odometer is optional via `-o/--odometer` (without it,
+    economy stats simply skip this fill-up). The old two-positional form
+    `car fuel ODOMETER VOLUME` is still accepted for backward compatibility.
+    """
+    # Back-compat shim: if a second positional was passed, the first one was
+    # actually the odometer (old signature: `fuel ODOMETER VOLUME`).
+    if extra is not None:
+        if odometer is not None:
+            fail(
+                "Pass odometer either positionally (old form) or with "
+                "`-o/--odometer`, not both",
+                json_out=json_out,
+            )
+        odometer = int(volume)
+        volume = extra
+    if volume <= 0 or cost < 0:
+        fail("Volume and cost must be non-negative", json_out=json_out)
+    if odometer is not None and odometer < 0:
+        fail("Odometer must be non-negative", json_out=json_out)
     entry = CarEntry(
         kind="fuel", entry_date=parse_date(on), odometer=odometer,
         volume=volume, cost=cost, note=note,
@@ -71,7 +98,9 @@ def fuel(
         db.flush()
         db.refresh(entry)
         data = _row(entry)
-    ok(f"Logged {EMOJI} fuel — {volume:g} @ {odometer}{' for ' + money(cost) if cost else ''}",
+    odo_str = f" @ {odometer}" if odometer is not None else ""
+    cost_str = f" for {money(cost)}" if cost else ""
+    ok(f"Logged {EMOJI} fuel — {volume:g}{odo_str}{cost_str}",
        json_out=json_out, data=data)
 
 
@@ -125,7 +154,7 @@ def list_entries(
         json_out=json_out,
         title="🚗 Car log",
         formatters={"cost": lambda v, r: money(v) if v else "[dim]—[/dim]"},
-        empty="No car entries yet — try: clibo car fuel 50000 45.5 -c 65",
+        empty="No car entries yet — try: clibo car fuel 45.5 -o 50000 -c 65",
     )
 
 

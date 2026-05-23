@@ -4,6 +4,33 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 56 — polish: `car fuel` odometer is now optional · 2026-05-23
+
+Agent-mode self-test: "Filled up the car — 45L for $60" died with
+"missing argument ODOMETER". Most users don't remember the odometer
+reading in the moment, but the old signature `clibo car fuel ODO VOL`
+made it the *first* required positional. Real ergonomic blocker.
+
+- ⛽ **Refactored `car fuel`** — `VOLUME` is now the single required
+  positional; `--odometer/-o` is optional. Fill-ups without an
+  odometer are silently skipped by the economy calculation rather
+  than crashing it.
+- 🛟 **Back-compat preserved** — the old two-positional form
+  `car fuel ODOMETER VOLUME` is still accepted (hidden second
+  positional triggers the legacy path). Existing tests, scripts and
+  user muscle-memory all still work.
+- 🧪 4 new tests — friendly form, odometer-only flag form, legacy
+  back-compat form, mixed-entries economy.
+- 📖 `skills/car/SKILL.md` rewritten with the new form first, the
+  legacy form documented as still supported.
+- 🎤 NL flow re-verified:
+  • "Filled up for $60" → `car fuel 45 -c 60` ✓
+  • "12.5 gallons at $52" → `car fuel 12.5 -c 52` ✓
+  • "Tank fill at 52,340 km — 45.5L" → `car fuel 45.5 -o 52340` ✓
+- **Tests:** 461 passing (+4); ruff clean.
+
+---
+
 ### Iteration 55 — `tip` (tipping tracker with venue / service-rating stats) · 2026-05-23
 
 Agent-mode self-test: "I left a 20% tip on a $40 dinner" had no good
