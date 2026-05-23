@@ -35,6 +35,17 @@ def test_add_is_alias_for_log(cli, tool):
     assert "Usage:" in add_help.output
 
 
+def test_water_add_is_alias_for_drink(cli):
+    """`clibo water` uses `drink` as its primary verb; `add` is the alias."""
+    drink_help = cli.run("water", "drink", "--help")
+    add_help = cli.run("water", "add", "--help")
+    assert drink_help.exit_code == 0 and "Usage:" in drink_help.output
+    assert add_help.exit_code == 0 and "Usage:" in add_help.output
+    cli.run("water", "add", "500")
+    today = cli.json("water", "today")
+    assert today["total_ml"] == 500
+
+
 def test_mood_add_actually_logs(cli):
     cli.run("mood", "add", "5", "-e", "great")
     today = cli.json("mood", "today")

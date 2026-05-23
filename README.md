@@ -185,6 +185,7 @@ sub-command and every flag.
 | ✅ | `period` 🌸 | Menstrual cycle tracker |
 | ✅ | `meditate` 🧘 | Meditation & mindfulness sessions |
 | ✅ | `vitals` ❤️ | Blood pressure, pulse & glucose log |
+| ✅ | `stretches` 🧎 | Mobility & flexibility session log |
 
 ### 💰 Money & Finance
 | | Tool | What it does |

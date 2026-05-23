@@ -2,7 +2,7 @@
 
 Auto-generated reference for every SQLite table clibo writes to. Regenerate with `python scripts/dump_schema.py`.
 
-_74 tables in total._
+_75 tables in total._
 
 ## Contents
 
@@ -24,6 +24,19 @@ _74 tables in total._
 | `scope` | `VARCHAR` | NOT NULL, indexed |
 | `key` | `VARCHAR` | NOT NULL, indexed |
 | `value` | `VARCHAR` | NOT NULL |
+
+### `stretch_session`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `INTEGER` | PK, NOT NULL |
+| `area` | `VARCHAR` | NOT NULL, default |
+| `duration_min` | `INTEGER` | NOT NULL, default |
+| `poses` | `VARCHAR` | — |
+| `difficulty` | `INTEGER` | — |
+| `entry_date` | `DATE` | NOT NULL, indexed, default |
+| `created_at` | `DATETIME` | NOT NULL, default |
+| `note` | `VARCHAR` | — |
 
 ## Health & Wellness
 

@@ -57,6 +57,7 @@ from clibo.clis import (
     savings,
     sleep,
     split,
+    stretches,
     subs,
     time,
     todo,
@@ -134,4 +135,5 @@ ALL = [
     dashboard,
     cv,
     dreams,
+    stretches,
 ]

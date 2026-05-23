@@ -30,6 +30,7 @@ from clibo.clis.network import Connection
 from clibo.clis.notes import Note
 from clibo.clis.quotes import Quote
 from clibo.clis.recipes import Recipe
+from clibo.clis.stretches import StretchSession
 from clibo.clis.todo import Task
 from clibo.clis.wishlist import WishlistItem
 from clibo.clis.worklog import WorkLogEntry
@@ -106,6 +107,10 @@ SOURCES: list[tuple] = [
      lambda d: d.summary),
     ("gratitude", GratitudeEntry,
      [GratitudeEntry.text], lambda g: g.text),
+    ("stretches", StretchSession,
+     [StretchSession.area, StretchSession.poses, StretchSession.note],
+     lambda s: f"{s.area} · {s.duration_min} min"
+                + (f" ({s.poses})" if s.poses else "")),
 ]
 
 

@@ -153,6 +153,8 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
                 + (f" @ {r['org']}" if r["org"] else "")),
     ("dreams", "🌙", "dreams_dream", ["summary", "lucid"],
      lambda r: f"{'🪄 ' if r['lucid'] else ''}{r['summary']}"),
+    ("stretches", "🧎", "stretch_session", ["area", "duration_min"],
+     lambda r: f"{r['duration_min']} min {r['area']}"),
 ]
 
 

@@ -4,6 +4,45 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 54 — `stretches` (mobility log) + water `add` alias · 2026-05-23
+
+Agent-mode self-test surfaced two gaps:
+
+```
+$ clibo stretches log hamstrings 10 → No such command 'stretches'.
+$ clibo water add 500              → No such command 'add'.
+```
+
+`workout` is for strength, `mileage` is for cardio distance,
+`meditate` is for mindfulness — but nothing tracked a stretching /
+mobility session, which has its own shape (which body area, how deep
+it felt, optional pose list).
+
+- 🧎 **New tool `stretches` (63rd)** — mobility / flexibility log.
+  Schema: `area`, `duration_min`, optional comma-separated `poses`,
+  optional `difficulty` 1-5, plus the usual `entry_date` /
+  `created_at` / `note`. Suggested area vocabulary (free text):
+  `hamstrings`, `quads`, `hips`, `back`, `lower-back`, `shoulders`,
+  `neck`, `chest`, `calves`, `ankles`, `wrists`, `full-body`.
+- Commands: `log AREA -m MIN -p POSES -D 1-5` (with `add` alias from
+  day one) / `today` / `list [--area X]` / `show ID` / `rm` /
+  **`areas`** (frequency table — find the area you neglect) /
+  `stats` (sessions, total min, avg difficulty, top area).
+- 🔌 Integrated everywhere: `recent.py`, `search.py` (area + poses +
+  note are indexed), `catalog.py` (Health & Wellness), README.
+- 💧 **Water polish** — `clibo water add 500` now works as an alias
+  for `clibo water drink 500`. Same one-line pattern as iter 53.
+  Pinned by a regression test in `test_add_alias.py`.
+- 📄 `docs/SCHEMA.md` regenerated (75 tables).
+- 🎤 NL flow verified end-to-end:
+  • "I stretched my hamstrings for 10 minutes" → `stretches log hamstrings -m 10`
+  • "Did 15 min of hip mobility, super deep" → `stretches log hips -m 15 -D 5`
+  • "Which areas am I neglecting?" → `stretches areas --days 30`
+  • "I drank 500ml" → `water add 500` ✓
+- **Tests:** 443 passing (+12); ruff clean.
+
+---
+
 ### Iteration 53 — polish: `add` is now a universal alias for `log` · 2026-05-23
 
 Agent-mode self-test: a user saying "I felt anxious today" or "I weigh

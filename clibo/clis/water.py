@@ -63,6 +63,10 @@ def drink(
     )
 
 
+# `add` is a friendlier alias for `drink` (predictable verbs across tools).
+app.command(name="add", help="Alias for `drink`")(drink)
+
+
 @app.command()
 def today(json_out: JsonOpt = False) -> None:
     """💧 Show today's water intake and goal progress."""
