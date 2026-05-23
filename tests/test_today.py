@@ -56,3 +56,102 @@ def test_today_plants_and_chores(cli):
     data = cli.json("today")
     assert any(p["name"] == "Basil" for p in data["plants_thirsty"])
     assert any(c["name"] == "Dishes" for c in data["chores_due"])
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Post-v1.0 tool integration into `today` (iter 68).
+# ──────────────────────────────────────────────────────────────────────
+
+
+def test_today_includes_mood(cli):
+    cli.run("mood", "log", "4", "-e", "calm")
+    data = cli.json("today")
+    assert data["mood"] is not None
+    assert data["mood"]["score"] == 4
+    assert data["mood"]["emotion"] == "calm"
+    assert data["mood"]["checkins"] == 1
+
+
+def test_today_mood_none_when_no_checkin(cli):
+    data = cli.json("today")
+    assert data["mood"] is None
+
+
+def test_today_includes_steps(cli):
+    cli.run("steps", "log", "6500")
+    data = cli.json("today")
+    assert data["steps"]["total"] == 6500
+    assert data["steps"]["goal"] == 10000  # default
+    assert data["steps"]["reached"] is False
+
+
+def test_today_workouts(cli):
+    cli.run("workout", "log", "running", "-t", "30", "-c", "350")
+    cli.run("workout", "log", "stretching", "-t", "10")
+    data = cli.json("today")
+    assert data["workouts"]["sessions"] == 2
+    assert data["workouts"]["minutes"] == 40
+    assert data["workouts"]["kcal"] == 350
+
+
+def test_today_caffeine(cli):
+    cli.run("caffeine", "log", "espresso")  # 63 mg
+    cli.run("caffeine", "log", "latte")     # 75 mg
+    data = cli.json("today")
+    assert data["caffeine"]["drinks"] == 2
+    assert data["caffeine"]["mg_today"] == 138
+    # residual_at_bedtime is computed; just check the key is present and non-negative
+    assert data["caffeine"]["residual_at_bedtime_mg"] >= 0
+
+
+def test_today_fasting_in_progress(cli):
+    cli.run("fasting", "start", "-T", "16")
+    data = cli.json("today")
+    assert data["fasting"] is not None
+    assert data["fasting"]["target_hours"] == 16.0
+    assert data["fasting"]["elapsed_hours"] >= 0
+
+
+def test_today_fasting_none_when_no_active_fast(cli):
+    data = cli.json("today")
+    assert data["fasting"] is None
+
+
+def test_today_pending_challenge_checkins(cli):
+    cli.run("challenge", "start", "no sugar", "--days", "30")
+    cli.run("challenge", "start", "100 days of code", "--days", "100")
+    data = cli.json("today")
+    pending_names = {c["name"] for c in data["challenges_pending"]}
+    assert pending_names == {"no sugar", "100 days of code"}
+
+
+def test_today_challenge_disappears_after_checkin(cli):
+    ch = cli.json("challenge", "start", "no sugar", "--days", "30")
+    cli.run("challenge", "check", str(ch["id"]))
+    data = cli.json("today")
+    assert data["challenges_pending"] == []
+
+
+def test_today_late_packages(cli):
+    from datetime import date as date_
+    from datetime import timedelta
+    today_str = str(date_.today() - timedelta(days=2))
+    cli.run("packages", "add", "LateOne", "-e", today_str)
+    cli.run("packages", "add", "OnTime")
+    data = cli.json("today")
+    assert data["packages"]["pending"] == 2
+    late_names = {p["sender"] for p in data["packages"]["late"]}
+    assert late_names == {"LateOne"}
+
+
+def test_today_documents_expiring_within_30_days(cli):
+    from datetime import date as date_
+    from datetime import timedelta
+    today = date_.today()
+    cli.run("documents", "add", "Passport",
+            "-e", str(today + timedelta(days=15)), "-k", "passport")
+    cli.run("documents", "add", "Far",
+            "-e", str(today + timedelta(days=200)), "-k", "other")
+    data = cli.json("today")
+    names = {d["name"] for d in data["documents_expiring"]}
+    assert names == {"Passport"}

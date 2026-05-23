@@ -4,6 +4,45 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 68 — `today` view now surfaces every post-v1.0 tool · 2026-05-23
+
+Agent-mode self-test exposed a structural gap: I'd added 17+ tools
+since v1.0 and **none of them were in the `today` view**. `clibo today`
+was still showing the v1.0 set (tasks, habits, water, calories, focus,
+events, meals, bills, follow-ups, plants, chores, birthdays). The
+killer "what's actionable today?" view was lying by omission.
+
+- 🛠️ **`clibo/dashboard.py` extended** to surface:
+  • 👟 **steps** — daily total + goal in the metric-bars row
+  • 🕒 **fasting** — running-clock with progress bar against target
+    (only when a fast is open — high-value real-time info)
+  • 🙂 **mood** — today's latest score + emotion (with check-in count
+    if there were multiple)
+  • ☕ **caffeine** — today's mg + **residual at bedtime** (yellow
+    warning if > 10 mg, the sleep-research threshold)
+  • 🏋️ **workouts** — today's session count + total minutes + kcal
+    burned
+  • 🚀 **challenges pending check-in** — actionable list with the
+    exact `clibo challenge check ID` command to copy
+  • 📦 **late packages** — surfaced with ⚠ marker (or a quiet
+    "N packages on the way" if none are late)
+  • 📑 **documents expiring** — within 30 days, colour-coded by
+    urgency
+- ✨ **Everything is conditional** — empty sections stay quiet so the
+  view doesn't grow into noise. The empty-state cheer ("nothing on
+  the radar today — enjoy! ✨") now correctly considers the new
+  sources too.
+- 🧪 11 new tests pin every new field on `collect_today()`:
+  mood present / absent, steps default goal, workouts aggregation,
+  caffeine total + residual, fasting in-progress vs none, pending
+  challenge check-ins (and they disappear after `check`), late
+  packages flagging, documents expiring within 30d.
+- 🎤 NL flow re-verified end-to-end on a populated database — every
+  post-v1.0 activity shows up in the right section.
+- **Tests:** 643 passing (+11); ruff clean.
+
+---
+
 ### Iteration 67 — `fasting` (intermittent fasting with running clock) + v1.3.0 to PyPI · 2026-05-23
 
 User said "continue releasing and development" — v1.3.0 went live at

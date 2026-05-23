@@ -10,22 +10,40 @@ it stays a pure read-only consumer of each tool's data.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from sqlmodel import select
 
 from clibo.clis.bills import Bill
 from clibo.clis.birthdays import Occasion
+from clibo.clis.caffeine import (
+    CaffeineEntry,
+    _bedtime,
+    _residual_at,
+)
 from clibo.clis.calorie import CalorieEntry
+from clibo.clis.challenge import (
+    Challenge,
+    ChallengeCheckin,
+    _auto_finalize,
+    _checkins,
+    _end_date,
+)
 from clibo.clis.chores import Chore
+from clibo.clis.documents import Document
 from clibo.clis.events import Event
+from clibo.clis.fasting import FastSession, _duration_hours
 from clibo.clis.focus import FocusSession
 from clibo.clis.followup import FollowUp
 from clibo.clis.habit import Habit, HabitCheck
 from clibo.clis.meals import MealPlan
+from clibo.clis.mood import MoodLog
+from clibo.clis.packages import Package
 from clibo.clis.plants import Plant
+from clibo.clis.steps import StepEntry
 from clibo.clis.todo import Task
 from clibo.clis.water import WaterLog
+from clibo.clis.workout import Workout
 from clibo.core.db import session
 from clibo.core.output import _emit_json, bar, console
 from clibo.core.settings import get_setting
@@ -105,6 +123,119 @@ def collect_today() -> dict:
         occasions = list(db.exec(select(Occasion)).all())
         bdays = [o for o in occasions if o.month == today.month and o.day == today.day]
 
+        # 🙂 Mood — today's latest score + emotions
+        mood_today = list(
+            db.exec(
+                select(MoodLog).where(MoodLog.entry_date == today)
+                .order_by(MoodLog.created_at.desc())
+            ).all()
+        )
+
+        # 👟 Steps — today's total vs goal
+        step_today_total = sum(
+            s.count
+            for s in db.exec(select(StepEntry).where(StepEntry.entry_date == today)).all()
+        )
+        steps_goal = int(get_setting("steps", "daily_goal", "10000") or 10000)
+
+        # 🏋️ Workout — today's session count + total kcal
+        workouts_today = list(
+            db.exec(select(Workout).where(Workout.entry_date == today)).all()
+        )
+
+        # ☕ Caffeine — today's mg + residual at bedtime
+        caffeine_today = list(
+            db.exec(
+                select(CaffeineEntry).where(CaffeineEntry.entry_date == today)
+            ).all()
+        )
+        caffeine_mg = sum(c.mg for c in caffeine_today)
+        bedtime = _bedtime()
+        bedtime_dt = datetime.combine(today, bedtime)
+        if bedtime_dt < datetime.now():
+            bedtime_dt += timedelta(days=1)
+        # Pull last 48h of entries for the bedtime-residual calc.
+        recent_caffeine = list(
+            db.exec(
+                select(CaffeineEntry).where(
+                    CaffeineEntry.consumed_at >= datetime.now() - timedelta(hours=48)
+                )
+            ).all()
+        )
+        caffeine_residual = round(
+            sum(_residual_at(e, bedtime_dt) for e in recent_caffeine), 1
+        )
+
+        # 🕒 Fasting — running clock if a fast is open
+        ongoing_fast = db.exec(
+            select(FastSession).where(FastSession.end_time.is_(None))
+            .order_by(FastSession.start_time.desc())
+        ).first()
+        fasting_dict = None
+        if ongoing_fast is not None:
+            elapsed = _duration_hours(ongoing_fast, until=datetime.now())
+            fasting_dict = {
+                "started": ongoing_fast.start_time,
+                "target_hours": ongoing_fast.target_hours,
+                "elapsed_hours": elapsed,
+                "remaining_hours": round(
+                    max(ongoing_fast.target_hours - elapsed, 0), 2
+                ),
+                "reached": elapsed >= ongoing_fast.target_hours,
+            }
+
+        # 🚀 Challenges — active + still need today's check-in
+        active_challenges = list(
+            db.exec(select(Challenge).where(Challenge.status == "active")).all()
+        )
+        pending_checkin_challenges = []
+        for ch in active_challenges:
+            # Skip challenges outside their window.
+            if today < ch.start_date or today > _end_date(ch):
+                continue
+            existing = db.exec(
+                select(ChallengeCheckin)
+                .where(ChallengeCheckin.challenge_id == ch.id)
+                .where(ChallengeCheckin.check_date == today)
+            ).first()
+            if existing is None:
+                # Need check-in.
+                cs = _checkins(db, ch.id)
+                _auto_finalize(ch, cs)
+                if ch.status == "active":
+                    pending_checkin_challenges.append({
+                        "id": ch.id, "name": ch.name,
+                        "day": (today - ch.start_date).days + 1,
+                        "target_days": ch.target_days,
+                    })
+
+        # 📦 Packages — pending count + late count
+        packages_pending = list(
+            db.exec(
+                select(Package).where(
+                    Package.status.in_(["ordered", "in_transit"])
+                )
+            ).all()
+        )
+        packages_late = [
+            p for p in packages_pending
+            if p.expected_date is not None and p.expected_date < today
+        ]
+
+        # 📑 Documents — expiring within 30 days
+        soon_30 = today + timedelta(days=30)
+        documents_expiring = list(
+            db.exec(
+                select(Document)
+                .where(Document.expires >= today)
+                .where(Document.expires <= soon_30)
+                .order_by(Document.expires)
+            ).all()
+        )
+
+    # Latest mood for the headline row
+    latest_mood = mood_today[0] if mood_today else None
+
     return {
         "date": today,
         "tasks": {
@@ -133,6 +264,38 @@ def collect_today() -> dict:
         "plants_thirsty": [{"name": p.name, "location": p.location} for p in thirsty],
         "chores_due": [{"name": c.name, "assignee": c.assignee} for c in chores_due],
         "birthdays": [{"person": o.person, "kind": o.kind} for o in bdays],
+        "mood": (
+            {
+                "score": latest_mood.score,
+                "emotion": latest_mood.emotion,
+                "checkins": len(mood_today),
+            } if latest_mood else None
+        ),
+        "steps": {"total": step_today_total, "goal": steps_goal,
+                  "reached": step_today_total >= steps_goal},
+        "workouts": {
+            "sessions": len(workouts_today),
+            "kcal": sum(w.kcal_burned or 0 for w in workouts_today),
+            "minutes": sum(w.duration_min for w in workouts_today),
+        },
+        "caffeine": {
+            "mg_today": caffeine_mg,
+            "residual_at_bedtime_mg": caffeine_residual,
+            "drinks": len(caffeine_today),
+        },
+        "fasting": fasting_dict,
+        "challenges_pending": pending_checkin_challenges,
+        "packages": {
+            "pending": len(packages_pending),
+            "late": [{"id": p.id, "sender": p.sender,
+                      "expected_date": p.expected_date}
+                     for p in packages_late],
+        },
+        "documents_expiring": [
+            {"name": d.name, "kind": d.kind, "expires": d.expires,
+             "days_until": (d.expires - today).days}
+            for d in documents_expiring
+        ],
     }
 
 
@@ -179,7 +342,7 @@ def render_today(json_out: bool) -> None:
             console.print(f"  {mark} {item['name']}")
         console.print()
 
-    # 💧🍎🍅 Daily metrics
+    # 💧🍎🍅👟 Daily metrics
     metric_lines = []
     if data["water"]["goal_ml"]:
         w = data["water"]
@@ -199,9 +362,99 @@ def render_today(json_out: bool) -> None:
             f"🍅 Focus    {bar(f['total_minutes'], f['goal_minutes'], width=18)}  "
             f"[bold]{f['total_minutes']}[/bold]/{f['goal_minutes']} min"
         )
+    s = data["steps"]
+    if s["total"] or s["goal"]:
+        metric_lines.append(
+            f"👟 Steps    {bar(s['total'], s['goal'], width=18)}  "
+            f"[bold]{s['total']:,}[/bold]/{s['goal']:,}"
+        )
     if metric_lines:
         for line in metric_lines:
             console.print(f"  {line}")
+        console.print()
+
+    # 🕒 Fasting — running clock if a fast is open
+    if data["fasting"]:
+        f = data["fasting"]
+        colour = "green" if f["reached"] else "yellow"
+        trailing = (
+            "[green]✓ target reached[/green]" if f["reached"]
+            else f"[{colour}]{f['remaining_hours']:g}h to target[/{colour}]"
+        )
+        console.print(
+            f"  🕒 [bold]Fasting[/bold]   "
+            f"{bar(f['elapsed_hours'], f['target_hours'], width=18)}  "
+            f"[bold cyan]{f['elapsed_hours']:g}h[/bold cyan]/"
+            f"{f['target_hours']:g}h   ·   {trailing}\n"
+        )
+
+    # 🙂☕🏋️ Lightweight one-liners for trackers with activity today
+    today_lines = []
+    if data["mood"]:
+        m = data["mood"]
+        emotion = f" — {m['emotion']}" if m.get("emotion") else ""
+        today_lines.append(
+            f"🙂 Mood     {m['score']}/5{emotion}"
+            + (f"   [dim]({m['checkins']} check-ins today)[/dim]"
+               if m["checkins"] > 1 else "")
+        )
+    c = data["caffeine"]
+    if c["drinks"]:
+        residual_colour = "yellow" if c["residual_at_bedtime_mg"] > 10 else "green"
+        today_lines.append(
+            f"☕ Caffeine {c['mg_today']} mg total   ·   "
+            f"[{residual_colour}]{c['residual_at_bedtime_mg']:g} mg residual at bedtime"
+            f"[/{residual_colour}]"
+        )
+    w = data["workouts"]
+    if w["sessions"]:
+        kcal_part = f"   ·   🔥 {w['kcal']} kcal" if w["kcal"] else ""
+        min_part = f"   ·   ⏱ {w['minutes']} min" if w["minutes"] else ""
+        today_lines.append(
+            f"🏋️ Workouts {w['sessions']} session{'s' if w['sessions'] != 1 else ''}"
+            f"{min_part}{kcal_part}"
+        )
+    if today_lines:
+        for line in today_lines:
+            console.print(f"  {line}")
+        console.print()
+
+    # 🚀 Challenges that still need today's check-in
+    if data["challenges_pending"]:
+        console.print("[bold]🚀 Challenges — check-in pending[/bold]")
+        for ch in data["challenges_pending"]:
+            console.print(
+                f"  · [bold]{ch['name']}[/bold]    "
+                f"day {ch['day']}/{ch['target_days']}    "
+                f"[dim]clibo challenge check {ch['id']}[/dim]"
+            )
+        console.print()
+
+    # 📦 Packages — surface late ones; otherwise just a count
+    if data["packages"]["late"]:
+        console.print("[bold]📦 Late packages[/bold]")
+        for p in data["packages"]["late"]:
+            console.print(
+                f"  [red]⚠[/red]  {p['sender']}   "
+                f"[dim]expected {p['expected_date']}[/dim]"
+            )
+        console.print()
+    elif data["packages"]["pending"]:
+        console.print(
+            f"  📦 [dim]{data['packages']['pending']} package"
+            f"{'s' if data['packages']['pending'] != 1 else ''} on the way"
+            f"[/dim]\n"
+        )
+
+    # 📑 Documents expiring soon (≤30 days)
+    if data["documents_expiring"]:
+        console.print("[bold]📑 Documents expiring soon[/bold]")
+        for d in data["documents_expiring"]:
+            colour = "red" if d["days_until"] <= 7 else "yellow"
+            console.print(
+                f"  [{colour}]·[/{colour}]  {d['kind']}: {d['name']}   "
+                f"[dim]expires {d['expires']} (in {d['days_until']}d)[/dim]"
+            )
         console.print()
 
     # 📅 Events
@@ -249,6 +502,9 @@ def render_today(json_out: bool) -> None:
         data["birthdays"], data["tasks"]["overdue"], data["tasks"]["due_today"],
         data["habits"]["total"], metric_lines, data["events"], data["meals"],
         data["bills"], data["followups"], data["plants_thirsty"], data["chores_due"],
+        data["fasting"], today_lines, data["challenges_pending"],
+        data["packages"]["late"], data["packages"]["pending"],
+        data["documents_expiring"],
     ])
     if not has_anything:
         console.print("  [dim]Nothing on the radar today — enjoy! ✨[/dim]\n")
