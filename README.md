@@ -6,12 +6,47 @@
 
 *From a calorie tracker to a CRM. Everything in your terminal, everything in one local SQLite file.*
 
+[![PyPI](https://img.shields.io/pypi/v/clibo.svg)](https://pypi.org/project/clibo/)
 [![CI](https://github.com/dm1tryG/clibo/actions/workflows/ci.yml/badge.svg)](https://github.com/dm1tryG/clibo/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Built with Typer](https://img.shields.io/badge/built%20with-Typer%20%2B%20SQLModel-0a7.svg)](https://typer.tiangolo.com/)
 
 </div>
+
+---
+
+## Install
+
+```bash
+pip install clibo          # or: pipx install clibo
+uv tool install clibo      # (recommended — fast, isolated)
+```
+
+Then:
+
+```bash
+clibo init                # one-shot onboarding — currency, goals, etc.
+clibo --help              # the full menu
+clibo today               # everything actionable today
+```
+
+That's it — a `clibo` command is on your PATH and a SQLite file lives at
+`~/.clibo/clibo.db`. No account, no cloud, no daemons.
+
+<details>
+<summary>Other install methods (development / pre-release)</summary>
+
+```bash
+# straight from GitHub main
+uv tool install --from git+https://github.com/dm1tryG/clibo.git clibo
+pipx install git+https://github.com/dm1tryG/clibo.git
+
+# or the curl one-liner
+curl -fsSL https://raw.githubusercontent.com/dm1tryG/clibo/main/install.sh | bash
+```
+
+</details>
 
 ---
 
@@ -32,31 +67,6 @@ that make them perfect for agents *and* for you:
 clibo calorie log "oatmeal with berries" --kcal 320 --protein 12
 clibo calorie today
 clibo calorie today --json        # same data, for your agent
-```
-
-## Install
-
-clibo installs as a single `clibo` command. Pick one:
-
-```bash
-# with uv (recommended)
-uv tool install --from git+https://github.com/dm1tryG/clibo.git clibo
-
-# or with pipx
-pipx install git+https://github.com/dm1tryG/clibo.git
-
-# or the one-liner
-curl -fsSL https://raw.githubusercontent.com/dm1tryG/clibo/main/install.sh | bash
-```
-
-Then:
-
-```bash
-clibo init --currency USD --calorie-goal 2000 --water-goal-ml 2500  # one-shot onboarding
-clibo --help          # the full menu
-clibo today           # a dashboard of everything actionable today
-clibo info            # what's built, what's coming
-clibo calorie --help  # any tool's help
 ```
 
 ## Demos
