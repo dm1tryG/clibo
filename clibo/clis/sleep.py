@@ -157,6 +157,46 @@ def rm(entry_id: int = typer.Argument(..., help="Log ID"), json_out: JsonOpt = F
 
 
 @app.command()
+def edit(
+    target: str = typer.Argument(..., help="Entry ID or 'last' for the most recent"),
+    hours: float = typer.Option(None, "--hours", "-H", help="New hours of sleep"),
+    quality: int = typer.Option(None, "--quality", "-q", help="New quality 1–5"),
+    bedtime: str = typer.Option(None, "--bed", "-b", help="New bedtime (free text)"),
+    wake_time: str = typer.Option(None, "--wake", "-w", help="New wake time"),
+    note: str = typer.Option(None, "--note", "-n", help="New note"),
+    on: str = typer.Option(None, "--date", "-d", help="New date"),
+    json_out: JsonOpt = False,
+) -> None:
+    """😴 Edit an existing sleep log."""
+    from clibo.core.base import resolve_id
+    with session() as db:
+        entry = resolve_id(target, SleepLog, db)
+        if not entry:
+            fail(f"No sleep log matching {target!r}", json_out=json_out)
+        if hours is not None:
+            if hours <= 0:
+                fail("Hours must be positive", json_out=json_out)
+            entry.hours = hours
+        if quality is not None:
+            if not 1 <= quality <= 5:
+                fail("Quality must be 1–5", json_out=json_out)
+            entry.quality = quality
+        if bedtime is not None:
+            entry.bedtime = bedtime
+        if wake_time is not None:
+            entry.wake_time = wake_time
+        if note is not None:
+            entry.note = note
+        if on is not None:
+            entry.entry_date = parse_date(on)
+        db.add(entry)
+        db.flush()
+        data = _row(entry)
+    ok(f"Updated sleep log #{entry.id} — {entry.hours:g}h",
+       json_out=json_out, data=data)
+
+
+@app.command()
 def goal(
     set_hours: float = typer.Option(None, "--set", help="Set your nightly sleep goal in hours"),
     json_out: JsonOpt = False,

@@ -170,6 +170,32 @@ def streak(json_out: JsonOpt = False) -> None:
 
 
 @app.command()
+def edit(
+    target: str = typer.Argument(..., help="Entry ID or 'last' for the most recent"),
+    text: str = typer.Option(None, "--text", "-t", help="Replace the entry text"),
+    on: str = typer.Option(None, "--date", "-d", help="New date"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🙏 Edit an existing gratitude entry."""
+    from clibo.core.base import resolve_id
+    with session() as db:
+        entry = resolve_id(target, GratitudeEntry, db)
+        if not entry:
+            fail(f"No gratitude entry matching {target!r}", json_out=json_out)
+        if text is not None:
+            if not text.strip():
+                fail("Text cannot be empty", json_out=json_out)
+            entry.text = text.strip()
+        if on is not None:
+            entry.entry_date = parse_date(on)
+        db.add(entry)
+        db.flush()
+        data = _row(entry)
+    ok(f"Updated gratitude entry #{entry.id}",
+       json_out=json_out, data=data)
+
+
+@app.command()
 def rm(entry_id: int = typer.Argument(..., help="Entry ID"), json_out: JsonOpt = False) -> None:
     """🙏 Delete a gratitude entry."""
     with session() as db:

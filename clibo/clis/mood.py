@@ -161,6 +161,40 @@ def rm(entry_id: int = typer.Argument(..., help="Entry ID"), json_out: JsonOpt =
 
 
 @app.command()
+def edit(
+    target: str = typer.Argument(..., help="Entry ID or 'last' for the most recent"),
+    score: int = typer.Option(None, "--score", "-s", help="New score 1–5"),
+    emotion: str = typer.Option(None, "--emotion", "-e",
+                                  help="Replace emotion list (comma-separated ok)"),
+    note: str = typer.Option(None, "--note", "-n", help="New note"),
+    on: str = typer.Option(None, "--date", "-d", help="New date"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🙂 Edit an existing mood check-in."""
+    from clibo.core.base import resolve_id
+    with session() as db:
+        entry = resolve_id(target, MoodLog, db)
+        if not entry:
+            fail(f"No mood entry matching {target!r}", json_out=json_out)
+        if score is not None:
+            if score not in MOOD_FACES:
+                fail("Score must be 1–5", json_out=json_out)
+            entry.score = score
+        if emotion is not None:
+            entry.emotion = emotion.lower().strip() or None
+        if note is not None:
+            entry.note = note
+        if on is not None:
+            entry.entry_date = parse_date(on)
+        db.add(entry)
+        db.flush()
+        data = _row(entry)
+    ok(f"Updated mood entry #{entry.id} — {MOOD_FACES[entry.score]} "
+       f"{MOOD_LABELS[entry.score]}",
+       json_out=json_out, data=data)
+
+
+@app.command()
 def stats(
     days: int = typer.Option(30, "--days", help="Window size in days"),
     json_out: JsonOpt = False,

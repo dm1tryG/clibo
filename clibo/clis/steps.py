@@ -257,6 +257,38 @@ def show(entry_id: int = typer.Argument(..., help="Entry ID"),
 
 
 @app.command()
+def edit(
+    target: str = typer.Argument(..., help="Entry ID or 'last' for the most recent"),
+    count: int = typer.Option(None, "--count", "-c", help="New step count"),
+    source: str = typer.Option(None, "--source", "-s", help="New source label"),
+    on: str = typer.Option(None, "--date", "-d", help="New date"),
+    note: str = typer.Option(None, "--note", "-n", help="New note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """👟 Edit an existing step-log entry."""
+    from clibo.core.base import resolve_id
+    with session() as db:
+        entry = resolve_id(target, StepEntry, db)
+        if not entry:
+            fail(f"No step entry matching {target!r}", json_out=json_out)
+        if count is not None:
+            if count <= 0:
+                fail("Step count must be positive", json_out=json_out)
+            entry.count = count
+        if source is not None:
+            entry.source = source.lower().strip() or None
+        if on is not None:
+            entry.entry_date = parse_date(on)
+        if note is not None:
+            entry.note = note
+        db.add(entry)
+        db.flush()
+        data = _row(entry)
+    ok(f"Updated step entry #{entry.id} — {entry.count:,}",
+       json_out=json_out, data=data)
+
+
+@app.command()
 def rm(entry_id: int = typer.Argument(..., help="Entry ID"),
        json_out: JsonOpt = False) -> None:
     """👟 Delete a step-log entry."""

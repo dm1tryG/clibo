@@ -184,3 +184,28 @@ def humanize_delta(d: date) -> str:
     if days == -1:
         return "yesterday"
     return f"in {days}d" if days > 0 else f"{-days}d ago"
+
+
+def resolve_id(target: str, model_class, db, order_by=None):
+    """Resolve a CLI argument to a model instance.
+
+    ``target`` is either a numeric ID or the keyword ``"last"`` — both
+    common patterns for ``edit`` and ``rm`` commands. With ``"last"`` we
+    return the most-recently inserted row of ``model_class`` (or the
+    most-recent by ``order_by`` if provided).
+
+    Returns the instance or ``None``. Raises :class:`typer.BadParameter`
+    for inputs that are neither an integer nor ``"last"``.
+    """
+    text = target.strip().lower()
+    if text == "last":
+        from sqlmodel import select
+        column = order_by if order_by is not None else model_class.id
+        return db.exec(select(model_class).order_by(column.desc())).first()
+    try:
+        entry_id = int(target)
+    except ValueError:
+        raise typer.BadParameter(
+            f"Expected an integer ID or 'last' (got {target!r})"
+        ) from None
+    return db.get(model_class, entry_id)

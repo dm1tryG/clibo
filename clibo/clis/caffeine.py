@@ -341,6 +341,46 @@ def rm(entry_id: int = typer.Argument(..., help="Entry ID"),
        json_out=json_out, data={"deleted": entry_id})
 
 
+@app.command()
+def edit(
+    target: str = typer.Argument(..., help="Entry ID or 'last' for the most recent"),
+    drink: str = typer.Option(None, "--drink", help="New drink name"),
+    mg: int = typer.Option(None, "--mg", "-m", help="New mg of caffeine"),
+    at: str = typer.Option(None, "--at", "-t", help="New consumed time HH:MM"),
+    on: str = typer.Option(None, "--date", "-d", help="New date"),
+    note: str = typer.Option(None, "--note", "-n", help="New note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """☕ Edit an existing caffeine entry."""
+    from clibo.core.base import resolve_id
+    with session() as db:
+        entry = resolve_id(target, CaffeineEntry, db)
+        if not entry:
+            fail(f"No caffeine entry matching {target!r}", json_out=json_out)
+        if drink is not None:
+            entry.drink = drink.lower().strip().replace(" ", "-")
+        if mg is not None:
+            if mg <= 0:
+                fail("mg must be positive", json_out=json_out)
+            entry.mg = mg
+        # Re-build consumed_at if either date or time is being changed.
+        if at is not None or on is not None:
+            day = parse_date(on) if on is not None else entry.entry_date
+            if at is not None:
+                consumed_at = _parse_consumed_at(str(day), at)
+            else:
+                consumed_at = datetime.combine(day, entry.consumed_at.time())
+            entry.consumed_at = consumed_at
+            entry.entry_date = consumed_at.date()
+        if note is not None:
+            entry.note = note
+        db.add(entry)
+        db.flush()
+        data = _row(entry)
+    ok(f"Updated caffeine entry #{entry.id} — {entry.drink} ({entry.mg} mg)",
+       json_out=json_out, data=data)
+
+
 @app.command(name="bedtime")
 def bedtime_cmd(
     set_time: str = typer.Option(None, "--set",

@@ -4,6 +4,43 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 73 — `edit ID|last` on six daily trackers · 2026-05-23
+
+Agent-mode self-test surfaced the user's exact words:
+> "Edit my last weight entry — typo, was 71.5 not 75"
+
+`clibo weight edit` didn't exist. A survey showed ~30 tools without
+an `edit` subcommand. Fixed for the six most-edited daily trackers
+where typos are common.
+
+- 🆕 **`clibo/core/base.py: resolve_id(target, model_class, db)`** —
+  small helper that takes either a numeric ID or the keyword
+  ``last`` and returns the matching row (or the most-recent if
+  ``last``). Raises a clear `typer.BadParameter` for bad input.
+- ✏️ **`edit ID|last` added to six tools**: weight, mood, sleep,
+  caffeine, steps, gratitude. Each has field-level optional flags
+  that override when provided and validates inputs (positive,
+  in-range, non-empty).
+- 🎯 **`last` keyword** lets the user "fix what I just typed"
+  without looking up an ID:
+  • `clibo weight edit last -w 71.5` (the user's exact case) ✓
+  • `clibo mood edit last -s 4 -e calm,focused` ✓
+  • `clibo gratitude edit last -t "coffee, dog, sunshine"` ✓
+- 🧪 16 new tests covering the headline use case (`edit last`),
+  edit-by-ID, unknown ID failures, validation failures (zero hours,
+  out-of-range score, empty text), and the normalisation behaviours
+  (case-folding, slug-ifying drink names).
+- 🎤 NL flow re-verified: the user's "typo, was 71.5 not 75"
+  scenario maps cleanly to `weight edit last -w 71.5`.
+- **Tests:** 686 passing (+16); ruff clean.
+
+Future-iteration note: 24 other tools still lack `edit`. Those are
+mostly entity-style (people, chores, plants) where the field set is
+larger and the edit boilerplate would be substantial — better to
+add them on-demand as users hit specific gaps.
+
+---
+
 ### Iteration 72 — Pydantic models for the integration views, no more `data["..."]` · 2026-05-23
 
 User request: "rewrite all to Pydantic models, no `data['...']` usage,

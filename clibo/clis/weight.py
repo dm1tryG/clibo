@@ -119,6 +119,36 @@ def rm(entry_id: int = typer.Argument(..., help="Log ID"), json_out: JsonOpt = F
 
 
 @app.command()
+def edit(
+    target: str = typer.Argument(..., help="Entry ID or 'last' for the most recent"),
+    weight_kg: float = typer.Option(None, "--weight", "-w", help="New weight in kg"),
+    on: str = typer.Option(None, "--date", "-d", help="New date"),
+    note: str = typer.Option(None, "--note", "-n", help="New note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """⚖️ Edit an existing weight log — fix a typo or update the date."""
+    from clibo.core.base import resolve_id
+    with session() as db:
+        entry = resolve_id(target, WeightLog, db)
+        if not entry:
+            fail(f"No weight log matching {target!r}", json_out=json_out)
+        if weight_kg is not None:
+            if weight_kg <= 0:
+                fail("Weight must be positive", json_out=json_out)
+            entry.weight_kg = weight_kg
+        if on is not None:
+            entry.entry_date = parse_date(on)
+        if note is not None:
+            entry.note = note
+        db.add(entry)
+        db.flush()
+        data = {"id": entry.id, "weight_kg": entry.weight_kg,
+                "entry_date": entry.entry_date, "note": entry.note}
+    ok(f"Updated weight log #{entry.id} — {entry.weight_kg:g}kg",
+       json_out=json_out, data=data)
+
+
+@app.command()
 def height(
     set_cm: float = typer.Option(None, "--set", help="Set your height in centimetres"),
     json_out: JsonOpt = False,
