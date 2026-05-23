@@ -4,6 +4,49 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 94 — wire `writing` + `books-session` into `month` · 2026-05-24
+
+Iter 93 wired writing + book-sessions into `today` / `week` /
+`recent`. Agent-mode self-test surfaced that `clibo month` was
+still missing both — the only cross-tool view that still
+ignored them.
+
+- 📅 **`clibo month`** — two new sub-blocks:
+  • `productivity.writing` mirrors the week shape:
+    `sessions`, `total_words`, `total_minutes`, `days_written`,
+    `avg_words_per_active_day`, `top_projects[]`. Rendered as
+    `✍️ Writing  1,600 words · 2 sessions · 2 days · top: novel`.
+  • `hobbies.reading` (new `ReadingMonth` model):
+    `sessions`, `pages`, `minutes`, `days_read`, `books[]`.
+    Rendered as `📖 Reading: 55 pages · 2 sessions
+    (2 days, 75 min; Atomic Habits)`.
+- 🆕 **Pydantic models**: `WritingMonth` and `ReadingMonth`.
+  Added as fields on the existing `ProductivityMonth` and
+  `HobbiesMonth` — additive, no breaking JSON shape change for
+  consumers that ignore unknown fields.
+- 🎯 **Empty-state guard** — the `has_anything` check that
+  prints "nothing logged this month" now also considers
+  `has_hobbies` (covers reading even when zero films + zero
+  books finished).
+- 🎤 NL flow verified with realistic month seed (writing today +
+  5 days ago, reading today + 3 days ago):
+  • `month` prints both new lines in the right block ✓
+  • `month --json` exposes `productivity.writing.{sessions=2,
+    total_words=1600, top_projects=[novel, blog]}` ✓
+  • `month --json` exposes `hobbies.reading.{sessions=2,
+    pages=55, days_read=2, books=['Atomic Habits']}` ✓
+- 🧪 **4 new tests**: empty-state for both blocks, multi-day
+  aggregation for writing including `top_projects`, multi-day
+  reading-session aggregation.
+- **Tests:** 902 passing (+4); ruff clean.
+
+All four cross-tool dashboards (today / week / month / recent)
+now surface every media-log tool. Three iterations of *"wire
+the new things into the existing views"* close the post-v1.10.0
+visibility loop.
+
+---
+
 ### Iteration 93 — wire `writing` + `books-session` into the dashboards · 2026-05-24
 
 Agent-mode self-test on `clibo today --json` after iters 90 + 91

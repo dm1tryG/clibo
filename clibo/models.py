@@ -471,6 +471,17 @@ class FocusMonth(_BaseSnapshot):
     days: int
 
 
+class WritingMonth(_BaseSnapshot):
+    """Aggregated writing for the calendar month."""
+
+    sessions: int
+    total_words: int
+    total_minutes: int
+    days_written: int
+    avg_words_per_active_day: float
+    top_projects: list[CategoryTotal]
+
+
 class ProductivityMonth(_BaseSnapshot):
     focus: FocusMonth
     habit_checks: int
@@ -479,6 +490,7 @@ class ProductivityMonth(_BaseSnapshot):
     gratitude_entries: int
     gratitude_days: int
     tasks_completed: int
+    writing: WritingMonth
 
 
 class BookFinished(_BaseSnapshot):
@@ -493,9 +505,20 @@ class FilmWatched(_BaseSnapshot):
     kind: str
 
 
+class ReadingMonth(_BaseSnapshot):
+    """Reading sessions across all books for the month."""
+
+    sessions: int
+    pages: int
+    minutes: int
+    days_read: int
+    books: list[str]
+
+
 class HobbiesMonth(_BaseSnapshot):
     books_finished: list[BookFinished]
     films_watched: list[FilmWatched]
+    reading: ReadingMonth
 
 
 class MonthSnapshot(_BaseSnapshot):

@@ -18,7 +18,7 @@ import typer
 from sqlmodel import select
 
 from clibo.clis.bills import Bill
-from clibo.clis.books import Book
+from clibo.clis.books import Book, BookSession
 from clibo.clis.caffeine import CaffeineEntry
 from clibo.clis.calorie import CalorieEntry
 from clibo.clis.donations import Donation
@@ -42,6 +42,7 @@ from clibo.clis.subs import _monthly as _sub_monthly
 from clibo.clis.todo import Task
 from clibo.clis.water import WaterLog
 from clibo.clis.workout import Workout
+from clibo.clis.writing import WritingSession
 from clibo.core.db import session
 from clibo.core.output import _emit_json, console
 from clibo.core.settings import get_setting
@@ -50,6 +51,7 @@ from clibo.models import (
     BookFinished,
     CaffeineMonth,
     CalorieMonth,
+    CategoryTotal,
     DonationsMonth,
     ExpenseMonth,
     FastingMonth,
@@ -63,11 +65,13 @@ from clibo.models import (
     MonthSnapshot,
     MoodWeek,
     ProductivityMonth,
+    ReadingMonth,
     SleepWeek,
     StepsMonth,
     TimedActivityWeek,
     WaterWeek,
     WorkoutWeek,
+    WritingMonth,
 )
 
 
@@ -273,6 +277,23 @@ def collect_month(year: int | None = None, month: int | None = None) -> MonthSna
                 .where(Film.watched_on <= end)
             ).all()
         )
+        # ✍️ Writing sessions this month
+        writing_sessions = list(
+            db.exec(
+                select(WritingSession)
+                .where(WritingSession.entry_date >= start)
+                .where(WritingSession.entry_date <= end)
+            ).all()
+        )
+        # 📖 Reading sessions this month
+        book_sessions = list(
+            db.exec(
+                select(BookSession)
+                .where(BookSession.entry_date >= start)
+                .where(BookSession.entry_date <= end)
+            ).all()
+        )
+        all_book_titles = {b.id: b.title for b in db.exec(select(Book)).all()}
 
     # ── Money rollups ──────────────────────────────────────────────
     income_total = round(sum(i.amount for i in incomes), 2)
@@ -432,6 +453,30 @@ def collect_month(year: int | None = None, month: int | None = None) -> MonthSna
         total_minutes=sum(f.minutes for f in focus_sessions),
         days=len({f.entry_date for f in focus_sessions}),
     )
+    # ✍️ Writing month rollup
+    writing_words_total = sum(s.words for s in writing_sessions)
+    writing_days_written = {s.entry_date for s in writing_sessions}
+    writing_by_project: dict[str, int] = {}
+    for s in writing_sessions:
+        writing_by_project[s.project] = (
+            writing_by_project.get(s.project, 0) + s.words
+        )
+    writing_top = sorted(
+        writing_by_project.items(), key=lambda kv: kv[1], reverse=True
+    )[:3]
+    writing_summary = WritingMonth(
+        sessions=len(writing_sessions),
+        total_words=writing_words_total,
+        total_minutes=sum(s.duration_min for s in writing_sessions),
+        days_written=len(writing_days_written),
+        avg_words_per_active_day=(
+            _round(writing_words_total / len(writing_days_written), 0)
+            if writing_days_written else 0.0
+        ),
+        top_projects=[
+            CategoryTotal(category=p, amount=w) for p, w in writing_top
+        ],
+    )
     productivity = ProductivityMonth(
         focus=focus_summary,
         habit_checks=len(habit_checks),
@@ -440,9 +485,20 @@ def collect_month(year: int | None = None, month: int | None = None) -> MonthSna
         gratitude_entries=len(gratitudes),
         gratitude_days=len({g.entry_date for g in gratitudes}),
         tasks_completed=len(tasks_done),
+        writing=writing_summary,
     )
 
     # ── Hobbies rollups ────────────────────────────────────────────
+    reading_titles = sorted({
+        all_book_titles.get(s.book_id, "?") for s in book_sessions
+    })
+    reading_summary = ReadingMonth(
+        sessions=len(book_sessions),
+        pages=sum(s.pages for s in book_sessions),
+        minutes=sum(s.duration_min for s in book_sessions),
+        days_read=len({s.entry_date for s in book_sessions}),
+        books=reading_titles,
+    )
     hobbies = HobbiesMonth(
         books_finished=[
             BookFinished(title=b.title, author=b.author, rating=b.rating)
@@ -452,6 +508,7 @@ def collect_month(year: int | None = None, month: int | None = None) -> MonthSna
             FilmWatched(title=f.title, rating=f.rating, kind=f.kind)
             for f in films_watched
         ],
+        reading=reading_summary,
     )
 
     return MonthSnapshot(
@@ -641,6 +698,14 @@ def render_month(
             f"🙏 Gratitude    {p.gratitude_entries} entries   ·   "
             f"{p.gratitude_days} days"
         )
+    if p.writing.sessions:
+        top = (f"   [dim]top: {p.writing.top_projects[0].category}[/dim]"
+               if p.writing.top_projects else "")
+        prod_lines.append(
+            f"✍️ Writing      [bold]{p.writing.total_words:,}[/bold] words   ·   "
+            f"{p.writing.sessions} sessions   ·   "
+            f"{p.writing.days_written} days{top}"
+        )
     if prod_lines:
         console.print("[bold]✅ Productivity[/bold]")
         for line in prod_lines:
@@ -649,13 +714,26 @@ def render_month(
 
     # Hobbies
     hob = data.hobbies
-    if hob.books_finished or hob.films_watched:
+    has_hobbies = (
+        hob.books_finished or hob.films_watched or hob.reading.sessions
+    )
+    if has_hobbies:
         console.print("[bold]🎨 Hobbies[/bold]")
         if hob.books_finished:
             console.print(
                 f"  📚 Books finished:   [bold]{len(hob.books_finished)}[/bold] "
                 + (" — " + ", ".join(b.title for b in hob.books_finished[:3])
                    if hob.books_finished else "")
+            )
+        if hob.reading.sessions:
+            min_part = f", {hob.reading.minutes} min" if hob.reading.minutes else ""
+            titles = ", ".join(hob.reading.books[:3])
+            more = (f" + {len(hob.reading.books) - 3} more"
+                    if len(hob.reading.books) > 3 else "")
+            console.print(
+                f"  📖 Reading:          [bold]{hob.reading.pages}[/bold] pages   ·   "
+                f"{hob.reading.sessions} sessions   "
+                f"[dim]({hob.reading.days_read} days{min_part}; {titles}{more})[/dim]"
             )
         if hob.films_watched:
             console.print(
@@ -665,8 +743,7 @@ def render_month(
 
     # Empty state
     has_anything = any([
-        money_lines, health_lines, prod_lines,
-        hob.books_finished, hob.films_watched,
+        money_lines, health_lines, prod_lines, has_hobbies,
     ])
     if not has_anything:
         console.print(f"  [dim]Nothing logged in {data.month_name}.[/dim]\n")

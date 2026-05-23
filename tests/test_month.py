@@ -108,3 +108,47 @@ def test_month_days_count(cli):
     assert feb["days"] == 28  # 2025 is not a leap year
     leap_feb = cli.json("month", "-y", "2024", "-m", "2")
     assert leap_feb["days"] == 29
+
+
+# ── writing + reading-sessions on month (iter 94) ──
+
+
+def test_month_includes_writing(cli):
+    data = cli.json("month")
+    assert "writing" in data["productivity"]
+    assert data["productivity"]["writing"]["sessions"] == 0
+    assert data["productivity"]["writing"]["total_words"] == 0
+
+
+def test_month_writing_aggregates(cli):
+    cli.run("writing", "log", "novel", "-w", "1200", "-t", "45")
+    cli.run("writing", "log", "blog", "-w", "400", "-d", "5 days ago")
+    data = cli.json("month")
+    w = data["productivity"]["writing"]
+    assert w["sessions"] == 2
+    assert w["total_words"] == 1600
+    assert w["days_written"] == 2
+    assert w["avg_words_per_active_day"] == 800.0
+    top = {p["category"]: p["amount"] for p in w["top_projects"]}
+    assert top["novel"] == 1200
+    assert top["blog"] == 400
+
+
+def test_month_includes_reading(cli):
+    data = cli.json("month")
+    assert "reading" in data["hobbies"]
+    assert data["hobbies"]["reading"]["sessions"] == 0
+    assert data["hobbies"]["reading"]["books"] == []
+
+
+def test_month_reading_sessions_aggregate(cli):
+    cli.run("books", "add", "Atomic Habits", "-p", "320")
+    cli.run("books", "read", "Atomic Habits", "30", "-t", "45")
+    cli.run("books", "read", "Atomic Habits", "25", "-t", "30", "-d", "3 days ago")
+    data = cli.json("month")
+    r = data["hobbies"]["reading"]
+    assert r["sessions"] == 2
+    assert r["pages"] == 55
+    assert r["minutes"] == 75
+    assert r["days_read"] == 2
+    assert r["books"] == ["Atomic Habits"]
