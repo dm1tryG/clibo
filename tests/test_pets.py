@@ -52,3 +52,53 @@ def test_invalid_kind_fails(cli):
     cli.run("pets", "add", "X")
     result = cli.run("pets", "log", "X", "training", "session")
     assert result.exit_code != 0
+
+
+# ── log SUMMARY optional + edit + rm by name (iter 83) ──
+
+
+def test_log_summary_optional_defaults_to_kind(cli):
+    """`pets log Whiskers vet` (no summary) defaults summary to the kind."""
+    cli.run("pets", "add", "Whiskers", "-s", "cat")
+    data = cli.json("pets", "log", "Whiskers", "vet")
+    assert data["summary"] == "vet"
+
+
+def test_log_summary_when_given_is_kept(cli):
+    cli.run("pets", "add", "Whiskers")
+    data = cli.json("pets", "log", "Whiskers", "vet", "annual checkup")
+    assert data["summary"] == "annual checkup"
+
+
+def test_edit_pet_by_name(cli):
+    cli.run("pets", "add", "Whiskers", "-s", "cat")
+    cli.run("pets", "edit", "Whiskers", "--breed", "Persian", "-n", "loud meower")
+    data = cli.json("pets", "show", "Whiskers")
+    assert data["breed"] == "Persian"
+    assert data["notes"] == "loud meower"
+
+
+def test_edit_pet_rename(cli):
+    cli.run("pets", "add", "Old Name")
+    cli.run("pets", "edit", "Old Name", "--name", "Whiskers")
+    data = cli.json("pets", "show", "Whiskers")
+    assert data["name"] == "Whiskers"
+
+
+def test_edit_pet_unknown_fails(cli):
+    result = cli.run("pets", "edit", "Ghost", "-s", "ghost")
+    assert result.exit_code != 0
+
+
+def test_rm_pet_by_name(cli):
+    cli.run("pets", "add", "Whiskers")
+    cli.run("pets", "rm", "Whiskers")
+    result = cli.run("pets", "show", "Whiskers")
+    assert result.exit_code != 0
+
+
+def test_pet_name_fuzzy_match(cli):
+    """`Whisk` finds `Whiskers`."""
+    cli.run("pets", "add", "Whiskers")
+    data = cli.json("pets", "show", "Whisk")
+    assert data["name"] == "Whiskers"

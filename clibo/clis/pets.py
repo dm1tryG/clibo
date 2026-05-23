@@ -50,12 +50,18 @@ app = typer.Typer(no_args_is_help=True, help=HELP)
 
 
 def _resolve(db, ident: str) -> Pet | None:
-    """Look up a pet by numeric ID or by (case-insensitive) name."""
+    """Look up a pet by numeric ID or (case-insensitive) name match.
+
+    Tries exact name first, then substring so `Whisk` finds `Whiskers`.
+    """
     if ident.isdigit():
         pet = db.get(Pet, int(ident))
         if pet:
             return pet
-    return db.exec(select(Pet).where(Pet.name.ilike(ident))).first()
+    exact = db.exec(select(Pet).where(Pet.name.ilike(ident))).first()
+    if exact:
+        return exact
+    return db.exec(select(Pet).where(Pet.name.ilike(f"%{ident}%"))).first()
 
 
 def _age_years(birth: date | None) -> float | None:
@@ -164,29 +170,72 @@ def show(
 def log(
     pet: str = typer.Argument(..., help="Pet name or ID"),
     kind: str = typer.Argument(..., help=f"{' / '.join(EVENT_KINDS)}"),
-    summary: str = typer.Argument(..., help="What happened"),
+    summary: str = typer.Argument(
+        "", help="What happened (defaults to the kind name if omitted)"
+    ),
     cost: float = typer.Option(0, "--cost", "-c", help="Cost, if any"),
     on: str = typer.Option("today", "--date", "-d", help="Date"),
     json_out: JsonOpt = False,
 ) -> None:
-    """🐾 Log an event for a pet."""
+    """🐾 Log an event for a pet.
+
+    `summary` is optional — if omitted, the row's summary defaults to the
+    `kind` (e.g. just "vet"), so agents/users can log a quick event
+    without inventing a description.
+    """
     kind = kind.lower()
     if kind not in EVENT_KINDS:
         fail(f"Kind must be one of: {', '.join(EVENT_KINDS)}", json_out=json_out)
     if cost < 0:
         fail("Cost cannot be negative", json_out=json_out)
+    summary_text = summary.strip() if summary else kind
     with session() as db:
         target = _resolve(db, pet)
         if not target:
             fail(f"No pet matching {pet!r}", json_out=json_out)
-        event = PetEvent(pet_id=target.id, kind=kind, summary=summary,
+        event = PetEvent(pet_id=target.id, kind=kind, summary=summary_text,
                          cost=cost, entry_date=parse_date(on))
         db.add(event)
         db.flush()
         db.refresh(event)
         data = {"id": event.id, "pet": target.name, "kind": kind,
-                "summary": summary, "cost": cost, "entry_date": event.entry_date}
-    ok(f"Logged 🐾 {target.name} · {kind}: {summary}", json_out=json_out, data=data)
+                "summary": summary_text, "cost": cost,
+                "entry_date": event.entry_date}
+    ok(f"Logged 🐾 {target.name} · {kind}: {summary_text}",
+       json_out=json_out, data=data)
+
+
+@app.command()
+def edit(
+    pet: str = typer.Argument(..., help="Pet name or ID"),
+    name: str = typer.Option(None, "--name", help="New name"),
+    species: str = typer.Option(None, "--species", "-s",
+                                  help="New species (cat / dog / …)"),
+    breed: str = typer.Option(None, "--breed", "-b", help="New breed"),
+    birth: str = typer.Option(None, "--birth", help="New birth date"),
+    note: str = typer.Option(None, "--note", "-n", help="New note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🐾 Edit a pet's profile. Accepts a numeric ID or a name."""
+    with session() as db:
+        target = _resolve(db, pet)
+        if not target:
+            fail(f"No pet matching {pet!r}", json_out=json_out)
+        if name is not None:
+            target.name = name
+        if species is not None:
+            target.species = species.lower().strip() or None
+        if breed is not None:
+            target.breed = breed
+        if birth is not None:
+            target.birth = parse_date(birth)
+        if note is not None:
+            target.notes = note
+        db.add(target)
+        db.flush()
+        data = _row(db, target)
+    ok(f"Updated pet #{target.id} — {target.name}",
+       json_out=json_out, data=data)
 
 
 @app.command()
@@ -222,16 +271,20 @@ def events(
 
 
 @app.command()
-def rm(pet_id: int = typer.Argument(..., help="Pet ID"), json_out: JsonOpt = False) -> None:
+def rm(
+    pet: str = typer.Argument(..., help="Pet name or ID"),
+    json_out: JsonOpt = False,
+) -> None:
     """🐾 Delete a pet and their event history."""
     with session() as db:
-        pet = db.get(Pet, pet_id)
-        if not pet:
-            fail(f"No pet #{pet_id}", json_out=json_out)
-        for event in db.exec(select(PetEvent).where(PetEvent.pet_id == pet_id)).all():
+        target = _resolve(db, pet)
+        if not target:
+            fail(f"No pet matching {pet!r}", json_out=json_out)
+        pid = target.id
+        for event in db.exec(select(PetEvent).where(PetEvent.pet_id == pid)).all():
             db.delete(event)
-        db.delete(pet)
-    ok(f"Deleted pet #{pet_id}", json_out=json_out, data={"deleted": pet_id})
+        db.delete(target)
+    ok(f"Deleted pet #{pid}", json_out=json_out, data={"deleted": pid})
 
 
 @app.command()

@@ -4,6 +4,42 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 83 — pets polish: optional summary + `edit` + name-by-rm · 2026-05-23
+
+Agent-mode self-test surfaced two real frictions on `pets`:
+
+1. `pets log Whiskers --kind vet --cost 80` failed because `kind`
+   is positional, not a flag — and `summary` was *required* even
+   for a quick "vet visit" with no description.
+2. No `edit` subcommand existed. "Add breed" / "change notes" had
+   no path.
+
+- 🐾 **`pets log SUMMARY` is now optional** — defaults to the `kind`
+  name when omitted. `pets log Whiskers vet` produces a row with
+  `summary="vet"` so quick entries no longer demand a description.
+- 🐾 **New `pets edit <name|id>`** — change `name`, `species`,
+  `breed`, `birth`, `notes`. Same flag shape as `pets add`. The
+  user's "change pet's breed/notes" NL probe now has a matching
+  command.
+- 🐾 **`pets rm <name|id>`** — was integer-only; now uses
+  `_resolve`. So `clibo pets rm Whiskers` works.
+- 🔧 **`_resolve` updated** — was `ilike(ident)` exact-only; now
+  tries exact then substring so `clibo pets show Whisk` finds
+  `Whiskers`.
+- 🧪 7 new tests: summary defaults to kind, summary kept when
+  given, edit by name, rename via edit, unknown-name fail, rm by
+  name, fuzzy substring match.
+- 🎤 End-to-end: `pets log Whiskers vet -c 80 -d yesterday` →
+  row created with `summary="vet"`. `pets edit Whiskers --breed
+  "Maine Coon"` → row updated. `pets show Whisk` → fuzzy find.
+- **Tests:** 754 passing (+7); ruff clean.
+
+Remaining entity tools without name-resolve (or similar friction):
+`network`, `leads`, `birthdays`, `brag`, `gifts`, `cv`. Same pattern
+on demand.
+
+---
+
 ### Iteration 82 — name resolution on clients, jobs, followup, plants · 2026-05-23
 
 Iter 81 added name-resolve to `crm` (the most-asked tool) but noted
