@@ -4,6 +4,36 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 55 — `tip` (tipping tracker with venue / service-rating stats) · 2026-05-23
+
+Agent-mode self-test: "I left a 20% tip on a $40 dinner" had no good
+home. `expense` captures the total but loses the percent and the
+venue's tipping history. So this is the tool for *tipping behaviour*,
+not generic spending.
+
+- 🪙 **New tool `tip` (64th, Money & Finance)** — bill + tip with
+  whichever side the user knows (percent or absolute), an optional
+  venue and a 1-5 service rating. Stores `tip_percent` so "what's my
+  avg tip %?" is a one-shot query.
+- Commands: `log BILL -p PERCENT` / `log BILL -a AMOUNT` (with the
+  `add` alias from day one) / **`calc`** (no-save quick calculator —
+  "how much is 20% on $35?") / `today` / `list [--venue X]` /
+  `show ID` / `rm` / `stats` (count, totals, **avg %**, **weighted %**
+  — weighted by bill amount, the truer figure, biggest tip, most
+  generous %, by-venue avg %, by-service-rating avg %).
+- 🔌 Integrated: `recent.py`, `search.py` (venue + note indexed),
+  `catalog.py` (Money & Finance), README. Uses the shared
+  `money/currency` setting via `clibo.clis.expense.money()`.
+- 📄 `docs/SCHEMA.md` regenerated (76 tables).
+- 🎤 NL flow verified end-to-end:
+  • "I left a 20% tip on a $40 dinner" → `tip log 40 -p 20 -v dinner` ✓
+  • "Tipped $10 on $50" → `tip log 50 -a 10` ✓
+  • "How much is 20% on $35?" → `tip calc 35 -p 20` ✓ (no save)
+  • "What's my avg tip %?" → `tip stats` ✓
+- **Tests:** 457 passing (+14); ruff clean.
+
+---
+
 ### Iteration 54 — `stretches` (mobility log) + water `add` alias · 2026-05-23
 
 Agent-mode self-test surfaced two gaps:

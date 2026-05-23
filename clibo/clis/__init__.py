@@ -60,6 +60,7 @@ from clibo.clis import (
     stretches,
     subs,
     time,
+    tip,
     todo,
     travel,
     vitals,
@@ -136,4 +137,5 @@ ALL = [
     cv,
     dreams,
     stretches,
+    tip,
 ]

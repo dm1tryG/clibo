@@ -91,6 +91,8 @@ CATALOG: list[Tool] = [
     Tool("dreams", "🌙", "Hobbies & Culture", "Dream journal with vividness & symbols"),
     Tool("stretches", "🧎", "Health & Wellness",
          "Mobility & flexibility session log (body area + duration)"),
+    Tool("tip", "🪙", "Money & Finance",
+         "Tipping tracker — bill, tip %, venue, service rating"),
 ]
 
 CATEGORIES: list[str] = list(dict.fromkeys(t.category for t in CATALOG))

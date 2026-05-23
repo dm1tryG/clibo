@@ -155,6 +155,11 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
      lambda r: f"{'🪄 ' if r['lucid'] else ''}{r['summary']}"),
     ("stretches", "🧎", "stretch_session", ["area", "duration_min"],
      lambda r: f"{r['duration_min']} min {r['area']}"),
+    ("tip", "🪙", "tip_entry",
+     ["bill_amount", "tip_amount", "tip_percent", "venue"],
+     lambda r: f"{r['tip_amount']:.2f} on {r['bill_amount']:.2f} "
+                f"({r['tip_percent']:g}%)"
+                + (f" @ {r['venue']}" if r["venue"] else "")),
 ]
 
 

@@ -201,6 +201,7 @@ sub-command and every flag.
 | ✅ | `split` 🤝 | Split shared expenses with people |
 | ✅ | `wishlist` ⭐ | Things-to-buy wishlist with prices |
 | ✅ | `income` 💵 | Income tracker — counterpart to expense |
+| ✅ | `tip` 🪙 | Tipping tracker — bill, tip %, venue, service rating |
 
 ### ✅ Productivity & Work
 | | Tool | What it does |

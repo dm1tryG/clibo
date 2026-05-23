@@ -31,6 +31,7 @@ from clibo.clis.notes import Note
 from clibo.clis.quotes import Quote
 from clibo.clis.recipes import Recipe
 from clibo.clis.stretches import StretchSession
+from clibo.clis.tip import TipEntry
 from clibo.clis.todo import Task
 from clibo.clis.wishlist import WishlistItem
 from clibo.clis.worklog import WorkLogEntry
@@ -111,6 +112,9 @@ SOURCES: list[tuple] = [
      [StretchSession.area, StretchSession.poses, StretchSession.note],
      lambda s: f"{s.area} · {s.duration_min} min"
                 + (f" ({s.poses})" if s.poses else "")),
+    ("tip", TipEntry, [TipEntry.venue, TipEntry.note],
+     lambda t: f"{t.tip_amount:.2f} ({t.tip_percent:g}%)"
+                + (f" @ {t.venue}" if t.venue else "")),
 ]
 
 
