@@ -4,6 +4,52 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 88 — `workout pr` (personal records) + name-resolve · 2026-05-24
+
+Agent-mode self-test on "Hit a new bench-press PR of 90kg" surfaced
+that **workout had no first-class PR tracking** — a PR was just a
+free-form note on a workout row, so asking "what's my bench-press
+PR?" later forced the agent to scan the full history manually.
+The tool also still had integer-only `show`/`rm` (carryover from
+before the name-resolve rollouts).
+
+- 🏆 **New `workout pr`** — two views in one subcommand:
+  • No arg: heaviest weight per exercise across all history, sorted
+    heaviest first, with reps × sets context and session count.
+    `clibo workout pr` answers "show me all my PRs".
+  • With an exercise: PR broken down by **rep range** (1RM / 3RM /
+    5RM / …) which is the gym-standard view — lifters care about
+    each rep target separately. Includes an "all-time max" footer.
+- 🏆 **`pr` skips cardio rows** — only counts entries with
+  `reps>0` AND `weight_kg>0`. A 30-minute jog doesn't pollute the
+  PR table.
+- 🏋️ **`workout show <name>`** and **`workout rm <name>`** — now
+  accept exercise name with most-recently-added preference (one
+  exercise gets logged dozens of times, mirrors the `gifts` /
+  `income` resolver pattern from iters 84-85).
+- 🎤 NL flow verified end-to-end with a realistic bench-press
+  progression (3×5@70 → 3×5@75 → 5×3@82.5 → 1×1@90):
+  • `workout pr "bench press"` → reads cleanly as 1RM=90kg,
+    3RM=82.5kg, 5RM=75kg with timestamps and "all-time max" footer ✓
+  • `workout pr` (no arg) → squat 110kg, bench 90kg, deadlift
+    140kg, sorted by heaviest ✓
+  • `workout show squat` (with 2 squat sessions) → picks the
+    most-recent ✓
+- 🧪 **10 new tests** pin: heaviest-per-exercise selection, session
+  count, cardio-row exclusion, rep-range grouping, fuzzy exercise
+  match, unknown-exercise rejection, show by name, most-recent
+  preference, rm by name.
+- 📚 **SKILL.md** — added "Natural language → command" table
+  covering the 8 most common workout phrasings, including the
+  three new PR forms.
+- **Tests:** 841 passing (+10); ruff clean.
+
+The workout tool now answers the gym-rat question *"what's my X
+PR?"* in one command, with the rep-range breakdown serious lifters
+actually want — without inventing a whole new "PR" table.
+
+---
+
 ### Iteration 87 — `films` gains episode progress + show/edit · 2026-05-24
 
 Agent-mode self-test on "Watching Better Call Saul S6E5" surfaced

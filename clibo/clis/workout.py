@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import typer
 from sqlmodel import Field, SQLModel, select
 
-from clibo.core.base import parse_date
+from clibo.core.base import humanize_delta, parse_date
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, console, fail, ok, render_record, render_rows
 
@@ -39,6 +39,24 @@ app = typer.Typer(no_args_is_help=True, help=HELP)
 def _volume(entry: Workout) -> float:
     """Total lifted volume = sets × reps × weight (kg)."""
     return round(entry.sets * entry.reps * entry.weight_kg, 1)
+
+
+def _resolve(db, ident: str) -> Workout | None:
+    """Resolve a CLI arg to a Workout by ID or exercise name (most-recent first).
+
+    One exercise is logged many times, so name lookups pick the
+    most-recently-added row. Pass the ID to disambiguate.
+    """
+    from clibo.core.base import lookup_by_id_or_name
+    if ident.isdigit():
+        entry = db.get(Workout, int(ident))
+        if entry:
+            return entry
+    return db.exec(
+        select(Workout)
+        .where(Workout.exercise.ilike(f"%{ident}%"))
+        .order_by(Workout.id.desc())
+    ).first() or lookup_by_id_or_name(db, Workout, ident, Workout.exercise)
 
 
 def _row(entry: Workout) -> dict:
@@ -172,25 +190,123 @@ def list_entries(
 
 
 @app.command()
-def show(entry_id: int = typer.Argument(..., help="Entry ID"), json_out: JsonOpt = False) -> None:
-    """🏋️ Show one workout entry."""
+def show(
+    entry: str = typer.Argument(..., help="Entry ID or exercise name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🏋️ Show one workout entry. Accepts a numeric ID or an exercise name."""
     with session() as db:
-        entry = db.get(Workout, entry_id)
-        if not entry:
-            fail(f"No workout #{entry_id}", json_out=json_out)
-        data = _row(entry) | {"created_at": entry.created_at}
-    render_record(data, json_out=json_out, title=f"🏋️ Workout #{entry_id}")
+        target = _resolve(db, entry)
+        if not target:
+            fail(f"No workout matching {entry!r}", json_out=json_out)
+        data = _row(target) | {"created_at": target.created_at}
+    render_record(data, json_out=json_out, title=f"🏋️ Workout #{target.id}")
 
 
 @app.command()
-def rm(entry_id: int = typer.Argument(..., help="Entry ID"), json_out: JsonOpt = False) -> None:
-    """🏋️ Delete a workout entry."""
+def rm(
+    entry: str = typer.Argument(..., help="Entry ID or exercise name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🏋️ Delete a workout entry. Accepts a numeric ID or an exercise name."""
     with session() as db:
-        entry = db.get(Workout, entry_id)
-        if not entry:
-            fail(f"No workout #{entry_id}", json_out=json_out)
-        db.delete(entry)
-    ok(f"Deleted workout #{entry_id}", json_out=json_out, data={"deleted": entry_id})
+        target = _resolve(db, entry)
+        if not target:
+            fail(f"No workout matching {entry!r}", json_out=json_out)
+        eid = target.id
+        db.delete(target)
+    ok(f"Deleted workout #{eid}", json_out=json_out, data={"deleted": eid})
+
+
+@app.command()
+def pr(
+    exercise: str = typer.Argument(
+        None, help="Exercise name (fuzzy). Omit for all-time PRs across every exercise."
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """🏆 Personal records.
+
+    With no argument: heaviest lifted weight per exercise across all
+    history (only counting rows with ≥1 rep). With an exercise name:
+    PR broken down by rep-range — the gym-standard view, since
+    lifters care about 1RM separately from 5RM and 10RM.
+    """
+    with session() as db:
+        query = select(Workout).where(Workout.reps > 0).where(Workout.weight_kg > 0)
+        if exercise:
+            query = query.where(Workout.exercise.ilike(f"%{exercise}%"))
+        rows = list(db.exec(query).all())
+
+    if not rows:
+        if exercise:
+            fail(f"No strength workouts logged for {exercise!r} yet",
+                 json_out=json_out)
+        fail("No strength workouts logged yet — try: "
+             "clibo workout log 'bench press' -s 3 -r 5 -w 80",
+             json_out=json_out)
+
+    # Per-exercise PR if no specific exercise requested.
+    if not exercise:
+        by_ex: dict[str, dict] = {}
+        for entry in rows:
+            current = by_ex.get(entry.exercise)
+            if current is None or entry.weight_kg > current["weight_kg"]:
+                by_ex[entry.exercise] = {
+                    "exercise": entry.exercise,
+                    "weight_kg": entry.weight_kg,
+                    "reps": entry.reps,
+                    "sets": entry.sets,
+                    "entry_date": entry.entry_date,
+                    "sessions": 0,
+                }
+        for entry in rows:
+            by_ex[entry.exercise]["sessions"] += 1
+        prs = sorted(by_ex.values(), key=lambda r: -r["weight_kg"])
+        for pr_row in prs:
+            pr_row["when"] = humanize_delta(pr_row["entry_date"])
+        render_rows(
+            prs,
+            [("exercise", "Exercise"), ("weight_kg", "Heaviest"),
+             ("reps", "Reps"), ("sets", "Sets"),
+             ("when", "When"), ("sessions", "Sessions")],
+            json_out=json_out,
+            title="🏆 Personal records",
+            formatters={"weight_kg": lambda v, r: f"{v:g} kg"},
+            empty="No PRs yet.",
+        )
+        return
+
+    # Specific exercise: rep-range breakdown.
+    by_reps: dict[int, dict] = {}
+    for entry in rows:
+        current = by_reps.get(entry.reps)
+        if current is None or entry.weight_kg > current["weight_kg"]:
+            by_reps[entry.reps] = {
+                "reps": entry.reps,
+                "weight_kg": entry.weight_kg,
+                "sets": entry.sets,
+                "entry_date": entry.entry_date,
+            }
+    breakdown = sorted(by_reps.values(), key=lambda r: r["reps"])
+    canonical = rows[0].exercise  # the actual matched name
+    for pr_row in breakdown:
+        pr_row["when"] = humanize_delta(pr_row["entry_date"])
+    render_rows(
+        breakdown,
+        [("reps", "Reps"), ("weight_kg", "Heaviest"),
+         ("sets", "Sets"), ("when", "When")],
+        json_out=json_out,
+        title=f"🏆 {canonical} · PRs by rep range",
+        formatters={"weight_kg": lambda v, r: f"{v:g} kg"},
+        empty=f"No strength logs for {exercise!r}.",
+    )
+    if not json_out:
+        all_time = max(breakdown, key=lambda r: r["weight_kg"])
+        console.print(
+            f"  💪 [bold]All-time max:[/bold] {all_time['weight_kg']:g} kg "
+            f"× {all_time['reps']} reps · {all_time['when']}"
+        )
 
 
 @app.command()

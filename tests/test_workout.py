@@ -73,3 +73,89 @@ def test_stats_includes_kcal_total(cli):
     cli.run("workout", "log", "running", "-t", "20", "-c", "250")
     stats = cli.json("workout", "stats")
     assert stats["total_kcal_burned"] == 550
+
+
+# ── PR view + name-resolve on show/rm (iter 88) ──
+
+
+def test_pr_all_exercises_picks_heaviest(cli):
+    """`workout pr` shows the heaviest weight per exercise."""
+    cli.run("workout", "log", "bench", "-s", "3", "-r", "5", "-w", "70")
+    cli.run("workout", "log", "bench", "-s", "1", "-r", "1", "-w", "90")
+    cli.run("workout", "log", "squat", "-s", "5", "-r", "5", "-w", "100")
+    prs = cli.json("workout", "pr")
+    by_ex = {p["exercise"]: p for p in prs}
+    assert by_ex["bench"]["weight_kg"] == 90.0
+    assert by_ex["squat"]["weight_kg"] == 100.0
+    # sorted by heaviest first
+    assert prs[0]["exercise"] == "squat"
+
+
+def test_pr_records_session_count(cli):
+    cli.run("workout", "log", "bench", "-s", "3", "-r", "5", "-w", "70")
+    cli.run("workout", "log", "bench", "-s", "3", "-r", "5", "-w", "75")
+    cli.run("workout", "log", "bench", "-s", "1", "-r", "1", "-w", "90")
+    prs = cli.json("workout", "pr")
+    bench = next(p for p in prs if p["exercise"] == "bench")
+    assert bench["sessions"] == 3
+
+
+def test_pr_ignores_no_rep_cardio(cli):
+    """Cardio entries (reps=0) should not appear in PR view."""
+    cli.run("workout", "log", "jogging", "-t", "30", "-c", "300")
+    result = cli.run("workout", "pr")
+    assert result.exit_code != 0  # "no strength workouts logged yet"
+
+
+def test_pr_for_one_exercise_groups_by_reps(cli):
+    """Specific-exercise PR breaks down by rep count (1RM / 3RM / 5RM)."""
+    cli.run("workout", "log", "bench press", "-s", "3", "-r", "5", "-w", "70")
+    cli.run("workout", "log", "bench press", "-s", "3", "-r", "5", "-w", "75")
+    cli.run("workout", "log", "bench press", "-s", "5", "-r", "3", "-w", "82.5")
+    cli.run("workout", "log", "bench press", "-s", "1", "-r", "1", "-w", "90")
+    breakdown = cli.json("workout", "pr", "bench press")
+    by_reps = {r["reps"]: r for r in breakdown}
+    assert by_reps[1]["weight_kg"] == 90.0
+    assert by_reps[3]["weight_kg"] == 82.5
+    assert by_reps[5]["weight_kg"] == 75.0  # heavier of the two 5-rep sets
+
+
+def test_pr_fuzzy_exercise_match(cli):
+    """`workout pr bench` finds 'bench press'."""
+    cli.run("workout", "log", "bench press", "-s", "1", "-r", "1", "-w", "90")
+    breakdown = cli.json("workout", "pr", "bench")
+    assert len(breakdown) == 1
+    assert breakdown[0]["weight_kg"] == 90.0
+
+
+def test_pr_unknown_exercise_fails(cli):
+    cli.run("workout", "log", "bench", "-s", "1", "-r", "1", "-w", "90")
+    result = cli.run("workout", "pr", "deadlift")
+    assert result.exit_code != 0
+
+
+def test_workout_show_by_name(cli):
+    cli.run("workout", "log", "squat", "-s", "5", "-r", "5", "-w", "100")
+    data = cli.json("workout", "show", "squat")
+    assert data["exercise"] == "squat"
+    assert data["weight_kg"] == 100.0
+
+
+def test_workout_show_name_prefers_most_recent(cli):
+    cli.run("workout", "log", "squat", "-s", "3", "-r", "5", "-w", "80")
+    latest = cli.json("workout", "log", "squat", "-s", "3", "-r", "5", "-w", "100")
+    data = cli.json("workout", "show", "squat")
+    assert data["id"] == latest["id"]
+    assert data["weight_kg"] == 100.0
+
+
+def test_workout_rm_by_name(cli):
+    cli.run("workout", "log", "bench", "-s", "1", "-r", "1", "-w", "90")
+    cli.json("workout", "rm", "bench")
+    listing = cli.json("workout", "list")
+    assert not any(e["exercise"] == "bench" for e in listing)
+
+
+def test_workout_unknown_name_fails(cli):
+    result = cli.run("workout", "show", "ghost-exercise")
+    assert result.exit_code != 0
