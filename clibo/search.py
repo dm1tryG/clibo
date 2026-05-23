@@ -30,6 +30,7 @@ from clibo.clis.network import Connection
 from clibo.clis.notes import Note
 from clibo.clis.quotes import Quote
 from clibo.clis.recipes import Recipe
+from clibo.clis.steps import StepEntry
 from clibo.clis.stretches import StretchSession
 from clibo.clis.tip import TipEntry
 from clibo.clis.todo import Task
@@ -115,6 +116,9 @@ SOURCES: list[tuple] = [
     ("tip", TipEntry, [TipEntry.venue, TipEntry.note],
      lambda t: f"{t.tip_amount:.2f} ({t.tip_percent:g}%)"
                 + (f" @ {t.venue}" if t.venue else "")),
+    ("steps", StepEntry, [StepEntry.source, StepEntry.note],
+     lambda s: f"{s.count:,} steps"
+                + (f" ({s.source})" if s.source else "")),
 ]
 
 

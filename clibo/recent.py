@@ -160,6 +160,9 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
      lambda r: f"{r['tip_amount']:.2f} on {r['bill_amount']:.2f} "
                 f"({r['tip_percent']:g}%)"
                 + (f" @ {r['venue']}" if r["venue"] else "")),
+    ("steps", "👟", "step_entry", ["count", "source"],
+     lambda r: f"{r['count']:,} steps"
+                + (f" ({r['source']})" if r["source"] else "")),
 ]
 
 

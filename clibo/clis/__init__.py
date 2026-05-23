@@ -57,6 +57,7 @@ from clibo.clis import (
     savings,
     sleep,
     split,
+    steps,
     stretches,
     subs,
     time,
@@ -138,4 +139,5 @@ ALL = [
     dreams,
     stretches,
     tip,
+    steps,
 ]

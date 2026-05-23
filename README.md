@@ -186,6 +186,7 @@ sub-command and every flag.
 | ✅ | `meditate` 🧘 | Meditation & mindfulness sessions |
 | ✅ | `vitals` ❤️ | Blood pressure, pulse & glucose log |
 | ✅ | `stretches` 🧎 | Mobility & flexibility session log |
+| ✅ | `steps` 👟 | Daily step-count tracker — goal, streak, by-source totals |
 
 ### 💰 Money & Finance
 | | Tool | What it does |

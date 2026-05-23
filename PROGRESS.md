@@ -4,6 +4,39 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 58 — `steps` (daily step-count tracker with streaks) · 2026-05-23
+
+Agent-mode self-test: "My step count was 8500 today" → no tool. The
+existing exercise tools all model *deliberate* activity (`workout` for
+strength, `mileage` for explicit cardio, `stretches` for mobility),
+but the single most-tracked passive health metric in 2026 — the daily
+step count from your watch or phone — had no home.
+
+- 👟 **New tool `steps` (65th, Health & Wellness)** — per-event step
+  log that sums to a per-day total. Multiple syncs in one day add up
+  (morning + afternoon + manual additions without double-counting).
+  Free-text `source` field tags where the count came from
+  (`apple_watch`, `fitbit`, `phone`, `manual`).
+- Commands: `log COUNT [-s SOURCE]` (with `add` alias from day one) /
+  `today` / `list --days N` / **`week`** (per-day bars with streak
+  callout) / `show` / `rm` / `goal --set N` (default 10,000) / `stats`
+  (window total, avg, hit-rate, best day, current + longest streak).
+- 🔥 **Streak logic** — consecutive goal-hit days ending today (or
+  yesterday if today's count is still below goal — the day isn't
+  "broken" until tomorrow). Pinned by a test that flips streak from 2
+  to 0 when both yesterday and today are below the goal.
+- 🔌 Integrated: `recent.py`, `search.py` (source + note indexed),
+  `catalog.py` (Health & Wellness), README.
+- 📄 `docs/SCHEMA.md` regenerated (77 tables).
+- 🎤 NL flow verified:
+  • "I did 8500 steps today" → `steps log 8500` ✓
+  • "Apple Watch shows 12,400 today" → `steps log 12400 -s apple_watch` ✓
+  • "Set my goal to 7000" → `steps goal --set 7000` ✓
+  • "How am I doing this week?" → `steps week` ✓ (bars + streak)
+- **Tests:** 488 passing (+15); ruff clean.
+
+---
+
 ### Iteration 57 — polish: `parse_date` learns weekday names, "in N units", month names · 2026-05-23
 
 Agent-mode self-test surfaced three distinct NL inputs that fell over
