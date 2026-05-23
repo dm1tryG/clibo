@@ -229,6 +229,7 @@ sub-command and every flag.
 | ✅ | `network` 🌐 | Networking & people-you-met log |
 | ✅ | `gifts` 🎁 | Gift ideas & giving tracker |
 | ✅ | `brag` 🏆 | Achievement log for reviews |
+| ✅ | `cv` 📜 | Career history — jobs, education, projects, certs |
 
 ### 🏠 Home & Life
 | | Tool | What it does |

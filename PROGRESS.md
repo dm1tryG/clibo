@@ -4,6 +4,33 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 50 — `cv` (career history) · 2026-05-23
+
+Self-test surfaced: "Add CV entry: 2024-2026 Senior Engineer at Acme"
+had no real home — `jobs` is for *applying*, not for past career.
+
+- 📜 **New tool `cv` (61st)** — résumé as living data. Distinct from
+  `jobs` (applications). Filed under CRM & Relationships alongside
+  it.
+- Model has month-precision dates: omit `--end` for currently-running,
+  use `YYYY-MM` for résumé-style "2024-01 — 2026-04" rendering.
+- Commands: `add TITLE -o ORG -k KIND --start --end` / `achieve ID
+  'bullet'` (append a highlight) / `current` / `list [-k KIND]` /
+  `show ID` (pretty CV detail) / `timeline` (chronological,
+  newest-first, CV-ready) / `end ID` (close out a current entry) /
+  `edit` / `rm` / `stats` (counts + approx job years).
+- Kinds: `job`, `education`, `project`, `cert`, `other`.
+- 📜 `recent` picks up CV entries.
+- 📄 `docs/SCHEMA.md` regenerated (73 tables).
+- 🎤 NL flow verified end-to-end:
+  • "2024-2026 Senior Engineer at Acme" → `cv add "Senior Engineer" -o Acme -k job --start 2024-01 --end 2026-04`
+  • "Currently Founder at MyCo since June 2025" → `cv add Founder -o MyCo -k job --start 2025-06`
+  • "Add bullet: Shipped search, cut latency 40%" → `cv achieve <id> "Shipped search..."`
+  • "Show my CV" → `cv timeline`
+- **Tests:** 417 passing (+9); ruff clean.
+
+---
+
 ### Iteration 49 — `clibo dashboard` (configurable widgets) · 2026-05-23
 
 User request: customizable dashboard distinct from the fixed `clibo today`.

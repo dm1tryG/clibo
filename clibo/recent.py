@@ -148,6 +148,9 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
      lambda r: f"[{r['deck']}] {r['front']} → {r['back']}"),
     ("lessons", "📓", "lessons_lesson", ["takeaway", "category"],
      lambda r: f"[{r['category']}] {r['takeaway']}"),
+    ("cv", "📜", "cv_entry", ["title", "org", "kind"],
+     lambda r: f"{r['kind']}: {r['title']}"
+                + (f" @ {r['org']}" if r["org"] else "")),
 ]
 
 

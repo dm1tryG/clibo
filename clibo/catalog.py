@@ -67,6 +67,7 @@ CATALOG: list[Tool] = [
     Tool("network", "🌐", "CRM & Relationships", "Networking & people-you-met log"),
     Tool("gifts", "🎁", "CRM & Relationships", "Gift ideas & giving tracker"),
     Tool("brag", "🏆", "CRM & Relationships", "Achievement log for reviews"),
+    Tool("cv", "📜", "CRM & Relationships", "Career history — jobs, education, projects, certs"),
     # ── 🏠 Home & Life ───────────────────────────────────────────────────
     Tool("groceries", "🛒", "Home & Life", "Grocery & shopping list"),
     Tool("pantry", "🥫", "Home & Life", "Food inventory with expiry dates"),
