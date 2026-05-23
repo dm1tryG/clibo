@@ -101,6 +101,8 @@ CATALOG: list[Tool] = [
          "Important documents with expiry tracking (passport, license, …)"),
     Tool("challenge", "🚀", "Productivity & Work",
          "Time-boxed challenges with daily check-ins (30-day, 100-day, …)"),
+    Tool("donations", "❤️", "Money & Finance",
+         "Charitable giving log with tax-year and recipient stats"),
 ]
 
 CATEGORIES: list[str] = list(dict.fromkeys(t.category for t in CATALOG))

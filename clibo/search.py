@@ -19,6 +19,7 @@ from clibo.clis.challenge import Challenge
 from clibo.clis.crm import Contact
 from clibo.clis.cv import CvEntry
 from clibo.clis.documents import Document
+from clibo.clis.donations import Donation
 from clibo.clis.dreams import Dream
 from clibo.clis.expense import Expense
 from clibo.clis.films import Film
@@ -131,6 +132,9 @@ SOURCES: list[tuple] = [
     ("challenge", Challenge,
      [Challenge.name, Challenge.description],
      lambda c: f"{c.status} {c.target_days}-day: {c.name}"),
+    ("donations", Donation,
+     [Donation.recipient, Donation.receipt, Donation.note],
+     lambda d: f"{d.amount:.2f} to {d.recipient}"),
 ]
 
 

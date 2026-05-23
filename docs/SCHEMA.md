@@ -2,7 +2,7 @@
 
 Auto-generated reference for every SQLite table clibo writes to. Regenerate with `python scripts/dump_schema.py`.
 
-_81 tables in total._
+_82 tables in total._
 
 ## Contents
 
@@ -37,6 +37,19 @@ _81 tables in total._
 | `number` | `VARCHAR` | — |
 | `note` | `VARCHAR` | — |
 | `created_at` | `DATETIME` | NOT NULL, default |
+
+### `donation_entry`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `INTEGER` | PK, NOT NULL |
+| `recipient` | `VARCHAR` | NOT NULL |
+| `amount` | `FLOAT` | NOT NULL |
+| `tax_deductible` | `BOOLEAN` | NOT NULL, default |
+| `receipt` | `VARCHAR` | — |
+| `entry_date` | `DATE` | NOT NULL, indexed, default |
+| `created_at` | `DATETIME` | NOT NULL, default |
+| `note` | `VARCHAR` | — |
 
 ### `step_entry`
 

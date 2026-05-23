@@ -214,6 +214,7 @@ sub-command and every flag.
 | ✅ | `wishlist` ⭐ | Things-to-buy wishlist with prices |
 | ✅ | `income` 💵 | Income tracker — counterpart to expense |
 | ✅ | `tip` 🪙 | Tipping tracker — bill, tip %, venue, service rating |
+| ✅ | `donations` ❤️ | Charitable giving log with tax-year and recipient stats |
 
 ### ✅ Productivity & Work
 | | Tool | What it does |

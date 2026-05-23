@@ -22,6 +22,7 @@ from clibo.clis import (
     dashboard,
     debt,
     documents,
+    donations,
     dreams,
     events,
     expense,
@@ -146,4 +147,5 @@ ALL = [
     caffeine,
     documents,
     challenge,
+    donations,
 ]

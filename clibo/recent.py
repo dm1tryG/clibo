@@ -172,6 +172,10 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
      lambda r: f"{r['kind']}: {r['name']} (expires {r['expires']})"),
     ("challenge", "🚀", "challenge_entry", ["name", "target_days", "status"],
      lambda r: f"{r['status']} {r['target_days']}-day: {r['name']}"),
+    ("donations", "❤️", "donation_entry",
+     ["recipient", "amount", "tax_deductible"],
+     lambda r: f"{r['amount']:.2f} to {r['recipient']}"
+                + ("" if r["tax_deductible"] else " (non-deductible)")),
 ]
 
 

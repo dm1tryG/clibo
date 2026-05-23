@@ -4,6 +4,44 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 63 — `donations` (charitable giving with tax-year aggregation) · 2026-05-23
+
+Agent-mode self-test: "I donated $50 to Red Cross" — could go through
+`expense` with category=donation, but giving has its own shape that
+doesn't fit a generic expense row.
+
+- ❤️ **New tool `donations` (69th, Money & Finance)** — three things
+  that make it distinct from `expense`:
+  • **Calendar-year totals** matter for tax filing — `year`
+    subcommand aggregates by Jan 1 → Dec 31 boundaries, separate
+    from fiscal-year expense reporting.
+  • **Tax-deductible vs not** as a per-gift flag (default deductible;
+    `--no-deductible` for political gifts, GoFundMe-to-individual,
+    non-US NGOs). `year` reports deductible vs non-deductible split.
+  • **Recipient as structured data** — repeat giving to the same
+    org clusters cleanly: "Red Cross: $250 across 5 gifts" instead
+    of five expense rows with slightly-different descriptions.
+- Commands: `log RECIPIENT -a AMOUNT [-r RECEIPT] [--no-deductible]`
+  (with `add` alias from day one) / `list [-y YEAR] [-R RECIPIENT]` /
+  **`year [-y YEAR]`** (the headline view — annual summary with
+  deductible total for tax filing) / **`top --days 365`** (most-
+  supported recipients) / `show` / `rm` / `stats` (lifetime: by
+  year, top recipient, deductible total).
+- 🔌 Integrated: `recent.py`, `search.py` (recipient + receipt + note
+  indexed — so the receipt number actually finds the donation),
+  `catalog.py` (Money & Finance), README. Uses the shared
+  `money/currency` setting.
+- 📄 `docs/SCHEMA.md` regenerated (82 tables).
+- 🎤 NL flow verified:
+  • "I donated $50 to Red Cross" →
+    `donations log "Red Cross" -a 50` ✓
+  • "Gave $200 to a friend's GoFundMe — not deductible" →
+    `donations log "GoFundMe Alice" -a 200 --no-deductible` ✓
+  • "How much did I give in 2025?" → `donations year -y 2025` ✓
+- **Tests:** 568 passing (+14); ruff clean.
+
+---
+
 ### Iteration 62 — `challenge` (30-day, 100-day, … with miss budget) + v1.1.1 to PyPI · 2026-05-23
 
 User asked to "release to pypi" mid-iteration. Done — v1.1.1 is live
