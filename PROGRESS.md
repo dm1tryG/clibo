@@ -4,6 +4,55 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 57 — polish: `parse_date` learns weekday names, "in N units", month names · 2026-05-23
+
+Agent-mode self-test surfaced three distinct NL inputs that fell over
+because the shared `parse_date()` helper didn't understand them:
+
+```
+$ clibo birthdays add Dad -d "March 12"      → Unrecognized date
+$ clibo events add ... -d "next Tuesday"     → Unrecognized date
+$ clibo followup add ... -d "in 2 weeks"     → Unrecognized date
+```
+
+These weren't tool bugs — they were missing vocabulary in the shared
+parser every `-d/--date` flag delegates to. One central fix unblocks
+flows across **every** tool.
+
+- 📆 **`parse_date` extended** with three new natural-language forms:
+  • Weekday names — bare (`monday` → next Monday), `next friday`,
+    `this wednesday` (allows today), `last tuesday`. Common
+    abbreviations work too (`mon`, `tue`, `wed`, `thu`, `fri`,
+    `sat`, `sun`).
+  • `in N <unit>` — `in 14 days`, `in 2 weeks`, `in 1 month`,
+    `in 3 years` (synonym for the existing `N <unit> from now`).
+  • Month-name forms — `March 12`, `12 march`, `Mar 12 1985`,
+    `Mar. 12 1985`, with year defaulting to the current year.
+    Implemented as a locale-independent English month dict (the
+    obvious `strptime("%B")` approach silently breaks under any
+    non-English `LC_TIME`).
+- 🎂 **`birthdays add`** now also accepts the month-name forms — its
+  separate `_parse_md` helper (which has year-optional semantics)
+  delegates month-name parsing to the same central function. So
+  "March 12" works *and* `data["turning"]` stays `None` when no
+  year was given, matching existing behaviour.
+- 🧪 **12 new parse_date tests** (`test_parse_date.py`) pin every
+  new form: weekday alone / next / this / last / abbreviations,
+  `in N` for all units, month-name with and without year, case
+  insensitivity, the trailing-dot ("Mar. 12") common typo, and the
+  invalid-day raises path. Plus one new birthdays test confirming
+  the integration end-to-end.
+- 🎤 NL flow re-verified — five different tools that were blocked
+  now work without any per-tool changes:
+  • `birthdays add Dad -d "March 12"` ✓
+  • `events add "Doctor appointment" -d "next Tuesday"` ✓
+  • `followup add Alice -r email -d "in 2 weeks"` ✓
+  • `workout log running -t 30 -d "last Friday"` ✓
+  • `bills add Rent -a 1200 -d "in 1 month"` ✓
+- **Tests:** 473 passing (+12); ruff clean.
+
+---
+
 ### Iteration 56 — polish: `car fuel` odometer is now optional · 2026-05-23
 
 Agent-mode self-test: "Filled up the car — 45L for $60" died with

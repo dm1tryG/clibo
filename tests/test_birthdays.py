@@ -39,3 +39,17 @@ def test_anniversary_kind(cli):
 def test_invalid_kind_fails(cli):
     result = cli.run("birthdays", "add", "Bad", "-d", "01-01", "-k", "nameday")
     assert result.exit_code != 0
+
+
+def test_add_with_month_name_date(cli):
+    """'March 12' / 'Mar 12' / '12 March' all work as natural-language input."""
+    data = cli.json("birthdays", "add", "Dad", "-d", "March 12")
+    assert data["date"] == "03-12"
+    assert data["turning"] is None  # no year provided
+
+    data = cli.json("birthdays", "add", "Friend", "-d", "12 mar")
+    assert data["date"] == "03-12"
+
+    data = cli.json("birthdays", "add", "Sister", "-d", "Mar 12 1985")
+    assert data["date"] == "03-12"
+    assert data["turning"] is not None

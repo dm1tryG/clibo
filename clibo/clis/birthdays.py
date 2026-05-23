@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime
 
 import typer
 from sqlmodel import Field, SQLModel, select
 
+from clibo.core.base import _parse_month_name_date
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, fail, ok, render_record, render_rows
 
@@ -35,15 +37,32 @@ app = typer.Typer(no_args_is_help=True, help=HELP)
 
 
 def _parse_md(text: str) -> tuple[int, int, int | None]:
-    """Parse a date string into (month, day, optional year)."""
+    """Parse a date string into (month, day, optional year).
+
+    Accepts the numeric forms ``YYYY-MM-DD``, ``MM-DD``, ``DD.MM`` and
+    ``MM/DD``, plus the month-name forms ``"March 12"``, ``"12 March"``,
+    ``"Mar 12 1985"`` (year stays optional in all cases — a birthday on
+    "March 12" doesn't need a birth year).
+    """
+    text = text.strip()
     for fmt, has_year in (("%Y-%m-%d", True), ("%m-%d", False),
                           ("%d.%m", False), ("%m/%d", False)):
         try:
-            parsed = datetime.strptime(text.strip(), fmt)
+            parsed = datetime.strptime(text, fmt)
         except ValueError:
             continue
         return parsed.month, parsed.day, (parsed.year if has_year else None)
-    raise typer.BadParameter(f"Date must be MM-DD or YYYY-MM-DD: {text!r}")
+    # Month-name forms ("March 12" / "12 march 1985" / "Mar 12").
+    md = _parse_month_name_date(text.lower())
+    if md is not None:
+        # If the original text didn't contain a 4-digit year, treat the
+        # year as unknown (parse_month_name_date fills in current year).
+        has_year_in_text = bool(re.search(r"\b\d{4}\b", text))
+        return md.month, md.day, (md.year if has_year_in_text else None)
+    raise typer.BadParameter(
+        f"Date must be MM-DD, YYYY-MM-DD, or a month-name form like "
+        f"'March 12' / 'Mar 12 1985': {text!r}"
+    )
 
 
 def _next_occurrence(month: int, day: int) -> date:
@@ -76,7 +95,9 @@ def _row(occasion: Occasion) -> dict:
 @app.command()
 def add(
     person: str = typer.Argument(..., help="Whose occasion this is"),
-    on: str = typer.Option(..., "--date", "-d", help="MM-DD or YYYY-MM-DD"),
+    on: str = typer.Option(..., "--date", "-d",
+                            help="MM-DD, YYYY-MM-DD, or a month-name form like "
+                                 "'March 12' / 'Mar 12 1985'"),
     kind: str = typer.Option("birthday", "--kind", "-k", help="birthday / anniversary"),
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
