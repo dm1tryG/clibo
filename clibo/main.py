@@ -154,19 +154,22 @@ def checkin(json_out: JsonOpt = False) -> None:
     ideal for an AI agent to ask the user one question at a time.
     """
     from datetime import date as _date
+
+    from clibo.models import CheckinSummary
     today = _date.today()
     with session() as db:
         checkins = collect_checkins(db, today=today)
-    pending = [c for c in checkins if not c["logged_today"]]
-    done = [c for c in checkins if c["logged_today"]]
+    pending = [c for c in checkins if not c.logged_today]
+    done = [c for c in checkins if c.logged_today]
+    summary = CheckinSummary(
+        date=today,
+        pending_count=len(pending),
+        logged_count=len(done),
+        pending=pending,
+        logged=done,
+    )
     if json_out:
-        _emit_json({
-            "date": today,
-            "pending_count": len(pending),
-            "logged_count": len(done),
-            "pending": pending,
-            "logged": done,
-        })
+        _emit_json(summary)
         return
     if not checkins:
         console.print(
@@ -185,15 +188,15 @@ def checkin(json_out: JsonOpt = False) -> None:
         f"[yellow]{len(pending)}[/yellow] pending\n"
     )
     for ci in pending:
-        console.print(f"  {ci['emoji']}  [bold]{ci['name']}[/bold]")
-        console.print(f"      ❓ [dim]{ci['question']}[/dim]")
-        if ci["last_value"] is not None:
-            ago_part = (f", {ci['last_days_ago']}d ago"
-                        if ci["last_days_ago"] else "")
+        console.print(f"  {ci.emoji}  [bold]{ci.name}[/bold]")
+        console.print(f"      ❓ [dim]{ci.question}[/dim]")
+        if ci.last_value is not None:
+            ago_part = (f", {ci.last_days_ago}d ago"
+                        if ci.last_days_ago else "")
             console.print(
-                f"      💡 last [dim]{ci['last_value']}{ago_part}[/dim]"
+                f"      💡 last [dim]{ci.last_value}{ago_part}[/dim]"
             )
-        console.print(f"      ➤  [cyan]{ci['command']}[/cyan]\n")
+        console.print(f"      ➤  [cyan]{ci.command}[/cyan]\n")
 
 
 @app.command()

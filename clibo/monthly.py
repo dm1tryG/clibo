@@ -45,6 +45,30 @@ from clibo.clis.workout import Workout
 from clibo.core.db import session
 from clibo.core.output import _emit_json, console
 from clibo.core.settings import get_setting
+from clibo.models import (
+    BillsMonth,
+    BookFinished,
+    CaffeineMonth,
+    CalorieMonth,
+    DonationsMonth,
+    ExpenseMonth,
+    FastingMonth,
+    FilmWatched,
+    FocusMonth,
+    HobbiesMonth,
+    IncomeMonth,
+    InvestMonth,
+    MileageMonth,
+    MoneyMonth,
+    MonthSnapshot,
+    MoodWeek,
+    ProductivityMonth,
+    SleepWeek,
+    StepsMonth,
+    TimedActivityWeek,
+    WaterWeek,
+    WorkoutWeek,
+)
 
 
 def _round(value: float, ndigits: int = 1) -> float:
@@ -62,7 +86,7 @@ def _month_bounds(year: int, month: int) -> tuple[date, date, int]:
     return first, last, (next_first.toordinal() - first.toordinal())
 
 
-def collect_month(year: int | None = None, month: int | None = None) -> dict:
+def collect_month(year: int | None = None, month: int | None = None) -> MonthSnapshot:
     """Aggregate one calendar month across the trackers."""
     today = date.today()
     year = year or today.year
@@ -281,177 +305,177 @@ def collect_month(year: int | None = None, month: int | None = None) -> dict:
         2,
     )
 
-    money_summary = {
-        "income": {
-            "total": income_total,
-            "entries": len(incomes),
-            "by_category": by_income_category,
-        },
-        "expenses": {
-            "total": expense_total,
-            "entries": len(expenses),
-            "by_category": by_expense_category,
-            "top_category": (
+    money_summary = MoneyMonth(
+        income=IncomeMonth(
+            total=income_total,
+            entries=len(incomes),
+            by_category=by_income_category,
+        ),
+        expenses=ExpenseMonth(
+            total=expense_total,
+            entries=len(expenses),
+            by_category=by_expense_category,
+            top_category=(
                 max(by_expense_category.items(), key=lambda kv: kv[1])
                 if by_expense_category else None
             ),
-        },
-        "donations": {
-            "total": donation_total,
-            "entries": len(donations),
-            "deductible_total": round(
+        ),
+        donations=DonationsMonth(
+            total=donation_total,
+            entries=len(donations),
+            deductible_total=round(
                 sum(d.amount for d in donations if d.tax_deductible), 2
             ),
-        },
-        "bills": {
-            "paid": len(bills_paid),
-            "unpaid": len(bills_unpaid),
-            "paid_total": round(sum(b.amount for b in bills_paid), 2),
-            "unpaid_total": round(sum(b.amount for b in bills_unpaid), 2),
-        },
-        "subs_monthly_total": subs_monthly_total,
-        "invest": {
-            "transactions": len(invest_txns),
-            "buys_total": invest_bought,
-            "sells_total": invest_sold,
-        },
-        "net_cash_flow": net_cash,
-        "currency": currency,
-    }
+        ),
+        bills=BillsMonth(
+            paid=len(bills_paid),
+            unpaid=len(bills_unpaid),
+            paid_total=round(sum(b.amount for b in bills_paid), 2),
+            unpaid_total=round(sum(b.amount for b in bills_unpaid), 2),
+        ),
+        subs_monthly_total=subs_monthly_total,
+        invest=InvestMonth(
+            transactions=len(invest_txns),
+            buys_total=invest_bought,
+            sells_total=invest_sold,
+        ),
+        net_cash_flow=net_cash,
+        currency=currency,
+    )
 
     # ── Health rollups ─────────────────────────────────────────────
-    sleep_summary = {
-        "nights_logged": len({s.entry_date for s in sleeps}),
-        "avg_hours": _round(sum(s.hours for s in sleeps) / len(sleeps)) if sleeps else None,
-        "avg_quality": _round(sum(s.quality for s in sleeps) / len(sleeps)) if sleeps else None,
-    }
+    sleep_summary = SleepWeek(
+        nights_logged=len({s.entry_date for s in sleeps}),
+        avg_hours=_round(sum(s.hours for s in sleeps) / len(sleeps)) if sleeps else None,
+        avg_quality=_round(sum(s.quality for s in sleeps) / len(sleeps)) if sleeps else None,
+    )
     cal_days = {c.entry_date for c in calories}
-    calorie_summary = {
-        "days_logged": len(cal_days),
-        "total_kcal": sum(c.kcal for c in calories),
-        "avg_per_day": _round(
+    calorie_summary = CalorieMonth(
+        days_logged=len(cal_days),
+        total_kcal=sum(c.kcal for c in calories),
+        avg_per_day=_round(
             sum(c.kcal for c in calories) / len(cal_days), 0
         ) if cal_days else None,
-        "goal_kcal": calorie_goal or None,
-    }
+        goal_kcal=calorie_goal or None,
+    )
     water_by_day: dict[date, int] = {}
     for w in waters:
         water_by_day[w.entry_date] = water_by_day.get(w.entry_date, 0) + w.amount_ml
-    water_summary = {
-        "days_logged": len(water_by_day),
-        "total_ml": sum(water_by_day.values()),
-        "goal_ml": water_goal,
-        "days_goal_reached": sum(1 for ml in water_by_day.values() if ml >= water_goal),
-    }
+    water_summary = WaterWeek(
+        days_logged=len(water_by_day),
+        total_ml=sum(water_by_day.values()),
+        goal_ml=water_goal,
+        days_goal_reached=sum(1 for ml in water_by_day.values() if ml >= water_goal),
+    )
     steps_by_day: dict[date, int] = {}
     for s in steps_entries:
         steps_by_day[s.entry_date] = steps_by_day.get(s.entry_date, 0) + s.count
-    steps_summary = {
-        "days_logged": len(steps_by_day),
-        "total": sum(steps_by_day.values()),
-        "avg_per_logged_day": (
+    steps_summary = StepsMonth(
+        days_logged=len(steps_by_day),
+        total=sum(steps_by_day.values()),
+        avg_per_logged_day=(
             int(sum(steps_by_day.values()) / len(steps_by_day))
             if steps_by_day else 0
         ),
-        "goal": steps_goal,
-        "days_goal_reached": sum(1 for n in steps_by_day.values() if n >= steps_goal),
-    }
-    workout_summary = {
-        "sessions": len(workouts),
-        "days_active": len({w.entry_date for w in workouts}),
-        "total_minutes": sum(w.duration_min for w in workouts),
-        "total_kcal_burned": sum(w.kcal_burned or 0 for w in workouts),
-    }
+        goal=steps_goal,
+        days_goal_reached=sum(1 for n in steps_by_day.values() if n >= steps_goal),
+    )
+    workout_summary = WorkoutWeek(
+        sessions=len(workouts),
+        days_active=len({w.entry_date for w in workouts}),
+        total_minutes=sum(w.duration_min for w in workouts),
+        total_kcal_burned=sum(w.kcal_burned or 0 for w in workouts),
+    )
     caffeine_by_day: dict[date, int] = {}
     for c in caffeines:
         caffeine_by_day[c.entry_date] = caffeine_by_day.get(c.entry_date, 0) + c.mg
-    caffeine_summary = {
-        "drinks": len(caffeines),
-        "days_logged": len(caffeine_by_day),
-        "total_mg": sum(caffeine_by_day.values()),
-        "over_limit_days": sum(
+    caffeine_summary = CaffeineMonth(
+        drinks=len(caffeines),
+        days_logged=len(caffeine_by_day),
+        total_mg=sum(caffeine_by_day.values()),
+        over_limit_days=sum(
             1 for mg in caffeine_by_day.values() if mg > caffeine_limit
         ),
-    }
+    )
     fast_hours = [_duration_hours(f) for f in fasts]
-    fasting_summary = {
-        "completed": len(fasts),
-        "total_hours": _round(sum(fast_hours)),
-        "longest_hours": _round(max(fast_hours)) if fast_hours else 0,
-        "target_hits": sum(
+    fasting_summary = FastingMonth(
+        completed=len(fasts),
+        total_hours=_round(sum(fast_hours)),
+        longest_hours=_round(max(fast_hours)) if fast_hours else 0,
+        target_hits=sum(
             1 for f, h in zip(fasts, fast_hours, strict=True)
             if h >= f.target_hours
         ),
-    }
-    meditate_summary = {
-        "sessions": len(meditations),
-        "total_minutes": sum(m.minutes for m in meditations),
-        "days": len({m.entry_date for m in meditations}),
-    }
-    stretches_summary = {
-        "sessions": len(stretches),
-        "total_minutes": sum(s.duration_min for s in stretches),
-        "days": len({s.entry_date for s in stretches}),
-    }
-    mileage_summary = {
-        "sessions": len(mileages),
-        "total_km": _round(sum(m.distance_km for m in mileages)),
-    }
-    mood_summary = {
-        "checkins": len(moods),
-        "avg_score": _round(sum(m.score for m in moods) / len(moods)) if moods else None,
-    }
+    )
+    meditate_summary = TimedActivityWeek(
+        sessions=len(meditations),
+        total_minutes=sum(m.minutes for m in meditations),
+        days=len({m.entry_date for m in meditations}),
+    )
+    stretches_summary = TimedActivityWeek(
+        sessions=len(stretches),
+        total_minutes=sum(s.duration_min for s in stretches),
+        days=len({s.entry_date for s in stretches}),
+    )
+    mileage_summary = MileageMonth(
+        sessions=len(mileages),
+        total_km=_round(sum(m.distance_km for m in mileages)),
+    )
+    mood_summary = MoodWeek(
+        checkins=len(moods),
+        avg_score=_round(sum(m.score for m in moods) / len(moods)) if moods else None,
+    )
 
     # ── Productivity rollups ───────────────────────────────────────
-    focus_summary = {
-        "sessions": len(focus_sessions),
-        "total_minutes": sum(f.minutes for f in focus_sessions),
-        "days": len({f.entry_date for f in focus_sessions}),
-    }
-    productivity = {
-        "focus": focus_summary,
-        "habit_checks": len(habit_checks),
-        "journal_entries": len(journal),
-        "journal_days": len({j.entry_date for j in journal}),
-        "gratitude_entries": len(gratitudes),
-        "gratitude_days": len({g.entry_date for g in gratitudes}),
-        "tasks_completed": len(tasks_done),
-    }
+    focus_summary = FocusMonth(
+        sessions=len(focus_sessions),
+        total_minutes=sum(f.minutes for f in focus_sessions),
+        days=len({f.entry_date for f in focus_sessions}),
+    )
+    productivity = ProductivityMonth(
+        focus=focus_summary,
+        habit_checks=len(habit_checks),
+        journal_entries=len(journal),
+        journal_days=len({j.entry_date for j in journal}),
+        gratitude_entries=len(gratitudes),
+        gratitude_days=len({g.entry_date for g in gratitudes}),
+        tasks_completed=len(tasks_done),
+    )
 
     # ── Hobbies rollups ────────────────────────────────────────────
-    hobbies = {
-        "books_finished": [
-            {"title": b.title, "author": b.author, "rating": b.rating}
+    hobbies = HobbiesMonth(
+        books_finished=[
+            BookFinished(title=b.title, author=b.author, rating=b.rating)
             for b in books_finished
         ],
-        "films_watched": [
-            {"title": f.title, "rating": f.rating, "kind": f.kind}
+        films_watched=[
+            FilmWatched(title=f.title, rating=f.rating, kind=f.kind)
             for f in films_watched
         ],
-    }
+    )
 
-    return {
-        "year": year,
-        "month": month,
-        "month_name": start.strftime("%B %Y"),
-        "start": start,
-        "end": end,
-        "days": num_days,
-        "money": money_summary,
-        "sleep": sleep_summary,
-        "calories": calorie_summary,
-        "water": water_summary,
-        "steps": steps_summary,
-        "workouts": workout_summary,
-        "caffeine": caffeine_summary,
-        "fasting": fasting_summary,
-        "meditate": meditate_summary,
-        "stretches": stretches_summary,
-        "mileage": mileage_summary,
-        "mood": mood_summary,
-        "productivity": productivity,
-        "hobbies": hobbies,
-    }
+    return MonthSnapshot(
+        year=year,
+        month=month,
+        month_name=start.strftime("%B %Y"),
+        start=start,
+        end=end,
+        days=num_days,
+        money=money_summary,
+        sleep=sleep_summary,
+        calories=calorie_summary,
+        water=water_summary,
+        steps=steps_summary,
+        workouts=workout_summary,
+        caffeine=caffeine_summary,
+        fasting=fasting_summary,
+        meditate=meditate_summary,
+        stretches=stretches_summary,
+        mileage=mileage_summary,
+        mood=mood_summary,
+        productivity=productivity,
+        hobbies=hobbies,
+    )
 
 
 def render_month(
@@ -460,136 +484,134 @@ def render_month(
     json_out: bool = False,
 ) -> None:
     """Render the calendar-month rollup to stdout."""
-    data = collect_month(year, month)
+    data: MonthSnapshot = collect_month(year, month)
     if json_out:
         _emit_json(data)
         return
-    console.print(f"\n🗓️  [bold]{data['month_name']}[/bold]   "
-                   f"[dim]{data['start']:%a %d} → {data['end']:%a %d %b}   "
-                   f"({data['days']} days)[/dim]\n")
+    console.print(f"\n🗓️  [bold]{data.month_name}[/bold]   "
+                   f"[dim]{data.start:%a %d} → {data.end:%a %d %b}   "
+                   f"({data.days} days)[/dim]\n")
 
-    m = data["money"]
+    m = data.money
     money_lines: list[str] = []
-    if m["income"]["entries"]:
+    if m.income.entries:
         money_lines.append(
-            f"💵 Income       [bold]{money(m['income']['total'])}[/bold]   ·   "
-            f"{m['income']['entries']} "
-            f"entr{'ies' if m['income']['entries'] != 1 else 'y'}"
+            f"💵 Income       [bold]{money(m.income.total)}[/bold]   ·   "
+            f"{m.income.entries} "
+            f"entr{'ies' if m.income.entries != 1 else 'y'}"
         )
-    if m["expenses"]["entries"]:
-        line = (f"💸 Expenses     [bold]{money(m['expenses']['total'])}[/bold]   ·   "
-                f"{m['expenses']['entries']} entries")
-        if m["expenses"]["top_category"]:
-            cat, amt = m["expenses"]["top_category"]
+    if m.expenses.entries:
+        line = (f"💸 Expenses     [bold]{money(m.expenses.total)}[/bold]   ·   "
+                f"{m.expenses.entries} entries")
+        if m.expenses.top_category:
+            cat, amt = m.expenses.top_category
             line += f"   ·   top: [bold]{cat}[/bold] ({money(amt)})"
         money_lines.append(line)
-    if m["donations"]["entries"]:
+    if m.donations.entries:
         money_lines.append(
-            f"❤️ Donations    [bold]{money(m['donations']['total'])}[/bold]   ·   "
-            f"{m['donations']['entries']} gift"
-            f"{'s' if m['donations']['entries'] != 1 else ''}"
+            f"❤️ Donations    [bold]{money(m.donations.total)}[/bold]   ·   "
+            f"{m.donations.entries} gift"
+            f"{'s' if m.donations.entries != 1 else ''}"
         )
-    if m["bills"]["paid"] or m["bills"]["unpaid"]:
+    if m.bills.paid or m.bills.unpaid:
         money_lines.append(
-            f"🧾 Bills        paid {m['bills']['paid']} ({money(m['bills']['paid_total'])})"
+            f"🧾 Bills        paid {m.bills.paid} ({money(m.bills.paid_total)})"
             + (
-                f"   ·   [red]{m['bills']['unpaid']} unpaid "
-                f"({money(m['bills']['unpaid_total'])})[/red]"
-                if m["bills"]["unpaid"] else ""
+                f"   ·   [red]{m.bills.unpaid} unpaid "
+                f"({money(m.bills.unpaid_total)})[/red]"
+                if m.bills.unpaid else ""
             )
         )
-    if m["subs_monthly_total"]:
+    if m.subs_monthly_total:
         money_lines.append(
             f"🔁 Subs         active monthly cost ~"
-            f"[bold]{money(m['subs_monthly_total'])}[/bold]"
+            f"[bold]{money(m.subs_monthly_total)}[/bold]"
         )
-    if m["invest"]["transactions"]:
+    if m.invest.transactions:
         money_lines.append(
-            f"📈 Invest       {m['invest']['transactions']} transactions   ·   "
-            f"buys {money(m['invest']['buys_total'])}"
-            + (f"   ·   sells {money(m['invest']['sells_total'])}"
-               if m["invest"]["sells_total"] else "")
+            f"📈 Invest       {m.invest.transactions} transactions   ·   "
+            f"buys {money(m.invest.buys_total)}"
+            + (f"   ·   sells {money(m.invest.sells_total)}"
+               if m.invest.sells_total else "")
         )
     if money_lines:
-        net = m["net_cash_flow"]
         console.print("[bold]💰 Money[/bold]")
         for line in money_lines:
             console.print(f"  {line}")
         # Show net only if there were both income and outflows
-        if m["income"]["entries"] and (
-            m["expenses"]["entries"] or m["bills"]["paid"] or m["donations"]["entries"]
+        if m.income.entries and (
+            m.expenses.entries or m.bills.paid or m.donations.entries
         ):
-            colour = "green" if net >= 0 else "red"
+            colour = "green" if m.net_cash_flow >= 0 else "red"
             console.print(
-                f"  ──"
-                f"  [{colour}]Net cash flow {money(net)}[/{colour}]"
+                f"  ──  [{colour}]Net cash flow {money(m.net_cash_flow)}[/{colour}]"
             )
         console.print()
 
     # Health
     health_lines: list[str] = []
-    s = data["sleep"]
-    if s["nights_logged"]:
+    if data.sleep.nights_logged:
+        s = data.sleep
         health_lines.append(
-            f"😴 Sleep        [bold]{s['avg_hours']}h[/bold] avg over "
-            f"{s['nights_logged']} nights"
+            f"😴 Sleep        [bold]{s.avg_hours}h[/bold] avg over "
+            f"{s.nights_logged} nights"
         )
-    c = data["calories"]
-    if c["days_logged"]:
+    if data.calories.days_logged:
+        c = data.calories
         health_lines.append(
-            f"🍎 Calories     [bold]{c['avg_per_day']:g}[/bold] kcal/day "
-            f"over {c['days_logged']} days"
+            f"🍎 Calories     [bold]{c.avg_per_day:g}[/bold] kcal/day "
+            f"over {c.days_logged} days"
         )
-    w = data["water"]
-    if w["days_logged"]:
+    if data.water.days_logged:
+        w = data.water
         health_lines.append(
-            f"💧 Water        hit goal [bold]{w['days_goal_reached']}/{data['days']}[/bold] days"
+            f"💧 Water        hit goal [bold]{w.days_goal_reached}/{data.days}[/bold] days"
         )
-    st = data["steps"]
-    if st["days_logged"]:
+    if data.steps.days_logged:
+        st = data.steps
         health_lines.append(
-            f"👟 Steps        [bold]{st['total']:,}[/bold] total   ·   "
-            f"hit goal {st['days_goal_reached']}/{data['days']} days"
+            f"👟 Steps        [bold]{st.total:,}[/bold] total   ·   "
+            f"hit goal {st.days_goal_reached}/{data.days} days"
         )
-    wo = data["workouts"]
-    if wo["sessions"]:
-        kcal_part = f"   ·   🔥 {wo['total_kcal_burned']} kcal" if wo["total_kcal_burned"] else ""
+    if data.workouts.sessions:
+        wo = data.workouts
+        kcal_part = f"   ·   🔥 {wo.total_kcal_burned} kcal" if wo.total_kcal_burned else ""
         health_lines.append(
-            f"🏋️ Workouts     [bold]{wo['sessions']}[/bold] sessions   ·   "
-            f"{wo['total_minutes']} min{kcal_part}"
+            f"🏋️ Workouts     [bold]{wo.sessions}[/bold] sessions   ·   "
+            f"{wo.total_minutes} min{kcal_part}"
         )
-    caf = data["caffeine"]
-    if caf["drinks"]:
-        over = (f"   ·   [red]{caf['over_limit_days']} over-limit days[/red]"
-                if caf["over_limit_days"] else "")
+    if data.caffeine.drinks:
+        caf = data.caffeine
+        over = (f"   ·   [red]{caf.over_limit_days} over-limit days[/red]"
+                if caf.over_limit_days else "")
         health_lines.append(
-            f"☕ Caffeine     [bold]{caf['total_mg']}[/bold] mg   ·   "
-            f"{caf['drinks']} drinks{over}"
+            f"☕ Caffeine     [bold]{caf.total_mg}[/bold] mg   ·   "
+            f"{caf.drinks} drinks{over}"
         )
-    fa = data["fasting"]
-    if fa["completed"]:
+    if data.fasting.completed:
+        fa = data.fasting
         health_lines.append(
-            f"🕒 Fasting      [bold]{fa['completed']}[/bold] completed   ·   "
-            f"{fa['total_hours']:g}h total   ·   "
-            f"hit target {fa['target_hits']}/{fa['completed']}"
+            f"🕒 Fasting      [bold]{fa.completed}[/bold] completed   ·   "
+            f"{fa.total_hours:g}h total   ·   "
+            f"hit target {fa.target_hits}/{fa.completed}"
         )
-    med = data["meditate"]
-    if med["sessions"]:
+    if data.meditate.sessions:
+        med = data.meditate
         health_lines.append(
-            f"🧘 Meditate     [bold]{med['total_minutes']}[/bold] min   ·   "
-            f"{med['sessions']} sessions over {med['days']} days"
+            f"🧘 Meditate     [bold]{med.total_minutes}[/bold] min   ·   "
+            f"{med.sessions} sessions over {med.days} days"
         )
-    mi = data["mileage"]
-    if mi["sessions"]:
+    if data.mileage.sessions:
+        mi = data.mileage
         health_lines.append(
-            f"🏃 Mileage      [bold]{mi['total_km']:g}[/bold] km   ·   "
-            f"{mi['sessions']} sessions"
+            f"🏃 Mileage      [bold]{mi.total_km:g}[/bold] km   ·   "
+            f"{mi.sessions} sessions"
         )
-    mo = data["mood"]
-    if mo["checkins"]:
+    if data.mood.checkins:
+        mo = data.mood
         health_lines.append(
-            f"🙂 Mood         [bold]{mo['avg_score']}/5[/bold] avg over "
-            f"{mo['checkins']} check-ins"
+            f"🙂 Mood         [bold]{mo.avg_score}/5[/bold] avg over "
+            f"{mo.checkins} check-ins"
         )
     if health_lines:
         console.print("[bold]🏃 Health & wellness[/bold]")
@@ -598,26 +620,26 @@ def render_month(
         console.print()
 
     # Productivity
-    p = data["productivity"]
+    p = data.productivity
     prod_lines: list[str] = []
-    if p["focus"]["sessions"]:
+    if p.focus.sessions:
         prod_lines.append(
-            f"🍅 Focus        [bold]{p['focus']['total_minutes']}[/bold] min   ·   "
-            f"{p['focus']['sessions']} sessions"
+            f"🍅 Focus        [bold]{p.focus.total_minutes}[/bold] min   ·   "
+            f"{p.focus.sessions} sessions"
         )
-    if p["habit_checks"]:
-        prod_lines.append(f"🔥 Habits       {p['habit_checks']} check-ins")
-    if p["tasks_completed"]:
-        prod_lines.append(f"✅ Tasks        {p['tasks_completed']} completed")
-    if p["journal_entries"]:
+    if p.habit_checks:
+        prod_lines.append(f"🔥 Habits       {p.habit_checks} check-ins")
+    if p.tasks_completed:
+        prod_lines.append(f"✅ Tasks        {p.tasks_completed} completed")
+    if p.journal_entries:
         prod_lines.append(
-            f"📔 Journal      {p['journal_entries']} entries   ·   "
-            f"{p['journal_days']} days"
+            f"📔 Journal      {p.journal_entries} entries   ·   "
+            f"{p.journal_days} days"
         )
-    if p["gratitude_entries"]:
+    if p.gratitude_entries:
         prod_lines.append(
-            f"🙏 Gratitude    {p['gratitude_entries']} entries   ·   "
-            f"{p['gratitude_days']} days"
+            f"🙏 Gratitude    {p.gratitude_entries} entries   ·   "
+            f"{p.gratitude_days} days"
         )
     if prod_lines:
         console.print("[bold]✅ Productivity[/bold]")
@@ -626,28 +648,28 @@ def render_month(
         console.print()
 
     # Hobbies
-    hob = data["hobbies"]
-    if hob["books_finished"] or hob["films_watched"]:
+    hob = data.hobbies
+    if hob.books_finished or hob.films_watched:
         console.print("[bold]🎨 Hobbies[/bold]")
-        if hob["books_finished"]:
+        if hob.books_finished:
             console.print(
-                f"  📚 Books finished:   [bold]{len(hob['books_finished'])}[/bold] "
-                + (" — " + ", ".join(b["title"] for b in hob["books_finished"][:3])
-                   if hob["books_finished"] else "")
+                f"  📚 Books finished:   [bold]{len(hob.books_finished)}[/bold] "
+                + (" — " + ", ".join(b.title for b in hob.books_finished[:3])
+                   if hob.books_finished else "")
             )
-        if hob["films_watched"]:
+        if hob.films_watched:
             console.print(
-                f"  🎬 Films watched:    [bold]{len(hob['films_watched'])}[/bold]"
+                f"  🎬 Films watched:    [bold]{len(hob.films_watched)}[/bold]"
             )
         console.print()
 
     # Empty state
     has_anything = any([
         money_lines, health_lines, prod_lines,
-        hob["books_finished"], hob["films_watched"],
+        hob.books_finished, hob.films_watched,
     ])
     if not has_anything:
-        console.print(f"  [dim]Nothing logged in {data['month_name']}.[/dim]\n")
+        console.print(f"  [dim]Nothing logged in {data.month_name}.[/dim]\n")
 
 
 def month_command(

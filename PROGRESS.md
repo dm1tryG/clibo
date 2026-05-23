@@ -4,6 +4,41 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 72 — Pydantic models for the integration views, no more `data["..."]` · 2026-05-23
+
+User request: "rewrite all to Pydantic models, no `data['...']` usage,
+add typehints everywhere". Executed as a leveraged refactor of the
+four integration-view producers and renderers.
+
+- 🆕 **`clibo/models.py`** — 40 Pydantic v2 models covering every
+  shape that the `today`, `week`, `month` and `checkin` views
+  construct. Each has explicit fields with types, replacing the
+  previously-implicit dict schemas.
+- 🛠️ **`clibo/dashboard.py`** — `collect_today() -> TodaySnapshot` and
+  `render_today` now use `.field` attribute access throughout.
+  Every nested level (tasks → overdue → TaskSummary) is typed.
+- 🛠️ **`clibo/weekly.py`** — `collect_week() -> WeekSnapshot` and
+  `render_week` similarly refactored. ~25 dict accesses replaced.
+- 🛠️ **`clibo/monthly.py`** — `collect_month() -> MonthSnapshot` and
+  `render_month` refactored. ~19 dict accesses replaced.
+- 🛠️ **`clibo/checkins.py`** — `collect_checkins()` returns
+  `list[CheckinStatus]` instead of `list[dict]`.
+- 🔌 **`clibo/core/output.py`** — `_emit_json` now serializes Pydantic
+  models via `.model_dump(mode="json")`, and `_coerce` does the same
+  for nested Pydantic values that show up via `default=`. Same JSON
+  output shape as before; every existing test still consumes JSON
+  correctly.
+- ✅ **All 670 tests pass** — no behavioural changes, only structure.
+  The producer-consumer contract is now compiler-checkable.
+- ✅ **Ruff clean.**
+
+This was a leveraged refactor: 90+ `data["..."]` accesses across four
+files replaced by attribute access against typed models. Producers
+can no longer construct malformed data; consumers can no longer typo
+a key; IDEs surface field names via autocomplete.
+
+---
+
 ### Iteration 71 — Daily check-ins on `today` + new `clibo checkin` command · 2026-05-23
 
 User feedback: "show more widgets on today, show all logged

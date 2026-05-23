@@ -36,6 +36,7 @@ from clibo.clis.steps import StepEntry
 from clibo.clis.stretches import StretchSession
 from clibo.clis.weight import WeightLog
 from clibo.clis.workout import Workout
+from clibo.models import CheckinStatus
 
 ACTIVE_WINDOW_DAYS = 14
 MIN_ENTRIES_TO_BE_ACTIVE = 2
@@ -175,24 +176,17 @@ def _entry_date_of(tracker: _Tracker, entry: Any) -> date:
 
 
 def collect_checkins(
-    db, today: date | None = None, days: int = ACTIVE_WINDOW_DAYS
-) -> list[dict]:
-    """Return one dict per actively-used tracker with today's status.
+    db: Any, today: date | None = None, days: int = ACTIVE_WINDOW_DAYS
+) -> list[CheckinStatus]:
+    """Return one :class:`CheckinStatus` per actively-used tracker.
 
     ``db`` is an open SQLModel session. ``days`` controls the activity window.
-    Each result has:
-
-    * ``name``, ``emoji`` — display labels
-    * ``logged_today`` — bool
-    * ``today_value`` — formatted string, or ``None`` if not logged today
-    * ``last_value`` — most-recent prior entry, formatted
-    * ``last_days_ago`` — int, or ``None`` if no prior entry exists
-    * ``question`` — the prompt for ``clibo checkin``
-    * ``command`` — suggested CLI to log the new value
+    A tracker is "active" if it has at least
+    :data:`MIN_ENTRIES_TO_BE_ACTIVE` entries in the window.
     """
     today = today or date.today()
     since = today - timedelta(days=days - 1)
-    results: list[dict] = []
+    results: list[CheckinStatus] = []
     for tc in TRACKERS:
         date_col = getattr(tc.model, tc.date_field)
         entries = list(
@@ -214,14 +208,14 @@ def collect_checkins(
             (today - _entry_date_of(tc, last_entry)).days
             if last_entry else None
         )
-        results.append({
-            "name": tc.name,
-            "emoji": tc.emoji,
-            "logged_today": today_entry is not None,
-            "today_value": tc.format_value(today_entry) if today_entry else None,
-            "last_value": tc.format_value(last_entry) if last_entry else None,
-            "last_days_ago": last_days_ago,
-            "question": tc.question,
-            "command": tc.command,
-        })
+        results.append(CheckinStatus(
+            name=tc.name,
+            emoji=tc.emoji,
+            logged_today=today_entry is not None,
+            today_value=tc.format_value(today_entry) if today_entry else None,
+            last_value=tc.format_value(last_entry) if last_entry else None,
+            last_days_ago=last_days_ago,
+            question=tc.question,
+            command=tc.command,
+        ))
     return results

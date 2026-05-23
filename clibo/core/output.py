@@ -32,10 +32,18 @@ def _coerce(value: Any) -> Any:
     """JSON fallback for types ``json`` cannot serialize on its own."""
     if isinstance(value, (datetime, date)):
         return value.isoformat()
+    # Pydantic v2 models — use their own JSON-mode dump (handles nested
+    # date/datetime fields too).
+    if hasattr(value, "model_dump"):
+        return value.model_dump(mode="json")
     return str(value)
 
 
 def _emit_json(data: Any) -> None:
+    # If the caller hands us a Pydantic model, pre-flatten it so the JSON
+    # output shape is identical to what the old dict-based code produced.
+    if hasattr(data, "model_dump"):
+        data = data.model_dump(mode="json")
     print(_json.dumps(data, default=_coerce, ensure_ascii=False, indent=2))
 
 
