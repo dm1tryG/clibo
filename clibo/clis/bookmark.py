@@ -35,6 +35,30 @@ class Bookmark(SQLModel, table=True):
 app = typer.Typer(no_args_is_help=True, help=HELP)
 
 
+def _resolve(db, ident: str) -> Bookmark | None:
+    """Resolve a CLI arg to a Bookmark by ID, title or URL (fuzzy).
+
+    Search hits ``title`` first, then ``url``, then falls back to the
+    generic helper. Most-recent wins ties.
+    """
+    from clibo.core.base import lookup_by_id_or_name
+    if ident.isdigit():
+        bm = db.get(Bookmark, int(ident))
+        if bm:
+            return bm
+    pattern = f"%{ident}%"
+    # Title match first (most natural), then URL match, then generic.
+    return db.exec(
+        select(Bookmark)
+        .where(Bookmark.title.ilike(pattern))
+        .order_by(Bookmark.id.desc())
+    ).first() or db.exec(
+        select(Bookmark)
+        .where(Bookmark.url.ilike(pattern))
+        .order_by(Bookmark.id.desc())
+    ).first() or lookup_by_id_or_name(db, Bookmark, ident, Bookmark.title)
+
+
 def _row(bookmark: Bookmark) -> dict:
     return {
         "id": bookmark.id,
@@ -97,14 +121,17 @@ def list_bookmarks(
 
 
 @app.command()
-def show(bookmark_id: int = typer.Argument(..., help="Bookmark ID"), json_out: JsonOpt = False) -> None:
-    """🔖 Show one bookmark."""
+def show(
+    bookmark: str = typer.Argument(..., help="Bookmark ID, title or URL (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🔖 Show one bookmark. Accepts a numeric ID, title or URL substring."""
     with session() as db:
-        bookmark = db.get(Bookmark, bookmark_id)
-        if not bookmark:
-            fail(f"No bookmark #{bookmark_id}", json_out=json_out)
-        data = _row(bookmark) | {"created_at": bookmark.created_at}
-    render_record(data, json_out=json_out, title=f"🔖 Bookmark #{bookmark_id}")
+        target = _resolve(db, bookmark)
+        if not target:
+            fail(f"No bookmark matching {bookmark!r}", json_out=json_out)
+        data = _row(target) | {"created_at": target.created_at}
+    render_record(data, json_out=json_out, title=f"🔖 Bookmark #{target.id}")
 
 
 @app.command()
@@ -137,55 +164,97 @@ def search(
 
 @app.command(name="open")
 def open_bookmark(
-    bookmark_id: int = typer.Argument(..., help="Bookmark ID"),
+    bookmark: str = typer.Argument(..., help="Bookmark ID, title or URL (fuzzy)"),
     json_out: JsonOpt = False,
 ) -> None:
     """🌐 Open a bookmark in your web browser."""
     with session() as db:
-        bookmark = db.get(Bookmark, bookmark_id)
-        if not bookmark:
-            fail(f"No bookmark #{bookmark_id}", json_out=json_out)
-        url = bookmark.url
+        target = _resolve(db, bookmark)
+        if not target:
+            fail(f"No bookmark matching {bookmark!r}", json_out=json_out)
+        bid, url = target.id, target.url
     if json_out:
-        render_record({"id": bookmark_id, "url": url, "opened": False}, json_out=True)
+        render_record({"id": bid, "url": url, "opened": False}, json_out=True)
         return
     webbrowser.open(url)
     ok(f"Opening {url}", json_out=False)
 
 
 @app.command()
-def fav(bookmark_id: int = typer.Argument(..., help="Bookmark ID"), json_out: JsonOpt = False) -> None:
+def fav(
+    bookmark: str = typer.Argument(..., help="Bookmark ID, title or URL (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
     """⭐ Mark a bookmark as a favorite."""
-    _set_favorite(bookmark_id, True, json_out)
+    _set_favorite(bookmark, True, json_out)
 
 
 @app.command()
-def unfav(bookmark_id: int = typer.Argument(..., help="Bookmark ID"), json_out: JsonOpt = False) -> None:
+def unfav(
+    bookmark: str = typer.Argument(..., help="Bookmark ID, title or URL (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
     """⭐ Remove a bookmark from favorites."""
-    _set_favorite(bookmark_id, False, json_out)
+    _set_favorite(bookmark, False, json_out)
 
 
-def _set_favorite(bookmark_id: int, favorite: bool, json_out: bool) -> None:
+def _set_favorite(ident: str, favorite: bool, json_out: bool) -> None:
     with session() as db:
-        bookmark = db.get(Bookmark, bookmark_id)
-        if not bookmark:
-            fail(f"No bookmark #{bookmark_id}", json_out=json_out)
-        bookmark.favorite = favorite
-        db.add(bookmark)
+        target = _resolve(db, ident)
+        if not target:
+            fail(f"No bookmark matching {ident!r}", json_out=json_out)
+        target.favorite = favorite
+        db.add(target)
+        bid = target.id
     verb = "Favorited" if favorite else "Unfavorited"
-    ok(f"{verb} bookmark #{bookmark_id}", json_out=json_out,
-       data={"id": bookmark_id, "favorite": favorite})
+    ok(f"{verb} bookmark #{bid}", json_out=json_out,
+       data={"id": bid, "favorite": favorite})
 
 
 @app.command()
-def rm(bookmark_id: int = typer.Argument(..., help="Bookmark ID"), json_out: JsonOpt = False) -> None:
+def edit(
+    bookmark: str = typer.Argument(..., help="Bookmark ID, title or URL (fuzzy)"),
+    title: str = typer.Option(None, "--title", "-t", help="New title"),
+    url: str = typer.Option(None, "--url", "-u", help="New URL"),
+    tag: str = typer.Option(None, "--tag", help="New comma-separated tags"),
+    category: str = typer.Option(None, "--category", "-c"),
+    note: str = typer.Option(None, "--note", "-n"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🔖 Edit a bookmark. Accepts a numeric ID, title or URL substring."""
+    with session() as db:
+        target = _resolve(db, bookmark)
+        if not target:
+            fail(f"No bookmark matching {bookmark!r}", json_out=json_out)
+        if title is not None:
+            target.title = title
+        if url is not None:
+            target.url = url
+        if tag is not None:
+            target.tags = tag
+        if category is not None:
+            target.category = category.lower()
+        if note is not None:
+            target.note = note
+        db.add(target)
+        db.flush()
+        data = _row(target)
+    ok(f"Updated bookmark #{target.id}", json_out=json_out, data=data)
+
+
+@app.command()
+def rm(
+    bookmark: str = typer.Argument(..., help="Bookmark ID, title or URL (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
     """🔖 Delete a bookmark."""
     with session() as db:
-        bookmark = db.get(Bookmark, bookmark_id)
-        if not bookmark:
-            fail(f"No bookmark #{bookmark_id}", json_out=json_out)
-        db.delete(bookmark)
-    ok(f"Deleted bookmark #{bookmark_id}", json_out=json_out, data={"deleted": bookmark_id})
+        target = _resolve(db, bookmark)
+        if not target:
+            fail(f"No bookmark matching {bookmark!r}", json_out=json_out)
+        bid = target.id
+        db.delete(target)
+    ok(f"Deleted bookmark #{bid}", json_out=json_out, data={"deleted": bid})
 
 
 @app.command()

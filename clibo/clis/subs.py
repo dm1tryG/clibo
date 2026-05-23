@@ -44,6 +44,12 @@ def _monthly(sub: Subscription) -> float:
     return round(sub.amount * CYCLES.get(sub.cycle, 1.0), 2)
 
 
+def _resolve(db, ident: str) -> Subscription | None:
+    """Resolve a CLI arg to a Subscription by ID or name (fuzzy)."""
+    from clibo.core.base import lookup_by_id_or_name
+    return lookup_by_id_or_name(db, Subscription, ident, Subscription.name)
+
+
 def _row(sub: Subscription) -> dict:
     return {
         "id": sub.id,
@@ -164,26 +170,89 @@ def upcoming(
 
 
 @app.command()
-def cancel(sub_id: int = typer.Argument(..., help="Subscription ID"), json_out: JsonOpt = False) -> None:
-    """🔁 Mark a subscription as cancelled (keeps it in history)."""
+def show(
+    sub: str = typer.Argument(..., help="Subscription ID or name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🔁 Show one subscription. Accepts a numeric ID or a name."""
     with session() as db:
-        sub = db.get(Subscription, sub_id)
-        if not sub:
-            fail(f"No subscription #{sub_id}", json_out=json_out)
-        sub.active = False
-        db.add(sub)
-    ok(f"Cancelled {EMOJI} {sub.name}", json_out=json_out, data={"id": sub_id, "active": False})
+        target = _resolve(db, sub)
+        if not target:
+            fail(f"No subscription matching {sub!r}", json_out=json_out)
+        data = _row(target) | {"created_at": target.created_at}
+    render_record(data, json_out=json_out, title=f"🔁 {target.name}")
 
 
 @app.command()
-def rm(sub_id: int = typer.Argument(..., help="Subscription ID"), json_out: JsonOpt = False) -> None:
+def edit(
+    sub: str = typer.Argument(..., help="Subscription ID or name (fuzzy)"),
+    name: str = typer.Option(None, "--name", help="New name"),
+    amount: float = typer.Option(None, "--amount", "-a", help="New charge"),
+    cycle: str = typer.Option(None, "--cycle", "-c",
+                              help="weekly / monthly / yearly"),
+    category: str = typer.Option(None, "--category", help="New category"),
+    next_billing: str = typer.Option(None, "--next", help="Next billing date"),
+    note: str = typer.Option(None, "--note", "-n"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🔁 Edit a subscription. Accepts a numeric ID or a name."""
+    with session() as db:
+        target = _resolve(db, sub)
+        if not target:
+            fail(f"No subscription matching {sub!r}", json_out=json_out)
+        if name is not None:
+            target.name = name
+        if amount is not None:
+            if amount <= 0:
+                fail("Amount must be positive", json_out=json_out)
+            target.amount = amount
+        if cycle is not None:
+            if cycle.lower() not in CYCLES:
+                fail(f"Cycle must be one of: {', '.join(CYCLES)}",
+                     json_out=json_out)
+            target.cycle = cycle.lower()
+        if category is not None:
+            target.category = category.lower()
+        if next_billing is not None:
+            target.next_billing = parse_date(next_billing)
+        if note is not None:
+            target.note = note
+        db.add(target)
+        db.flush()
+        data = _row(target)
+    ok(f"Updated subscription #{target.id} — {target.name}",
+       json_out=json_out, data=data)
+
+
+@app.command()
+def cancel(
+    sub: str = typer.Argument(..., help="Subscription ID or name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🔁 Mark a subscription as cancelled (keeps it in history)."""
+    with session() as db:
+        target = _resolve(db, sub)
+        if not target:
+            fail(f"No subscription matching {sub!r}", json_out=json_out)
+        target.active = False
+        db.add(target)
+    ok(f"Cancelled {EMOJI} {target.name}", json_out=json_out,
+       data={"id": target.id, "active": False})
+
+
+@app.command()
+def rm(
+    sub: str = typer.Argument(..., help="Subscription ID or name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
     """🔁 Delete a subscription."""
     with session() as db:
-        sub = db.get(Subscription, sub_id)
-        if not sub:
-            fail(f"No subscription #{sub_id}", json_out=json_out)
-        db.delete(sub)
-    ok(f"Deleted subscription #{sub_id}", json_out=json_out, data={"deleted": sub_id})
+        target = _resolve(db, sub)
+        if not target:
+            fail(f"No subscription matching {sub!r}", json_out=json_out)
+        sid = target.id
+        db.delete(target)
+    ok(f"Deleted subscription #{sid}", json_out=json_out, data={"deleted": sid})
 
 
 @app.command()

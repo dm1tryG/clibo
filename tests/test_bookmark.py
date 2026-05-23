@@ -45,3 +45,44 @@ def test_remove(cli):
     bm = cli.json("bookmark", "add", "https://temp.com")
     removed = cli.json("bookmark", "rm", str(bm["id"]))
     assert removed["deleted"] == bm["id"]
+
+
+# ── name-resolution on show/edit/open/fav/unfav/rm (iter 85) ──
+
+
+def test_bookmark_show_by_title(cli):
+    cli.run("bookmark", "add", "https://example.com", "-t", "Example Site")
+    data = cli.json("bookmark", "show", "Example")
+    assert data["title"] == "Example Site"
+
+
+def test_bookmark_show_by_url_substring(cli):
+    cli.run("bookmark", "add", "https://news.ycombinator.com", "-t", "HN")
+    data = cli.json("bookmark", "show", "ycombinator")
+    assert data["url"] == "https://news.ycombinator.com"
+
+
+def test_bookmark_edit_by_title(cli):
+    cli.run("bookmark", "add", "https://example.com", "-t", "Example Site")
+    edited = cli.json("bookmark", "edit", "Example", "-t", "Example Inc.")
+    assert edited["title"] == "Example Inc."
+
+
+def test_bookmark_fav_unfav_by_title(cli):
+    cli.run("bookmark", "add", "https://example.com", "-t", "Example")
+    fav = cli.json("bookmark", "fav", "Example")
+    assert fav["favorite"] is True
+    unfav = cli.json("bookmark", "unfav", "Example")
+    assert unfav["favorite"] is False
+
+
+def test_bookmark_rm_by_title(cli):
+    cli.run("bookmark", "add", "https://example.com", "-t", "Doomed")
+    cli.json("bookmark", "rm", "Doomed")
+    listing = cli.json("bookmark", "list")
+    assert not any(b["title"] == "Doomed" for b in listing)
+
+
+def test_bookmark_unknown_title_fails(cli):
+    result = cli.run("bookmark", "show", "ghost-xyz-not-real")
+    assert result.exit_code != 0

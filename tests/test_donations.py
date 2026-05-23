@@ -143,3 +143,45 @@ def test_searchable_and_in_recent(cli):
     assert any(h["source"] == "donations" for h in by_note["results"])
     recent = cli.json("recent")
     assert any(e["source"] == "donations" for e in recent["events"])
+
+
+# ── name-resolution on show/edit/rm (iter 85) ──
+
+
+def test_donations_show_by_recipient_name(cli):
+    cli.run("donations", "log", "Red Cross", "-a", "50")
+    data = cli.json("donations", "show", "Red Cross")
+    assert data["recipient"] == "Red Cross"
+
+
+def test_donations_rm_by_recipient_name(cli):
+    cli.run("donations", "log", "Red Cross", "-a", "50")
+    cli.json("donations", "rm", "Red Cross")
+    listing = cli.json("donations", "list")
+    assert not any(e["recipient"] == "Red Cross" for e in listing)
+
+
+def test_donations_edit_amount_by_name(cli):
+    cli.run("donations", "log", "MSF", "-a", "100")
+    edited = cli.json("donations", "edit", "MSF", "-a", "150")
+    assert edited["amount"] == 150.0
+
+
+def test_donations_edit_flips_deductible(cli):
+    cli.run("donations", "log", "GoFundMe Friend", "-a", "50")
+    edited = cli.json("donations", "edit", "GoFundMe", "--no-deductible")
+    assert edited["tax_deductible"] is False
+
+
+def test_donations_resolves_most_recent_when_multiple(cli):
+    """Repeat giving — name lookup prefers the latest gift."""
+    cli.run("donations", "log", "Red Cross", "-a", "25")
+    latest = cli.json("donations", "log", "Red Cross", "-a", "75")
+    data = cli.json("donations", "show", "Red Cross")
+    assert data["id"] == latest["id"]
+    assert data["amount"] == 75.0
+
+
+def test_donations_unknown_recipient_fails(cli):
+    result = cli.run("donations", "show", "ghost")
+    assert result.exit_code != 0

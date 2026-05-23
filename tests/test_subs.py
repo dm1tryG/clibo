@@ -40,3 +40,51 @@ def test_upcoming_filters_by_date(cli):
 def test_invalid_cycle_fails(cli):
     result = cli.run("subs", "add", "Bad", "-a", "5", "-c", "daily")
     assert result.exit_code != 0
+
+
+# ── name-resolution on show/edit/cancel/rm (iter 85) ──
+
+
+def test_subs_show_by_name(cli):
+    cli.run("subs", "add", "Netflix", "-a", "16")
+    data = cli.json("subs", "show", "Netflix")
+    assert data["name"] == "Netflix"
+    assert data["monthly_cost"] == 16.0
+
+
+def test_subs_show_fuzzy_match(cli):
+    cli.run("subs", "add", "Netflix Premium", "-a", "20")
+    data = cli.json("subs", "show", "netflix")
+    assert data["name"] == "Netflix Premium"
+
+
+def test_subs_edit_by_name(cli):
+    cli.run("subs", "add", "Netflix", "-a", "16")
+    edited = cli.json("subs", "edit", "Netflix", "-a", "20")
+    assert edited["amount"] == 20.0
+
+
+def test_subs_cancel_by_name(cli):
+    cli.run("subs", "add", "Netflix", "-a", "16")
+    cli.run("subs", "cancel", "Netflix")
+    listing = cli.json("subs", "list", "--all")
+    netflix = next(s for s in listing if s["name"] == "Netflix")
+    assert netflix["active"] is False
+
+
+def test_subs_rm_by_name(cli):
+    cli.run("subs", "add", "Spotify", "-a", "10")
+    cli.json("subs", "rm", "Spotify")
+    listing = cli.json("subs", "list", "--all")
+    assert not any(s["name"] == "Spotify" for s in listing)
+
+
+def test_subs_edit_rejects_bad_cycle(cli):
+    cli.run("subs", "add", "Netflix", "-a", "16")
+    result = cli.run("subs", "edit", "Netflix", "-c", "fortnightly")
+    assert result.exit_code != 0
+
+
+def test_subs_unknown_name_fails(cli):
+    result = cli.run("subs", "show", "ghost")
+    assert result.exit_code != 0

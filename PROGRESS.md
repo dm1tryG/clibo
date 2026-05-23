@@ -4,6 +4,54 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 85 — name resolution on six transactional tools · 2026-05-24
+
+Iter 81-84 closed the entity-tool ID barrier. Agent-mode self-test
+this round revealed the same gap on **transactional tools with
+natural labels**: `income.source`, `subs.name`, `bills.name`,
+`wishlist.name`, `bookmark.title`, `donations.recipient`. Every
+mutating verb (`show`/`edit`/`rm`/`cancel`/`pay`/`unpay`/`buy`/
+`fav`/`unfav`/`open`) used to demand integer IDs.
+
+- 💵 **`income show/edit/rm <source>`** — name-resolve with
+  most-recently-added preference (one source pays you many times).
+  Mirrors the `gifts` resolver from iter 84.
+- ❤️ **`donations show/edit/rm <recipient>`** + **new `edit`**
+  subcommand. Edit can also flip `--no-deductible` / `--deductible`.
+  Same most-recent preference (repeat giving).
+- 🔁 **`subs show/edit/cancel/rm <name>`** + **new `show` + `edit`**
+  subcommands. `edit` accepts new amount/cycle/category/next-billing.
+- 🧾 **`bills show/edit/pay/unpay/rm <name>`** + **new `show` + `edit`**
+  subcommands. The `pay` resolver prefers the **unpaid** match
+  (so a recurring "Electricity" bill lands on this month, not last
+  month's already-paid row); `unpay` prefers a paid match.
+- ⭐ **`wishlist show/edit/buy/rm <name>`** + **new `edit`**
+  subcommand. Prices and priorities can be revised in place.
+- 🔖 **`bookmark show/edit/open/fav/unfav/rm <title|url>`** + **new
+  `edit`** subcommand. Resolver searches `title` first, then `url`
+  substring, so `bookmark show ycombinator` finds the HN entry.
+- 🧪 **37 new tests** covering every refactored path:
+  name-resolution, fuzzy match, most-recent-wins for income &
+  donations, unpaid-wins for bills, rejection of invalid edit
+  inputs (bad cycle, bad priority).
+- 🎤 Replayed every failing flow end-to-end:
+  • `income show Acme` (2 rows) → picks the latest ✓
+  • `bills pay Electricity` (1 paid, 1 unpaid) → pays the unpaid ✓
+  • `subs edit Netflix -a 20` then `subs cancel Netflix` ✓
+  • `donations edit "Red Cross" -a 150` ✓
+  • `wishlist buy MacBook` ✓
+  • `bookmark fav HN` ✓
+- 📚 **README** — bumped "50+" to "72" in three places (header,
+  cross-tool section, code-layout block). Stale since iter 50.
+- **Tests:** 807 passing (+37); ruff clean.
+
+The integer-ID barrier is now closed across **all** tools that
+expose a natural label — both entity-style (CRM/jobs/plants/…)
+and transactional (income/bills/subs/…). Agent-mode is back to
+near-zero friction on edit/remove flows.
+
+---
+
 ### Iteration 84 — name resolution on six more entity tools · 2026-05-24
 
 Closing the entity-tool name-resolution gap. Iter 81-83 covered crm,

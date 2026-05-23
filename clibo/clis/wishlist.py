@@ -42,6 +42,12 @@ def _stars(priority: int) -> str:
     return "★" * priority + "☆" * (5 - priority)
 
 
+def _resolve(db, ident: str) -> WishlistItem | None:
+    """Resolve a CLI arg to a WishlistItem by ID or name (fuzzy)."""
+    from clibo.core.base import lookup_by_id_or_name
+    return lookup_by_id_or_name(db, WishlistItem, ident, WishlistItem.name)
+
+
 def _row(item: WishlistItem) -> dict:
     return {
         "id": item.id,
@@ -114,44 +120,91 @@ def list_items(
 
 
 @app.command()
-def show(item_id: int = typer.Argument(..., help="Item ID"), json_out: JsonOpt = False) -> None:
-    """⭐ Show one wishlist item."""
+def show(
+    item: str = typer.Argument(..., help="Item ID or name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """⭐ Show one wishlist item. Accepts a numeric ID or a name."""
     with session() as db:
-        item = db.get(WishlistItem, item_id)
-        if not item:
-            fail(f"No wishlist item #{item_id}", json_out=json_out)
-        data = _row(item) | {"priority_stars": _stars(item.priority)}
+        target = _resolve(db, item)
+        if not target:
+            fail(f"No wishlist item matching {item!r}", json_out=json_out)
+        data = _row(target) | {"priority_stars": _stars(target.priority)}
     render_record(data, json_out=json_out, title=f"⭐ {data['name']}")
 
 
 @app.command()
+def edit(
+    item: str = typer.Argument(..., help="Item ID or name (fuzzy)"),
+    name: str = typer.Option(None, "--name", help="New name"),
+    price: float = typer.Option(None, "--price", "-p"),
+    priority: int = typer.Option(None, "--priority", "-P", help="1–5"),
+    url: str = typer.Option(None, "--url", "-u"),
+    category: str = typer.Option(None, "--category", "-c"),
+    note: str = typer.Option(None, "--note", "-n"),
+    json_out: JsonOpt = False,
+) -> None:
+    """⭐ Edit a wishlist item. Accepts a numeric ID or a name."""
+    with session() as db:
+        target = _resolve(db, item)
+        if not target:
+            fail(f"No wishlist item matching {item!r}", json_out=json_out)
+        if name is not None:
+            target.name = name
+        if price is not None:
+            if price < 0:
+                fail("Price cannot be negative", json_out=json_out)
+            target.price = price
+        if priority is not None:
+            if priority < 1 or priority > 5:
+                fail("Priority must be 1–5", json_out=json_out)
+            target.priority = priority
+        if url is not None:
+            target.url = url
+        if category is not None:
+            target.category = category.lower()
+        if note is not None:
+            target.note = note
+        db.add(target)
+        db.flush()
+        data = _row(target)
+    ok(f"Updated wishlist item #{target.id} — {target.name}",
+       json_out=json_out, data=data)
+
+
+@app.command()
 def buy(
-    item_id: int = typer.Argument(..., help="Item ID"),
+    item: str = typer.Argument(..., help="Item ID or name (fuzzy)"),
     on: str = typer.Option("today", "--date", "-d", help="Date purchased"),
     json_out: JsonOpt = False,
 ) -> None:
     """🛍️ Mark a wishlist item as purchased."""
     with session() as db:
-        item = db.get(WishlistItem, item_id)
-        if not item:
-            fail(f"No wishlist item #{item_id}", json_out=json_out)
-        item.purchased = True
-        item.purchased_date = parse_date(on)
-        db.add(item)
+        target = _resolve(db, item)
+        if not target:
+            fail(f"No wishlist item matching {item!r}", json_out=json_out)
+        target.purchased = True
+        target.purchased_date = parse_date(on)
+        db.add(target)
         db.flush()
-        data = _row(item)
-    ok(f"Marked {EMOJI} {item.name} as purchased 🛍️", json_out=json_out, data=data)
+        data = _row(target)
+    ok(f"Marked {EMOJI} {target.name} as purchased 🛍️",
+       json_out=json_out, data=data)
 
 
 @app.command()
-def rm(item_id: int = typer.Argument(..., help="Item ID"), json_out: JsonOpt = False) -> None:
-    """⭐ Delete a wishlist item."""
+def rm(
+    item: str = typer.Argument(..., help="Item ID or name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """⭐ Delete a wishlist item. Accepts a numeric ID or a name."""
     with session() as db:
-        item = db.get(WishlistItem, item_id)
-        if not item:
-            fail(f"No wishlist item #{item_id}", json_out=json_out)
-        db.delete(item)
-    ok(f"Deleted wishlist item #{item_id}", json_out=json_out, data={"deleted": item_id})
+        target = _resolve(db, item)
+        if not target:
+            fail(f"No wishlist item matching {item!r}", json_out=json_out)
+        iid = target.id
+        db.delete(target)
+    ok(f"Deleted wishlist item #{iid}", json_out=json_out, data={"deleted": iid})
 
 
 @app.command()

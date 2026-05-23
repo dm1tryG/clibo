@@ -45,6 +45,24 @@ def _row(entry: IncomeEntry) -> dict:
     }
 
 
+def _resolve(db, ident: str) -> IncomeEntry | None:
+    """Resolve a CLI arg to an IncomeEntry by ID or source name.
+
+    A source pays you many times, so for name lookups we prefer the
+    most-recently-added entry. Pass the explicit ID to disambiguate.
+    """
+    from clibo.core.base import lookup_by_id_or_name
+    if ident.isdigit():
+        entry = db.get(IncomeEntry, int(ident))
+        if entry:
+            return entry
+    return db.exec(
+        select(IncomeEntry)
+        .where(IncomeEntry.source.ilike(f"%{ident}%"))
+        .order_by(IncomeEntry.id.desc())
+    ).first() or lookup_by_id_or_name(db, IncomeEntry, ident, IncomeEntry.source)
+
+
 def _month_range(spec: str | None) -> tuple[date, date, str]:
     """Resolve a ``YYYY-MM`` spec (or None = current month) to a date range."""
     if spec:
@@ -159,49 +177,56 @@ def month(
 
 
 @app.command()
-def show(entry_id: int = typer.Argument(..., help="Entry ID"), json_out: JsonOpt = False) -> None:
-    """💵 Show one income entry."""
+def show(
+    entry: str = typer.Argument(..., help="Entry ID or source name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """💵 Show one income entry. Accepts a numeric ID or a source name."""
     with session() as db:
-        entry = db.get(IncomeEntry, entry_id)
-        if not entry:
-            fail(f"No income entry #{entry_id}", json_out=json_out)
-        data = _row(entry) | {"created_at": entry.created_at}
-    render_record(data, json_out=json_out, title=f"💵 Income #{entry_id}")
+        target = _resolve(db, entry)
+        if not target:
+            fail(f"No income entry matching {entry!r}", json_out=json_out)
+        data = _row(target) | {"created_at": target.created_at}
+    render_record(data, json_out=json_out, title=f"💵 Income #{target.id}")
 
 
 @app.command()
 def edit(
-    entry_id: int = typer.Argument(..., help="Entry ID"),
+    entry: str = typer.Argument(..., help="Entry ID or source name (fuzzy)"),
     amount: float = typer.Option(None, "--amount", "-a"),
     source: str = typer.Option(None, "--source"),
     category: str = typer.Option(None, "--category", "-c"),
     note: str = typer.Option(None, "--note", "-n"),
     json_out: JsonOpt = False,
 ) -> None:
-    """💵 Edit an income entry."""
+    """💵 Edit an income entry. Accepts a numeric ID or a source name."""
     with session() as db:
-        entry = db.get(IncomeEntry, entry_id)
-        if not entry:
-            fail(f"No income entry #{entry_id}", json_out=json_out)
+        target = _resolve(db, entry)
+        if not target:
+            fail(f"No income entry matching {entry!r}", json_out=json_out)
         for field, value in {"amount": amount, "source": source,
                              "category": category, "note": note}.items():
             if value is not None:
-                setattr(entry, field, value.lower() if field == "category" else value)
-        db.add(entry)
+                setattr(target, field, value.lower() if field == "category" else value)
+        db.add(target)
         db.flush()
-        data = _row(entry)
-    ok(f"Updated income #{entry_id}", json_out=json_out, data=data)
+        data = _row(target)
+    ok(f"Updated income #{target.id}", json_out=json_out, data=data)
 
 
 @app.command()
-def rm(entry_id: int = typer.Argument(..., help="Entry ID"), json_out: JsonOpt = False) -> None:
-    """💵 Delete an income entry."""
+def rm(
+    entry: str = typer.Argument(..., help="Entry ID or source name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """💵 Delete an income entry. Accepts a numeric ID or a source name."""
     with session() as db:
-        entry = db.get(IncomeEntry, entry_id)
-        if not entry:
-            fail(f"No income entry #{entry_id}", json_out=json_out)
-        db.delete(entry)
-    ok(f"Deleted income entry #{entry_id}", json_out=json_out, data={"deleted": entry_id})
+        target = _resolve(db, entry)
+        if not target:
+            fail(f"No income entry matching {entry!r}", json_out=json_out)
+        eid = target.id
+        db.delete(target)
+    ok(f"Deleted income entry #{eid}", json_out=json_out, data={"deleted": eid})
 
 
 @app.command()

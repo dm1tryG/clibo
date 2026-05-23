@@ -64,6 +64,43 @@ def _row(bill: Bill) -> dict:
     }
 
 
+def _resolve(db, ident: str, prefer: str | None = None) -> Bill | None:
+    """Resolve a CLI arg to a Bill by ID or name (fuzzy).
+
+    ``prefer="unpaid"`` floats unpaid matches to the top so
+    ``bills pay Electricity`` lands on the open one rather than last
+    month's already-paid row. ``prefer="paid"`` is the inverse for
+    ``bills unpay``. Tie-break: most-recently-added.
+    """
+    from clibo.core.base import lookup_by_id_or_name
+    if ident.isdigit():
+        bill = db.get(Bill, int(ident))
+        if bill:
+            return bill
+    pattern = f"%{ident}%"
+    if prefer == "unpaid":
+        match = db.exec(
+            select(Bill)
+            .where(Bill.name.ilike(pattern), Bill.paid == False)  # noqa: E712
+            .order_by(Bill.due_date)
+        ).first()
+        if match:
+            return match
+    elif prefer == "paid":
+        match = db.exec(
+            select(Bill)
+            .where(Bill.name.ilike(pattern), Bill.paid == True)  # noqa: E712
+            .order_by(Bill.id.desc())
+        ).first()
+        if match:
+            return match
+    return db.exec(
+        select(Bill)
+        .where(Bill.name.ilike(pattern))
+        .order_by(Bill.id.desc())
+    ).first() or lookup_by_id_or_name(db, Bill, ident, Bill.name)
+
+
 def _status_cell(status: str) -> str:
     return {
         "paid": "[green]✓ paid[/green]",
@@ -122,46 +159,100 @@ def list_bills(
 
 
 @app.command()
+def show(
+    bill: str = typer.Argument(..., help="Bill ID or name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🧾 Show one bill. Accepts a numeric ID or a name."""
+    with session() as db:
+        target = _resolve(db, bill)
+        if not target:
+            fail(f"No bill matching {bill!r}", json_out=json_out)
+        data = _row(target) | {"created_at": target.created_at}
+    render_record(data, json_out=json_out, title=f"🧾 {target.name}")
+
+
+@app.command()
+def edit(
+    bill: str = typer.Argument(..., help="Bill ID or name (fuzzy)"),
+    name: str = typer.Option(None, "--name", help="New name"),
+    amount: float = typer.Option(None, "--amount", "-a", help="New amount"),
+    due: str = typer.Option(None, "--due", "-d", help="New due date"),
+    category: str = typer.Option(None, "--category", "-c"),
+    note: str = typer.Option(None, "--note", "-n"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🧾 Edit a bill. Accepts a numeric ID or a name."""
+    with session() as db:
+        target = _resolve(db, bill, prefer="unpaid")
+        if not target:
+            fail(f"No bill matching {bill!r}", json_out=json_out)
+        if name is not None:
+            target.name = name
+        if amount is not None:
+            target.amount = amount
+        if due is not None:
+            target.due_date = parse_date(due)
+        if category is not None:
+            target.category = category.lower()
+        if note is not None:
+            target.note = note
+        db.add(target)
+        db.flush()
+        data = _row(target)
+    ok(f"Updated bill #{target.id} — {target.name}",
+       json_out=json_out, data=data)
+
+
+@app.command()
 def pay(
-    bill_id: int = typer.Argument(..., help="Bill ID"),
+    bill: str = typer.Argument(..., help="Bill ID or name (fuzzy)"),
     on: str = typer.Option("today", "--date", "-d", help="Date paid"),
     json_out: JsonOpt = False,
 ) -> None:
-    """🧾 Mark a bill as paid."""
+    """🧾 Mark a bill as paid. With a name, picks the unpaid one (oldest due first)."""
     with session() as db:
-        bill = db.get(Bill, bill_id)
-        if not bill:
-            fail(f"No bill #{bill_id}", json_out=json_out)
-        bill.paid = True
-        bill.paid_date = parse_date(on)
-        db.add(bill)
+        target = _resolve(db, bill, prefer="unpaid")
+        if not target:
+            fail(f"No bill matching {bill!r}", json_out=json_out)
+        target.paid = True
+        target.paid_date = parse_date(on)
+        db.add(target)
         db.flush()
-        data = _row(bill)
-    ok(f"Paid {EMOJI} {bill.name}", json_out=json_out, data=data)
+        data = _row(target)
+    ok(f"Paid {EMOJI} {target.name}", json_out=json_out, data=data)
 
 
 @app.command()
-def unpay(bill_id: int = typer.Argument(..., help="Bill ID"), json_out: JsonOpt = False) -> None:
-    """🧾 Mark a bill as unpaid again."""
+def unpay(
+    bill: str = typer.Argument(..., help="Bill ID or name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🧾 Mark a bill as unpaid again. With a name, prefers a paid match."""
     with session() as db:
-        bill = db.get(Bill, bill_id)
-        if not bill:
-            fail(f"No bill #{bill_id}", json_out=json_out)
-        bill.paid = False
-        bill.paid_date = None
-        db.add(bill)
-    ok(f"Marked {EMOJI} {bill.name} unpaid", json_out=json_out, data={"id": bill_id, "paid": False})
+        target = _resolve(db, bill, prefer="paid")
+        if not target:
+            fail(f"No bill matching {bill!r}", json_out=json_out)
+        target.paid = False
+        target.paid_date = None
+        db.add(target)
+    ok(f"Marked {EMOJI} {target.name} unpaid", json_out=json_out,
+       data={"id": target.id, "paid": False})
 
 
 @app.command()
-def rm(bill_id: int = typer.Argument(..., help="Bill ID"), json_out: JsonOpt = False) -> None:
-    """🧾 Delete a bill."""
+def rm(
+    bill: str = typer.Argument(..., help="Bill ID or name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🧾 Delete a bill. Accepts a numeric ID or a name."""
     with session() as db:
-        bill = db.get(Bill, bill_id)
-        if not bill:
-            fail(f"No bill #{bill_id}", json_out=json_out)
-        db.delete(bill)
-    ok(f"Deleted bill #{bill_id}", json_out=json_out, data={"deleted": bill_id})
+        target = _resolve(db, bill)
+        if not target:
+            fail(f"No bill matching {bill!r}", json_out=json_out)
+        bid = target.id
+        db.delete(target)
+    ok(f"Deleted bill #{bid}", json_out=json_out, data={"deleted": bid})
 
 
 @app.command()

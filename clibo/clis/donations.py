@@ -49,6 +49,24 @@ class Donation(SQLModel, table=True):
 app = typer.Typer(no_args_is_help=True, help=HELP)
 
 
+def _resolve(db, ident: str) -> Donation | None:
+    """Resolve a CLI arg to a Donation by ID or recipient (most-recent first).
+
+    Repeat giving to the same org means a name lookup is many-to-one;
+    we prefer the most-recently-added entry. Pass the ID to be precise.
+    """
+    from clibo.core.base import lookup_by_id_or_name
+    if ident.isdigit():
+        entry = db.get(Donation, int(ident))
+        if entry:
+            return entry
+    return db.exec(
+        select(Donation)
+        .where(Donation.recipient.ilike(f"%{ident}%"))
+        .order_by(Donation.id.desc())
+    ).first() or lookup_by_id_or_name(db, Donation, ident, Donation.recipient)
+
+
 def _row(entry: Donation) -> dict:
     return {
         "id": entry.id,
@@ -219,29 +237,74 @@ def top(
 
 
 @app.command()
-def show(entry_id: int = typer.Argument(..., help="Donation ID"),
-         json_out: JsonOpt = False) -> None:
-    """❤️ Show one donation."""
+def show(
+    entry: str = typer.Argument(..., help="Donation ID or recipient name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """❤️ Show one donation. Accepts a numeric ID or a recipient name."""
     with session() as db:
-        entry = db.get(Donation, entry_id)
-        if not entry:
-            fail(f"No donation #{entry_id}", json_out=json_out)
-        data = _row(entry)
+        target = _resolve(db, entry)
+        if not target:
+            fail(f"No donation matching {entry!r}", json_out=json_out)
+        data = _row(target)
     render_record(data, json_out=json_out,
-                  title=f"{EMOJI} Donation #{entry_id}")
+                  title=f"{EMOJI} Donation #{target.id}")
 
 
 @app.command()
-def rm(entry_id: int = typer.Argument(..., help="Donation ID"),
-       json_out: JsonOpt = False) -> None:
-    """❤️ Delete a donation."""
+def edit(
+    entry: str = typer.Argument(..., help="Donation ID or recipient name (fuzzy)"),
+    amount: float = typer.Option(None, "--amount", "-a", help="New amount"),
+    recipient: str = typer.Option(None, "--recipient", "-R", help="New recipient"),
+    receipt: str = typer.Option(None, "--receipt", "-r", help="Receipt / tx ref"),
+    not_deductible: bool = typer.Option(
+        False, "--no-deductible", help="Flip to NOT tax-deductible"
+    ),
+    deductible: bool = typer.Option(
+        False, "--deductible", help="Flip back to tax-deductible"
+    ),
+    note: str = typer.Option(None, "--note", "-n"),
+    json_out: JsonOpt = False,
+) -> None:
+    """❤️ Edit a donation. Accepts a numeric ID or a recipient name."""
     with session() as db:
-        entry = db.get(Donation, entry_id)
-        if not entry:
-            fail(f"No donation #{entry_id}", json_out=json_out)
-        db.delete(entry)
-    ok(f"Deleted donation #{entry_id}",
-       json_out=json_out, data={"deleted": entry_id})
+        target = _resolve(db, entry)
+        if not target:
+            fail(f"No donation matching {entry!r}", json_out=json_out)
+        if amount is not None:
+            if amount <= 0:
+                fail("Amount must be positive", json_out=json_out)
+            target.amount = round(amount, 2)
+        if recipient is not None:
+            target.recipient = recipient.strip()
+        if receipt is not None:
+            target.receipt = receipt
+        if note is not None:
+            target.note = note
+        if not_deductible:
+            target.tax_deductible = False
+        if deductible:
+            target.tax_deductible = True
+        db.add(target)
+        db.flush()
+        data = _row(target)
+    ok(f"Updated donation #{target.id}", json_out=json_out, data=data)
+
+
+@app.command()
+def rm(
+    entry: str = typer.Argument(..., help="Donation ID or recipient name (fuzzy)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """❤️ Delete a donation. Accepts a numeric ID or a recipient name."""
+    with session() as db:
+        target = _resolve(db, entry)
+        if not target:
+            fail(f"No donation matching {entry!r}", json_out=json_out)
+        did = target.id
+        db.delete(target)
+    ok(f"Deleted donation #{did}",
+       json_out=json_out, data={"deleted": did})
 
 
 @app.command()

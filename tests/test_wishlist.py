@@ -35,3 +35,42 @@ def test_stats_pending_cost(cli):
 def test_invalid_priority_fails(cli):
     result = cli.run("wishlist", "add", "Bad", "-P", "9")
     assert result.exit_code != 0
+
+
+# ── name-resolution on show/edit/buy/rm (iter 85) ──
+
+
+def test_wishlist_show_by_name(cli):
+    cli.run("wishlist", "add", "MacBook Pro", "-p", "2400", "-P", "5")
+    data = cli.json("wishlist", "show", "MacBook")
+    assert data["name"] == "MacBook Pro"
+
+
+def test_wishlist_edit_by_name(cli):
+    cli.run("wishlist", "add", "Standing Desk", "-p", "300")
+    edited = cli.json("wishlist", "edit", "Desk", "-p", "350")
+    assert edited["price"] == 350.0
+
+
+def test_wishlist_buy_by_name(cli):
+    cli.run("wishlist", "add", "AirPods", "-p", "200")
+    bought = cli.json("wishlist", "buy", "AirPods")
+    assert bought["purchased"] is True
+
+
+def test_wishlist_rm_by_name(cli):
+    cli.run("wishlist", "add", "Kindle", "-p", "120")
+    cli.json("wishlist", "rm", "Kindle")
+    listing = cli.json("wishlist", "list", "--all")
+    assert not any(i["name"] == "Kindle" for i in listing)
+
+
+def test_wishlist_edit_rejects_bad_priority(cli):
+    cli.run("wishlist", "add", "Tablet", "-p", "500")
+    result = cli.run("wishlist", "edit", "Tablet", "-P", "9")
+    assert result.exit_code != 0
+
+
+def test_wishlist_unknown_name_fails(cli):
+    result = cli.run("wishlist", "show", "ghost")
+    assert result.exit_code != 0

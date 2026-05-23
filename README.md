@@ -2,7 +2,7 @@
 
 # 📦 clibo
 
-### 50+ local-first CLI tools for AI agents — and humans
+### 72 local-first CLI tools for AI agents — and humans
 
 *From a calorie tracker to a CRM. Everything in your terminal, everything in one local SQLite file.*
 
@@ -148,7 +148,7 @@ notes  (1)            todo  (1)              crm  (1)
 
 ## Cross-tool commands
 
-A handful of root commands tie all 50 tools together:
+A handful of root commands tie all 72 tools together:
 
 | Command | What it does |
 |---|---|
@@ -181,7 +181,7 @@ sub-command and every flag.
 
 ## The tools
 
-> 🎉 **All 50 tools are built.** Run `clibo info` for a live menu.
+> 🎉 **All 72 tools are built.** Run `clibo info` for a live menu.
 
 ### 🏃 Health & Wellness
 | | Tool | What it does |
@@ -317,7 +317,7 @@ Python · [Typer](https://typer.tiangolo.com/) · [SQLModel](https://sqlmodel.ti
 clibo/
 ├── clibo/
 │   ├── main.py          # root command, registers every tool
-│   ├── catalog.py       # the canonical list of all 50 tools
+│   ├── catalog.py       # the canonical list of all 72 tools
 │   ├── core/            # db, config, settings, output (the shared engine)
 │   └── clis/            # one module per tool
 ├── skills/              # one micro-skill (SKILL.md) per tool
