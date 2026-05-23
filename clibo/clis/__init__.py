@@ -67,6 +67,7 @@ from clibo.clis import (
     steps,
     stretches,
     subs,
+    symptom,
     time,
     tip,
     todo,
@@ -156,4 +157,5 @@ ALL = [
     packages,
     fasting,
     writing,
+    symptom,
 ]

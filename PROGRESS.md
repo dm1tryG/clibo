@@ -4,6 +4,71 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 95 — new tool: 🤒 `symptom` (pain & symptom tracker) · 2026-05-24
+
+Agent-mode self-test on *"My back's been hurting all day — about
+7/10"* revealed a real gap. The existing health tools each cover
+a different axis:
+
+- **`vitals`** stores **measurable** readings (BP, pulse, glucose, SpO2)
+- **`mood`** is whole-person 1-5, not per body-area or kind
+- **`journal`** is freeform text — no aggregation, no intensity trend
+
+Nothing handled **subjective, scale-able** experiences: chronic
+back pain, migraines, allergies, IBS flare-ups, post-viral
+fatigue. Real audiences with no fit.
+
+The **74th tool**.
+
+- 🤒 **`symptom log NAME -i INTENSITY [-l LOC -t MIN --triggers ... -r ...]`**
+  — log a symptom with the standard medical 1-10 pain scale.
+  Validation: `1 ≤ intensity ≤ 10`, `duration ≥ 0`. Returns the
+  `intensity_label` (`mild`/`moderate`/`severe`/`worst possible`)
+  inline so agents can format prose without bucket logic.
+- 🤒 **`symptom today`** — today's entries with worst-of-day; if
+  nothing logged, prints a discoverable nudge.
+- 🤒 **`symptom history NAME`** — one condition over time.
+  Aggregates per-day with `episodes`, `avg_intensity`,
+  `max_intensity`. Renders a trend indicator (↘ improving / ↗
+  worsening / → steady) by comparing first-day vs last-day avg —
+  the single answer chronic-condition trackers actually want.
+- 🤒 **`symptom stats --days N`** — top complaints (by episodes),
+  total episodes, days affected, worst-ever episode in window.
+- 🤒 **`show`/`edit`/`rm`** all name-resolve with most-recent-wins,
+  matching the iter-84/85 pattern (one condition flares many
+  times, so name lookup picks the latest).
+- 🎨 **Colour-coded `intensity_cell`** in tables — green for mild,
+  yellow for moderate, red for severe, bold-red for worst-possible.
+  Reads at a glance.
+- 🎤 NL flow verified end-to-end:
+  • `symptom log "back pain" -i 7 -l lumbar -r ibuprofen` → severe label ✓
+  • `symptom log migraine -i 9 -t 120 --triggers "poor sleep,bright light"` ✓
+  • `symptom history "back pain"` → 3-day intensity progression (5→6→7) ✓
+  • `symptom stats` → top: back pain (3 ep avg 6.0), worst: migraine 9/10 ✓
+  • `symptom today` → coloured intensity cells with location + duration ✓
+- 🧪 **20 new tests**: log shape, all-fields capture, add alias,
+  intensity labels match medical buckets, out-of-range + negative-
+  duration rejection, today filtering + empty state, list by
+  name + days, name-resolve picks latest, edit with validation,
+  rm by name, unknown-name failures, history per-day aggregation,
+  stats top + worst-episode + empty.
+- 📚 **`skills/symptom/SKILL.md`** — natural-language → command
+  table covering 7 phrasings, plus a "when to use which tool"
+  section that distinguishes `symptom` from `vitals` / `mood` /
+  `journal` / `meds` (the exact disambiguation question agents
+  would otherwise have to guess).
+- 📚 **README** — new row in **Health & Wellness** (15th tool in
+  the category). Bumped "73" → "74" in five places.
+- 📚 **`docs/SCHEMA.md`** regenerated — `symptom_entry` (89 tables
+  total, up from 88 after iter 91).
+- **Tests:** 922 passing (+20); ruff clean.
+
+Tool count now **74/74**. Health & Wellness grows from 14 → 15 —
+filling the long-standing structured-pain-tracking gap that none
+of the original 50 nor the iters 51-94 addressed.
+
+---
+
 ### Iteration 94 — wire `writing` + `books-session` into `month` · 2026-05-24
 
 Iter 93 wired writing + book-sessions into `today` / `week` /
