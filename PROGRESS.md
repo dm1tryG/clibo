@@ -4,6 +4,51 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 67 — `fasting` (intermittent fasting with running clock) + v1.3.0 to PyPI · 2026-05-23
+
+User said "continue releasing and development" — v1.3.0 went live at
+the end of iter 66 with invest + packages + polish. Now back to the
+build loop.
+
+Agent-mode self-test: "I'm starting a 16-hour fast" had no home.
+`calorie` is food intake, `water` is hydration, `sleep` is overnight
+sleep — none capture a *time window* with a target duration and a
+"still going?" state.
+
+- 🕒 **New tool `fasting` (72nd, Health & Wellness)** — `fast_session`
+  table with `start_time`, `end_time` (nullable while in progress),
+  `target_hours`, `note`. Exactly one fast can be in progress at a
+  time — `start` refuses if there's already an open one.
+- ⏱️ **`status` is the killer view** — running clock with a progress
+  bar against target. While fasting: "21.48h elapsed · ✓ target
+  reached!" or "8.2h to target". While not fasting: shows the last
+  completed fast as context.
+- 📐 **Smart datetime parsing** — `_parse_when` accepts `HH:MM` (today),
+  a date phrase alone, or *a date phrase followed by HH:MM*. So
+  `--at "yesterday 08:00"`, `--at "3 days ago 22:00"` all work — and
+  this is what makes backdated fasts feasible in tests too.
+- Commands: `start [-T HOURS] [-t TIME]` / `stop [-t TIME] [-n NOTE]` /
+  `status` / `list [--days N] [--completed]` / `show` / `rm` /
+  `target --set HOURS` (default 16h) / `stats` (count, avg, longest,
+  hit-rate vs target).
+- 🔌 Integrated: `recent.py` (with `start_time` time-column override
+  so backdated fasts sort correctly), `search.py` (note indexed),
+  `catalog.py` (Health & Wellness — 13 tools), README.
+- 📄 `docs/SCHEMA.md` regenerated (86 tables).
+- 🧪 17 new tests covering start/stop validation, concurrent-fast
+  rejection, the not-fasting-with-history status path, target
+  set/get, list filtering, stats computation across multiple
+  completed fasts, and integration with `search` + `recent`.
+- 🎤 NL flow verified:
+  • "Starting a 16-hour fast" → `fasting start --target 16` ✓
+  • "Started fasting at 8pm last night" →
+    `fasting start -t "yesterday 20:00"` ✓
+  • "Done, broke my fast" → `fasting stop` ✓
+  • "How much longer?" → `fasting status` ✓
+- **Tests:** 632 passing (+17); ruff clean.
+
+---
+
 ### Iteration 66 — `packages` (parcel tracker with late detection) · 2026-05-23
 
 Agent-mode self-test: "Amazon order coming Tuesday" / "Where's my

@@ -26,6 +26,7 @@ from clibo.clis import (
     dreams,
     events,
     expense,
+    fasting,
     films,
     flashcards,
     focus,
@@ -152,4 +153,5 @@ ALL = [
     donations,
     invest,
     packages,
+    fasting,
 ]

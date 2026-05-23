@@ -20,6 +20,7 @@ from clibo.core.db import init_db
 TIME_COLUMN_OVERRIDES = {
     "habit_check": "check_date",
     "caffeine_entry": "consumed_at",
+    "fast_session": "start_time",
 }
 
 
@@ -184,6 +185,10 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
      ["sender", "status", "description"],
      lambda r: f"[{r['status']}] {r['sender']}"
                 + (f" — {r['description']}" if r["description"] else "")),
+    ("fasting", "🕒", "fast_session",
+     ["start_time", "end_time", "target_hours"],
+     lambda r: ("started" if r["end_time"] is None
+                else f"finished ({r['target_hours']:g}h target)")),
 ]
 
 

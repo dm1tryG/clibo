@@ -198,6 +198,7 @@ sub-command and every flag.
 | ✅ | `stretches` 🧎 | Mobility & flexibility session log |
 | ✅ | `steps` 👟 | Daily step-count tracker — goal, streak, by-source totals |
 | ✅ | `caffeine` ☕ | Caffeine intake with bedtime-residual estimate (half-life model) |
+| ✅ | `fasting` 🕒 | Intermittent-fasting tracker with running clock against target |
 
 ### 💰 Money & Finance
 | | Tool | What it does |

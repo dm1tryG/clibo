@@ -22,6 +22,7 @@ from clibo.clis.documents import Document
 from clibo.clis.donations import Donation
 from clibo.clis.dreams import Dream
 from clibo.clis.expense import Expense
+from clibo.clis.fasting import FastSession
 from clibo.clis.films import Film
 from clibo.clis.gifts import Gift
 from clibo.clis.gratitude import GratitudeEntry
@@ -145,6 +146,9 @@ SOURCES: list[tuple] = [
       Package.carrier, Package.note],
      lambda p: f"[{p.status}] {p.sender}"
                 + (f" — {p.description}" if p.description else "")),
+    ("fasting", FastSession, [FastSession.note],
+     lambda f: f"{f.target_hours:g}h target"
+                + (f" — {f.note}" if f.note else "")),
 ]
 
 
