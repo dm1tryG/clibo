@@ -4,6 +4,45 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 75 — `clibo compare` (week-over-week) + info header fix + v1.6.0 to PyPI · 2026-05-23
+
+Agent-mode self-test: "Show me this week vs last week" — no matching
+command. The `week` view shows the current 7 days; nothing showed
+how that compared to the 7 before. Also discovered `clibo info`
+still printed "50 local-first CLI tools" — stale since v1.0 even
+though `CATALOG` has 72.
+
+- 🐛 **`clibo info` header** — was hardcoded `50 local-first CLI
+  tools`; now reads `f"{len(CATALOG)} local-first CLI tools"` so it
+  always reflects reality.
+- 🆕 **`clibo compare`** — side-by-side current 7d vs prior 7d for
+  every key metric. Sleep avg, mood avg, steps, workouts, caffeine,
+  expenses, donations, fasting, meditate, stretches, mileage,
+  habits-hit, journal entries, gratitude entries, tasks done. Each
+  row shows `prior → current   ↑/↓ delta%` with **green/red colour
+  encoding good vs bad direction** (more sleep = green ↑; more
+  caffeine = red ↑; less caffeine = green ↓).
+- 🔧 **`collect_week(start: date | None = None)`** — parameterized
+  to accept any 7-day window's start date. All ~20 queries now
+  carry an explicit upper bound (`<= today_local`) so backdated
+  windows don't leak in entries from the future.
+- 🎨 **Arrow + colour split** is the small UX touch: arrow
+  reflects the *actual numeric direction* (went up or down), colour
+  reflects whether that direction is *good or bad* for the metric.
+  No more confusing green-↑ on a caffeine increase.
+- 🧪 8 new compare tests + the rendering arrow-direction fix.
+- 🎤 Visual smoke confirms: caffeine 170 → 63 shows as ↓ 62.9%
+  green; expenses 150 → 25 shows as ↓ 83.3% green; sleep 6.5h →
+  7.5h shows as ↑ 15.4% green.
+
+**Release: v1.6.0 → PyPI** — bundles iter 73 (`edit ID|last`) +
+iter 74 (`today --on / yesterday`) + iter 75 (`compare` + info fix).
+Three new user-facing commands since v1.5.0 warrants a minor bump.
+
+- **Tests:** 698 passing (+8); ruff clean.
+
+---
+
 ### Iteration 74 — `today --on DATE` + `clibo yesterday` shortcut · 2026-05-23
 
 Agent-mode self-test: "Show me what I logged yesterday" had no

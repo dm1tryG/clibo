@@ -89,7 +89,8 @@ def info(json_out: JsonOpt = False) -> None:
     console.print(
         Panel(
             f"📦 [bold]clibo[/bold] v{__version__}\n"
-            f"[dim]50 local-first CLI tools for AI agents & humans[/dim]\n\n"
+            f"[dim]{len(CATALOG)} local-first CLI tools for AI agents & humans"
+            f"[/dim]\n\n"
             f"[bold green]{len(built)}[/bold green] / {len(CATALOG)} tools built"
             f"   ·   🗄️  [dim]{config.db_path()}[/dim]",
             border_style="cyan",
@@ -162,6 +163,17 @@ def week(json_out: JsonOpt = False) -> None:
 from clibo.monthly import month_command  # noqa: E402
 
 app.command(name="month")(month_command)
+
+
+@app.command()
+def compare(json_out: JsonOpt = False) -> None:
+    """⚖️ Week-over-week comparison — every key metric side by side.
+
+    Shows the current 7 days vs the 7 before, with green/red deltas
+    based on direction (more sleep is better; more caffeine is worse).
+    """
+    from clibo.compare import render_compare
+    render_compare(json_out=json_out)
 
 
 @app.command()

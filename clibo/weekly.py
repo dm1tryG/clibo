@@ -64,44 +64,53 @@ def _round(value: float, ndigits: int = 1) -> float:
     return round(value, ndigits)
 
 
-def collect_week() -> WeekSnapshot:
-    """Aggregate the past 7 days across the trackers that have time-series data."""
-    today = date.today()
-    start = today - timedelta(days=WINDOW_DAYS - 1)
+def collect_week(start: date | None = None) -> WeekSnapshot:
+    """Aggregate a 7-day window across every time-series tracker.
+
+    By default the window ends today (i.e. the last 7 days). Passing ``start``
+    overrides the window so the same code can produce a *prior* week's
+    rollup for comparison views like ``clibo compare``.
+    """
+    if start is None:
+        today = date.today()
+        start = today - timedelta(days=WINDOW_DAYS - 1)
+    else:
+        today = start + timedelta(days=WINDOW_DAYS - 1)
     water_goal = int(get_setting("water", "daily_ml", "2000") or 2000)
     calorie_goal = int(get_setting("calorie", "daily_kcal", "0") or 0)
     focus_goal = int(get_setting("focus", "daily_min", "100") or 100)
 
     with session() as db:
         sleeps = list(
-            db.exec(select(SleepLog).where(SleepLog.entry_date >= start)).all()
+            db.exec(select(SleepLog).where(SleepLog.entry_date >= start).where(SleepLog.entry_date <= today)).all()
         )
         calories = list(
-            db.exec(select(CalorieEntry).where(CalorieEntry.entry_date >= start)).all()
+            db.exec(select(CalorieEntry).where(CalorieEntry.entry_date >= start).where(CalorieEntry.entry_date <= today)).all()
         )
         waters = list(
-            db.exec(select(WaterLog).where(WaterLog.entry_date >= start)).all()
+            db.exec(select(WaterLog).where(WaterLog.entry_date >= start).where(WaterLog.entry_date <= today)).all()
         )
         focus = list(
-            db.exec(select(FocusSession).where(FocusSession.entry_date >= start)).all()
+            db.exec(select(FocusSession).where(FocusSession.entry_date >= start).where(FocusSession.entry_date <= today)).all()
         )
         moods = list(
-            db.exec(select(MoodLog).where(MoodLog.entry_date >= start)).all()
+            db.exec(select(MoodLog).where(MoodLog.entry_date >= start).where(MoodLog.entry_date <= today)).all()
         )
         expenses = list(
-            db.exec(select(Expense).where(Expense.entry_date >= start)).all()
+            db.exec(select(Expense).where(Expense.entry_date >= start).where(Expense.entry_date <= today)).all()
         )
         journal = list(
-            db.exec(select(JournalEntry).where(JournalEntry.entry_date >= start)).all()
+            db.exec(select(JournalEntry).where(JournalEntry.entry_date >= start).where(JournalEntry.entry_date <= today)).all()
         )
         worklog = list(
-            db.exec(select(WorkLogEntry).where(WorkLogEntry.entry_date >= start)).all()
+            db.exec(select(WorkLogEntry).where(WorkLogEntry.entry_date >= start).where(WorkLogEntry.entry_date <= today)).all()
         )
         tasks_done = list(
             db.exec(
                 select(Task).where(
                     Task.done == True, Task.done_at != None,  # noqa: E711, E712
                     Task.done_at >= start,
+                    Task.done_at <= today + timedelta(days=1),
                 )
             ).all()
         )
@@ -109,48 +118,49 @@ def collect_week() -> WeekSnapshot:
             db.exec(select(Habit).where(Habit.active == True)).all()  # noqa: E712
         )
         habit_checks = list(
-            db.exec(select(HabitCheck).where(HabitCheck.check_date >= start)).all()
+            db.exec(select(HabitCheck).where(HabitCheck.check_date >= start).where(HabitCheck.check_date <= today)).all()
         )
         # Post-v1.0 trackers ───────────────────────────────────────────
         steps_entries = list(
-            db.exec(select(StepEntry).where(StepEntry.entry_date >= start)).all()
+            db.exec(select(StepEntry).where(StepEntry.entry_date >= start).where(StepEntry.entry_date <= today)).all()
         )
         workouts = list(
-            db.exec(select(Workout).where(Workout.entry_date >= start)).all()
+            db.exec(select(Workout).where(Workout.entry_date >= start).where(Workout.entry_date <= today)).all()
         )
         caffeines = list(
             db.exec(
-                select(CaffeineEntry).where(CaffeineEntry.entry_date >= start)
+                select(CaffeineEntry).where(CaffeineEntry.entry_date >= start).where(CaffeineEntry.entry_date <= today)
             ).all()
         )
         fasts = list(
             db.exec(
                 select(FastSession).where(FastSession.start_time >= start)
+                .where(FastSession.start_time <= today + timedelta(days=1))
                 .where(FastSession.end_time.is_not(None))
             ).all()
         )
         meditations = list(
             db.exec(
-                select(MeditationSession).where(MeditationSession.entry_date >= start)
+                select(MeditationSession).where(MeditationSession.entry_date >= start).where(MeditationSession.entry_date <= today)
             ).all()
         )
         stretches = list(
             db.exec(
-                select(StretchSession).where(StretchSession.entry_date >= start)
+                select(StretchSession).where(StretchSession.entry_date >= start).where(StretchSession.entry_date <= today)
             ).all()
         )
         mileages = list(
             db.exec(
-                select(MileageEntry).where(MileageEntry.entry_date >= start)
+                select(MileageEntry).where(MileageEntry.entry_date >= start).where(MileageEntry.entry_date <= today)
             ).all()
         )
         gratitudes = list(
             db.exec(
-                select(GratitudeEntry).where(GratitudeEntry.entry_date >= start)
+                select(GratitudeEntry).where(GratitudeEntry.entry_date >= start).where(GratitudeEntry.entry_date <= today)
             ).all()
         )
         donations = list(
-            db.exec(select(Donation).where(Donation.entry_date >= start)).all()
+            db.exec(select(Donation).where(Donation.entry_date >= start).where(Donation.entry_date <= today)).all()
         )
 
     # Sleep
