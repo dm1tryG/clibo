@@ -49,3 +49,55 @@ def test_stats(cli):
 def test_invalid_status_fails(cli):
     result = cli.run("crm", "add", "Bad", "-s", "prospect")
     assert result.exit_code != 0
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Name-based resolution on show/edit/rm/touch (iter 81).
+# ──────────────────────────────────────────────────────────────────────
+
+
+def test_crm_show_by_name(cli):
+    cli.run("crm", "add", "Bob", "-c", "Acme")
+    data = cli.json("crm", "show", "Bob")
+    assert data["name"] == "Bob"
+
+
+def test_crm_show_by_id_still_works(cli):
+    entry = cli.json("crm", "add", "Bob")
+    data = cli.json("crm", "show", str(entry["id"]))
+    assert data["name"] == "Bob"
+
+
+def test_crm_edit_by_name(cli):
+    """The headline use case: 'Bob got promoted' — edit by name."""
+    cli.run("crm", "add", "Bob", "-c", "Acme")
+    cli.run("crm", "edit", "Bob", "-c", "Acme Corp")
+    data = cli.json("crm", "show", "Bob")
+    assert data["company"] == "Acme Corp"
+
+
+def test_crm_edit_unknown_name_fails(cli):
+    cli.run("crm", "add", "Bob")
+    result = cli.run("crm", "edit", "Ghost", "-c", "X")
+    assert result.exit_code != 0
+
+
+def test_crm_rm_by_name(cli):
+    cli.run("crm", "add", "Bob")
+    cli.run("crm", "rm", "Bob")
+    listing = cli.json("crm", "list")
+    assert not any(c["name"] == "Bob" for c in listing)
+
+
+def test_crm_touch_by_name(cli):
+    cli.run("crm", "add", "Bob")
+    cli.run("crm", "touch", "Bob", "-d", "yesterday")
+    data = cli.json("crm", "show", "Bob")
+    assert data["last_contact"] is not None
+
+
+def test_crm_name_match_is_substring(cli):
+    """Fuzzy: 'Smith' matches 'Bob Smith' too."""
+    cli.run("crm", "add", "Bob Smith")
+    data = cli.json("crm", "show", "Smith")
+    assert data["name"] == "Bob Smith"

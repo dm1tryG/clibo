@@ -38,6 +38,17 @@ class Contact(SQLModel, table=True):
 app = typer.Typer(no_args_is_help=True, help=HELP)
 
 
+def _resolve(db, ident: str) -> Contact | None:
+    """Look up a contact by numeric ID or by (case-insensitive) name match."""
+    if ident.isdigit():
+        contact = db.get(Contact, int(ident))
+        if contact:
+            return contact
+    return db.exec(
+        select(Contact).where(Contact.name.ilike(f"%{ident}%"))
+    ).first()
+
+
 def _row(contact: Contact) -> dict:
     return {
         "id": contact.id,
@@ -118,19 +129,22 @@ def list_contacts(
 
 
 @app.command()
-def show(contact_id: int = typer.Argument(..., help="Contact ID"), json_out: JsonOpt = False) -> None:
-    """👥 Show one contact in detail."""
+def show(
+    contact: str = typer.Argument(..., help="Contact ID or name (fuzzy match)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """👥 Show one contact in detail. Accepts a numeric ID or a name."""
     with session() as db:
-        contact = db.get(Contact, contact_id)
-        if not contact:
-            fail(f"No contact #{contact_id}", json_out=json_out)
-        data = _row(contact) | {"created_at": contact.created_at}
+        target = _resolve(db, contact)
+        if not target:
+            fail(f"No contact matching {contact!r}", json_out=json_out)
+        data = _row(target) | {"created_at": target.created_at}
     render_record(data, json_out=json_out, title=f"👥 {data['name']}")
 
 
 @app.command()
 def edit(
-    contact_id: int = typer.Argument(..., help="Contact ID"),
+    contact: str = typer.Argument(..., help="Contact ID or name (fuzzy match)"),
     name: str = typer.Option(None, "--name", help="New name"),
     company: str = typer.Option(None, "--company", "-c"),
     email: str = typer.Option(None, "--email", "-e"),
@@ -140,41 +154,41 @@ def edit(
     note: str = typer.Option(None, "--note", "-n"),
     json_out: JsonOpt = False,
 ) -> None:
-    """👥 Edit a contact."""
+    """👥 Edit a contact. Accepts a numeric ID or a name."""
     if status and status.lower() not in STATUSES:
         fail(f"Status must be one of: {', '.join(STATUSES)}", json_out=json_out)
     with session() as db:
-        contact = db.get(Contact, contact_id)
-        if not contact:
-            fail(f"No contact #{contact_id}", json_out=json_out)
+        target = _resolve(db, contact)
+        if not target:
+            fail(f"No contact matching {contact!r}", json_out=json_out)
         for field, value in {"name": name, "company": company, "email": email,
                              "phone": phone, "tags": tag, "notes": note}.items():
             if value is not None:
-                setattr(contact, field, value)
+                setattr(target, field, value)
         if status is not None:
-            contact.status = status.lower()
-        db.add(contact)
+            target.status = status.lower()
+        db.add(target)
         db.flush()
-        data = _row(contact)
-    ok(f"Updated contact #{contact_id}", json_out=json_out, data=data)
+        data = _row(target)
+    ok(f"Updated contact #{target.id}", json_out=json_out, data=data)
 
 
 @app.command()
 def touch(
-    contact_id: int = typer.Argument(..., help="Contact ID"),
+    contact: str = typer.Argument(..., help="Contact ID or name (fuzzy match)"),
     on: str = typer.Option("today", "--date", "-d", help="Date of contact"),
     json_out: JsonOpt = False,
 ) -> None:
     """🤝 Record that you were in touch with a contact."""
     with session() as db:
-        contact = db.get(Contact, contact_id)
-        if not contact:
-            fail(f"No contact #{contact_id}", json_out=json_out)
-        contact.last_contact = parse_date(on)
-        db.add(contact)
+        target = _resolve(db, contact)
+        if not target:
+            fail(f"No contact matching {contact!r}", json_out=json_out)
+        target.last_contact = parse_date(on)
+        db.add(target)
         db.flush()
-        data = _row(contact)
-    ok(f"Logged contact with {contact.name}", json_out=json_out, data=data)
+        data = _row(target)
+    ok(f"Logged contact with {target.name}", json_out=json_out, data=data)
 
 
 @app.command()
@@ -209,14 +223,18 @@ def search(
 
 
 @app.command()
-def rm(contact_id: int = typer.Argument(..., help="Contact ID"), json_out: JsonOpt = False) -> None:
-    """👥 Delete a contact."""
+def rm(
+    contact: str = typer.Argument(..., help="Contact ID or name (fuzzy match)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """👥 Delete a contact. Accepts a numeric ID or a name."""
     with session() as db:
-        contact = db.get(Contact, contact_id)
-        if not contact:
-            fail(f"No contact #{contact_id}", json_out=json_out)
-        db.delete(contact)
-    ok(f"Deleted contact #{contact_id}", json_out=json_out, data={"deleted": contact_id})
+        target = _resolve(db, contact)
+        if not target:
+            fail(f"No contact matching {contact!r}", json_out=json_out)
+        cid = target.id
+        db.delete(target)
+    ok(f"Deleted contact #{cid}", json_out=json_out, data={"deleted": cid})
 
 
 @app.command()

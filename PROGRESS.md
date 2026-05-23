@@ -4,6 +4,34 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 81 — `crm show/edit/rm/touch <name>` (name-based resolution) · 2026-05-23
+
+Persistent gap from agent-mode self-test: "Edit my CRM — Bob got
+promoted" failed because the four `crm` mutating commands all
+required integer `CONTACT_ID`. `books` already has this pattern via
+a small `_resolve` helper; mirroring it onto `crm`.
+
+- 🆕 **`_resolve(db, ident)`** on `clibo/clis/crm.py` — tries
+  `int(ident)` first, falls back to case-insensitive substring
+  match on `Contact.name`.
+- ✏️ **`crm show / edit / rm / touch`** now take a `contact: str`
+  positional that's either a numeric ID or a name. The agent
+  flow `clibo crm edit Bob -c "Acme Corp"` works end-to-end.
+  Backward-compatible: passing a numeric ID still works.
+- 🧪 7 new tests pin the behaviour: show by name + by ID still
+  work, edit by name, unknown name fails, rm by name, touch by
+  name, fuzzy substring match (e.g. "Smith" matches "Bob Smith").
+- 🎤 Visual smoke confirms the headline case — `clibo crm edit Bob
+  -c "Acme Corp"` updates the row and `clibo crm show Smith` finds
+  the same record via partial name.
+- **Tests:** 734 passing (+7); ruff clean.
+
+Future-iteration note: ~10 other entity-style tools (network,
+clients, pets, plants, jobs, leads, etc.) have the same gap. The
+`_resolve` pattern is now established — easy to extend on demand.
+
+---
+
 ### Iteration 80 — `clibo compare --month` (calendar-month deltas) · 2026-05-23
 
 Agent-mode self-test surfaced "compare to last month" twice now —
