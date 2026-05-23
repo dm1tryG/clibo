@@ -4,6 +4,30 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 51 — `dreams` (dream journal) · 2026-05-23
+
+Self-test: "Strange dream about flying over the city" went to `journal`
+— workable, but dreams have specific structure (vividness, lucid flag,
+recurring symbols) that `journal` can't express.
+
+- 🌙 **New tool `dreams` (62nd)** — dream journal with `vividness`
+  (1-5), `lucid` flag, and comma-separated **symbols** so recurring
+  motifs are queryable.
+- Commands: `add SUMMARY -D DESC -v VIVID --lucid -s SYMBOLS` /
+  `today` (full detail) / `list [--lucid]` / `show ID` (stars +
+  symbols + narrative) / `search` (summary/description/symbols) /
+  **`symbols`** (frequency table — the recurring-pattern view) /
+  `rm` / `stats` (lucid rate, avg vividness, top symbols).
+- 📜 `recent` picks up dreams with optional 🪄 prefix for lucid.
+- 📄 `docs/SCHEMA.md` regenerated (74 tables).
+- 🎤 NL flow verified:
+  • "Strange dream about flying over the city" → `dreams add "flying over the city" -s flying,city`
+  • "Had a lucid dream about water" → `dreams add "water dream" --lucid -s water`
+  • "What symbols keep showing up?" → `dreams symbols`
+- **Tests:** 424 passing (+7); ruff clean.
+
+---
+
 ### Iteration 50 — `cv` (career history) · 2026-05-23
 
 Self-test surfaced: "Add CV entry: 2024-2026 Senior Engineer at Acme"

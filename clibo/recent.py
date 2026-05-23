@@ -151,6 +151,8 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
     ("cv", "📜", "cv_entry", ["title", "org", "kind"],
      lambda r: f"{r['kind']}: {r['title']}"
                 + (f" @ {r['org']}" if r["org"] else "")),
+    ("dreams", "🌙", "dreams_dream", ["summary", "lucid"],
+     lambda r: f"{'🪄 ' if r['lucid'] else ''}{r['summary']}"),
 ]
 
 

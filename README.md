@@ -256,6 +256,7 @@ sub-command and every flag.
 | ✅ | `flashcards` 🃏 | Spaced-repetition flashcards (Leitner-style) |
 | ✅ | `lessons` 📓 | Lessons learned — context + takeaway |
 | ✅ | `dashboard` 🎛️ | Customizable widget dashboard |
+| ✅ | `dreams` 🌙 | Dream journal with vividness & symbols |
 
 ## For AI agents
 

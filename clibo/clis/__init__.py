@@ -19,6 +19,7 @@ from clibo.clis import (
     cv,
     dashboard,
     debt,
+    dreams,
     events,
     expense,
     films,
@@ -132,4 +133,5 @@ ALL = [
     lessons,
     dashboard,
     cv,
+    dreams,
 ]
