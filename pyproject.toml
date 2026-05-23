@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "clibo"
-version = "1.3.0"
+version = "1.4.0"
 description = "67+ local-first CLI tools for AI agents and humans — calorie tracker, CRM, dashboard, dream journal, expiry tracker, caffeine half-life, and more."
 readme = "README.md"
 license = "MIT"

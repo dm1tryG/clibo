@@ -153,8 +153,9 @@ A handful of root commands tie all 50 tools together:
 | Command | What it does |
 |---|---|
 | `clibo init` | Set common defaults in one call — currency, height (for BMI), calorie/water/focus/sleep/meditation goals. |
-| `clibo today` | A one-screen dashboard pulling from every tool — tasks, habits, meals, events, bills, water/calorie/focus progress, plants & chores due, today's birthdays. |
-| `clibo week` | 7-day rollup: sleep avg & quality, focus minutes, habit progress vs target, expenses by category, tasks completed, journal entries. |
+| `clibo today` | One-screen dashboard pulling from every tool — tasks, habits, meals, events, bills, plus mood, steps, workouts, caffeine, fasting clock, pending challenge check-ins, late packages, and documents expiring soon. |
+| `clibo week` | 7-day rollup: sleep, focus, mood, habits, expenses, journal — plus steps, workouts, caffeine, fasting, meditate, stretches, mileage, gratitude, donations. |
+| `clibo month [-y Y] [-m M]` | Calendar-month rollup: money-first (income vs expenses vs donations + net cash flow), then health & wellness, productivity, hobbies (books finished, films watched). |
 | `clibo recent` | A chronological activity feed across every tool — newest first, with relative timestamps ("just now", "yesterday"). |
 | `clibo backup [PATH]` | Copy the local SQLite database to a timestamped `.db` backup (default: `~/.clibo/backups/`). |
 | `clibo restore PATH` | Replace the live database with a backup. |

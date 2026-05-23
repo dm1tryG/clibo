@@ -4,6 +4,50 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 70 — `month` view (calendar-month rollup, money-first) + v1.4.0 to PyPI · 2026-05-23
+
+Closes the aggregation trilogy: `today` (right now), `week` (last 7
+days), `month` (this calendar month). Different framings, different
+emphases — `today` is actionable, `week` is averages-and-totals,
+`month` is the calendar-anchored unit that money actually lives on.
+
+- 🗓️ **New top-level command `clibo month`** — `clibo/monthly.py`.
+  Defaults to the current calendar month; pass `-y YEAR -m MONTH` to
+  view any past month (e.g. `clibo month -y 2025 -m 12` for last
+  December).
+- 💰 **Money-first layout** — Income, Expenses, Donations, Bills (paid
+  vs unpaid), Subscriptions (monthly cost rolled up via the existing
+  `_monthly()` helper), Investments (transaction count + buys/sells
+  total), and a **Net cash flow** line when both inflows and outflows
+  exist. The number that actually answers "how was my financial
+  month?"
+- 🏃 **Health & wellness block** — sleep avg, calorie avg, water/steps
+  hit-goal days over the calendar window, workouts (sessions + kcal),
+  caffeine total + over-limit days, fasting (completed + hours + hit
+  rate), meditate, mileage, mood avg.
+- ✅ **Productivity block** — focus minutes, habit check-ins, tasks
+  completed, journal + gratitude entries (with day counts).
+- 🎨 **Hobbies block** — books finished this month (with titles), films
+  watched count. The natural "what did I read/watch in May?" answer.
+- 🧪 10 new tests covering empty state, money rollups + top category,
+  net-cash-flow math, health aggregates, productivity counts, invest
+  transactions, specific year/month lookups, invalid month rejection,
+  books finished, and calendar arithmetic (31-day / 28-day / leap
+  Feb).
+- 🎤 Visual smoke on a populated database confirms all sections render
+  correctly with sensible units and the Net cash flow line.
+
+**Release: v1.4.0 → PyPI** — `pip install --upgrade clibo` now ships
+fasting (iter 67) + `today` enhancements (iter 68) + `week`
+enhancements (iter 69) + this `month` view (iter 70). The pair of
+iter-68/69 already closed the gap of post-v1.0 tools not surfacing in
+the integration views; iter 70 extends the family to the next natural
+window.
+
+- **Tests:** 662 passing (+10); ruff clean.
+
+---
+
 ### Iteration 69 — `week` view now surfaces every post-v1.0 tool too · 2026-05-23
 
 Parallel polish to iter 68: the `clibo today` fix exposed that

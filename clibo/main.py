@@ -138,6 +138,11 @@ def week(json_out: JsonOpt = False) -> None:
     render_week(json_out=json_out)
 
 
+from clibo.monthly import month_command  # noqa: E402
+
+app.command(name="month")(month_command)
+
+
 @app.command()
 def backup(
     dest: Path = typer.Argument(None, help="Where to write the backup .db file"),
