@@ -6,6 +6,7 @@ particular set of SQLModel tables being importable.
 
 from __future__ import annotations
 
+import csv as _csv
 import json as _json
 import shutil
 import sqlite3
@@ -27,6 +28,10 @@ def default_backup_path() -> Path:
 
 def default_export_path() -> Path:
     return config.clibo_home() / f"clibo-export-{_stamp()}.json"
+
+
+def default_csv_export_dir() -> Path:
+    return config.clibo_home() / f"clibo-csv-{_stamp()}"
 
 
 def backup_db(dest: Path | None = None) -> Path:
@@ -114,6 +119,53 @@ def import_data(src: Path, *, replace: bool = False) -> dict[str, int]:
     finally:
         conn.close()
     return inserted
+
+
+def export_csv(dest: Path | None = None) -> tuple[Path, dict]:
+    """Dump every clibo table as a CSV file in ``dest`` (a directory).
+
+    One CSV per table — easier to open in Excel / Numbers / Sheets than the
+    single big JSON. Empty tables still produce a header-only CSV so the
+    schema is visible.
+
+    Returns ``(dir_path, summary)`` where ``summary`` maps each table name
+    to its row count.
+    """
+    init_db()
+    src = config.db_path()
+    target_dir = Path(dest).expanduser() if dest else default_csv_export_dir()
+    target_dir.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(src))
+    summary: dict[str, int] = {}
+    try:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+        )
+        tables = [r[0] for r in cursor.fetchall() if not r[0].startswith("sqlite_")]
+        for name in tables:
+            rows = list(cursor.execute(f'SELECT * FROM "{name}"').fetchall())
+            csv_path = target_dir / f"{name}.csv"
+            with csv_path.open("w", newline="", encoding="utf-8") as fh:
+                writer = _csv.writer(fh)
+                if rows:
+                    writer.writerow(rows[0].keys())
+                    for row in rows:
+                        writer.writerow(list(row))
+                else:
+                    # Empty table — still write a header from PRAGMA so the
+                    # schema is visible when imported into a spreadsheet.
+                    cols = [
+                        c[1] for c in
+                        conn.execute(f'PRAGMA table_info("{name}")').fetchall()
+                    ]
+                    if cols:
+                        writer.writerow(cols)
+            summary[name] = len(rows)
+    finally:
+        conn.close()
+    return target_dir, summary
 
 
 def export_data(dest: Path | None = None) -> tuple[Path, dict]:

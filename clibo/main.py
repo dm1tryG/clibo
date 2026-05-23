@@ -271,16 +271,39 @@ def restore(
 
 @app.command(name="export")
 def export_cmd(
-    dest: Path = typer.Argument(None, help="JSON file to write"),
+    dest: Path = typer.Argument(
+        None, help="JSON file (default) or CSV directory (with --csv)"
+    ),
+    csv: bool = typer.Option(
+        False, "--csv",
+        help="Write one CSV per table to a directory — easier for spreadsheets",
+    ),
     json_out: JsonOpt = False,
 ) -> None:
-    """📤 Dump every clibo table to one JSON file (great for AI agents)."""
+    """📤 Dump every clibo table — one big JSON, or one CSV per table.
+
+    Default writes a single JSON file (great for AI agents reading the whole
+    state). `--csv` writes a directory with one CSV per table, which Excel /
+    Numbers / Sheets can open directly.
+    """
     try:
-        path, summary = export_data(dest)
+        if csv:
+            from clibo.admin import export_csv
+            path, summary = export_csv(dest)
+            fmt = "csv"
+        else:
+            path, summary = export_data(dest)
+            fmt = "json"
     except FileNotFoundError as exc:
         fail(str(exc), json_out=json_out)
-    data = {"path": str(path), "tables": summary, "rows": sum(summary.values())}
-    ok(f"Exported {data['rows']} rows across {len(summary)} tables → {path}",
+    data = {
+        "path": str(path),
+        "format": fmt,
+        "tables": summary,
+        "rows": sum(summary.values()),
+    }
+    where = f"directory {path}" if csv else f"file {path}"
+    ok(f"Exported {data['rows']} rows across {len(summary)} tables → {where}",
        json_out=json_out, data=data)
 
 

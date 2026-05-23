@@ -4,6 +4,32 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 79 — `clibo export --csv` (one file per table) · 2026-05-23
+
+Agent-mode self-test: "I want to export to CSV for Excel" — only JSON
+export existed. Spreadsheet users hit a wall there.
+
+- 🆕 **`clibo/admin.py: export_csv(dest)`** — writes one CSV per
+  table to a target directory (defaults to
+  `~/.clibo/clibo-csv-<timestamp>/`). Empty tables still get a
+  header-only CSV via `PRAGMA table_info`, so the schema is visible
+  even before logging anything.
+- 🛠️ **`clibo export --csv [DIR]`** — single flag on the existing
+  `export` command. Default JSON behaviour unchanged when `--csv`
+  is absent (existing tests + agent contracts intact).
+- 🧪 4 new tests pin the behaviour: empty DB → one CSV per table
+  (header-only), populated DB → header + data rows, summary
+  counts match, the JSON path still works unchanged.
+- 🎤 Visual smoke: 86 CSV files produced, ready to drop into
+  Excel / Numbers / Sheets.
+- **Tests:** 723 passing (+4); ruff clean.
+
+This unlocks a workflow the JSON dump couldn't: long-form
+spreadsheet analysis of any single tracker. `clibo export --csv
+~/Desktop/clibo` and double-click any file.
+
+---
+
 ### Iteration 78 — examples: drop `.sh`, replace with 11 use-case `.md` files · 2026-05-23
 
 User request: "improve examples — drop there sh scripts — just add .md
