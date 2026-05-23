@@ -79,3 +79,46 @@ def test_compare_delta_pct(cli):
     steps = next(r for r in data["rows"] if r["label"] == "Steps total")
     # Delta pct from 5000 → 10000 is +100%.
     assert steps["delta_pct"] == 100.0
+
+
+# ──────────────────────────────────────────────────────────────────────
+# `clibo compare --month` (iter 80)
+# ──────────────────────────────────────────────────────────────────────
+
+
+def test_compare_month_default_is_current_vs_previous(cli):
+    """No args → this calendar month vs the previous one."""
+    data = cli.json("compare", "--month")
+    assert "current" in data and "prior" in data
+    assert data["current"]["month"] != data["prior"]["month"] or \
+           data["current"]["year"] != data["prior"]["year"]
+
+
+def test_compare_month_arbitrary_pair(cli):
+    """`-y -m` selects any calendar month and compares vs its predecessor."""
+    cli.run("expense", "add", "april stuff", "-a", "100", "-d", "2025-04-15")
+    cli.run("expense", "add", "may stuff", "-a", "200", "-d", "2025-05-15")
+    data = cli.json("compare", "--month", "-y", "2025", "-m", "5")
+    assert data["current"]["month"] == 5
+    assert data["prior"]["month"] == 4
+    exp = next(r for r in data["rows"] if r["label"] == "Expenses")
+    assert exp["current"] == 200.0
+    assert exp["prior"] == 100.0
+    assert exp["direction"] == "worse"  # expenses up = worse
+
+
+def test_compare_month_january_wraps_to_december(cli):
+    """January's previous month is December of the year before."""
+    data = cli.json("compare", "--month", "-y", "2026", "-m", "1")
+    assert data["prior"]["year"] == 2025
+    assert data["prior"]["month"] == 12
+
+
+def test_compare_month_donations_better_when_higher(cli):
+    cli.run("donations", "log", "Red Cross", "-a", "20",
+            "-d", "2025-04-15")
+    cli.run("donations", "log", "MSF", "-a", "100",
+            "-d", "2025-05-15")
+    data = cli.json("compare", "--month", "-y", "2025", "-m", "5")
+    don = next(r for r in data["rows"] if r["label"] == "Donations")
+    assert don["direction"] == "better"

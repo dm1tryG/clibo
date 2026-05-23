@@ -4,6 +4,36 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 80 — `clibo compare --month` (calendar-month deltas) · 2026-05-23
+
+Agent-mode self-test surfaced "compare to last month" twice now —
+`clibo compare` only did week-over-week. Filling that gap.
+
+- ✏️ **`clibo compare --month`** — calendar-month vs the previous
+  calendar month. With `-y YEAR -m MONTH` for any past pair.
+  January 2026 correctly wraps to December 2025 as the prior month.
+- 🆕 **`MONTH_METRICS`** in `clibo/compare.py` — 19 metrics tuned
+  for the monthly framing: income (good ↑), expenses (bad ↑),
+  donations (good ↑), bills paid count, **net cash flow** (good ↑),
+  invest buys, sleep avg, steps total, workouts, caffeine, fasts,
+  meditate, mileage, mood, focus, tasks, journal, gratitude,
+  books finished. Same green/red colour-by-polarity logic as the
+  week comparison.
+- 🆕 **`compare_months(year, month)`** returns the same
+  `(current, prior, rows)` triple shape as `compare_weeks` so the
+  rendering helper is shared via `_render_rows_table`.
+- 🆕 **`render_compare_months(json_out, year, month)`** — same JSON
+  shape as week mode, just keyed by `month_name` in the headers.
+- 🧪 4 new tests pin month-mode: default = current vs prior, arbitrary
+  pair via `-y -m`, January-wraps-to-December edge case, donations
+  direction encoding.
+- 🎤 Visual smoke confirms the headline metric — `Net cash flow`
+  surfaces correctly with green/red colour and a delta-percent
+  reading.
+- **Tests:** 727 passing (+4); ruff clean.
+
+---
+
 ### Iteration 79 — `clibo export --csv` (one file per table) · 2026-05-23
 
 Agent-mode self-test: "I want to export to CSV for Excel" — only JSON

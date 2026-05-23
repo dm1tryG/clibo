@@ -166,12 +166,32 @@ app.command(name="month")(month_command)
 
 
 @app.command()
-def compare(json_out: JsonOpt = False) -> None:
-    """⚖️ Week-over-week comparison — every key metric side by side.
+def compare(
+    month_mode: bool = typer.Option(
+        False, "--month",
+        help="Compare this calendar month vs the previous one "
+             "(default: week-over-week)",
+    ),
+    year: int = typer.Option(
+        None, "--year", "-y",
+        help="Calendar year for --month (default: current)",
+    ),
+    month_num: int = typer.Option(
+        None, "--month-of", "-m",
+        help="Calendar month 1-12 for --month (default: current)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """⚖️ Week-over-week (default) or month-over-month comparison.
 
-    Shows the current 7 days vs the 7 before, with green/red deltas
-    based on direction (more sleep is better; more caffeine is worse).
+    Without flags, compares the current 7 days vs the 7 before. With
+    ``--month``, compares the current calendar month vs the previous one
+    — pass ``--year`` / ``--month-of`` to look at any past pair.
     """
+    if month_mode:
+        from clibo.compare import render_compare_months
+        render_compare_months(json_out=json_out, year=year, month=month_num)
+        return
     from clibo.compare import render_compare
     render_compare(json_out=json_out)
 
