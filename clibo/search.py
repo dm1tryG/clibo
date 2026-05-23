@@ -12,14 +12,23 @@ from sqlalchemy import or_
 from sqlmodel import select
 
 from clibo.clis.bookmark import Bookmark
+from clibo.clis.books import Book
 from clibo.clis.brag import Achievement
 from clibo.clis.crm import Contact
+from clibo.clis.cv import CvEntry
+from clibo.clis.dreams import Dream
 from clibo.clis.expense import Expense
+from clibo.clis.films import Film
 from clibo.clis.gifts import Gift
+from clibo.clis.gratitude import GratitudeEntry
+from clibo.clis.ideas import Idea
+from clibo.clis.income import IncomeEntry
 from clibo.clis.journal import JournalEntry
+from clibo.clis.lessons import Lesson
 from clibo.clis.meetings import Meeting
 from clibo.clis.network import Connection
 from clibo.clis.notes import Note
+from clibo.clis.quotes import Quote
 from clibo.clis.recipes import Recipe
 from clibo.clis.todo import Task
 from clibo.clis.wishlist import WishlistItem
@@ -72,6 +81,31 @@ SOURCES: list[tuple] = [
      [Expense.description, Expense.category, Expense.note], lambda e: e.description),
     ("wishlist", WishlistItem,
      [WishlistItem.name, WishlistItem.category, WishlistItem.note], lambda w: w.name),
+    # ── beyond the original 50 ─────────────────────────────────────────────
+    ("books", Book, [Book.title, Book.author, Book.note], lambda b: b.title),
+    ("films", Film, [Film.title, Film.note], lambda f: f.title),
+    ("income", IncomeEntry,
+     [IncomeEntry.source, IncomeEntry.category, IncomeEntry.note],
+     lambda i: f"{i.source} ({i.category})"),
+    ("ideas", Idea,
+     [Idea.title, Idea.description, Idea.tags],
+     lambda i: f"[{i.status}] {i.title}"),
+    ("quotes", Quote,
+     [Quote.text, Quote.author, Quote.source, Quote.tags],
+     lambda q: (q.text[:60] + ("…" if len(q.text) > 60 else ""))
+                + (f" — {q.author}" if q.author else "")),
+    ("lessons", Lesson,
+     [Lesson.takeaway, Lesson.context, Lesson.tags],
+     lambda ls: ls.takeaway),
+    ("cv", CvEntry,
+     [CvEntry.title, CvEntry.org, CvEntry.description,
+      CvEntry.achievements, CvEntry.tags],
+     lambda c: f"{c.title}" + (f" @ {c.org}" if c.org else "")),
+    ("dreams", Dream,
+     [Dream.summary, Dream.description, Dream.symbols],
+     lambda d: d.summary),
+    ("gratitude", GratitudeEntry,
+     [GratitudeEntry.text], lambda g: g.text),
 ]
 
 

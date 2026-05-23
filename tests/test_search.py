@@ -42,3 +42,20 @@ def test_search_each_result_has_snippet(cli):
     cli.run("journal", "write", "A productive day building widgets")
     result = cli.json("search", "widgets")
     assert all(hit["snippet"] for hit in result["results"])
+
+
+def test_search_covers_beyond_50_tools(cli):
+    """The 12 tools added after v1.0 must also be searchable."""
+    cli.run("books", "add", "Atomic Habits", "-a", "James Clear")
+    cli.run("films", "add", "Atomic Blonde")
+    cli.run("ideas", "add", "atomic widget refactor")
+    cli.run("quotes", "add", "atomic wisdom", "-a", "Sage")
+    cli.run("lessons", "add", "keep changes atomic")
+    cli.run("cv", "add", "Atomic team lead", "-o", "X")
+    cli.run("dreams", "add", "atomic explosion dream")
+    cli.run("gratitude", "add", "atomic clarity")
+    cli.run("income", "add", "Atomic Corp salary", "-a", "1000")
+    result = cli.json("search", "atomic")
+    sources = {hit["source"] for hit in result["results"]}
+    assert {"books", "films", "ideas", "quotes", "lessons", "cv",
+            "dreams", "gratitude", "income"} <= sources

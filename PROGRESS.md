@@ -4,6 +4,40 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 52 — polish: search / tags now index the beyond-50 tools · 2026-05-23
+
+Agent-mode smoke test exposed a silent regression: every tool added
+after v1.0 (books, films, mileage, gratitude, income, ideas, quotes,
+flashcards, lessons, cv, dreams, dashboard) was registered in `recent`
+but **invisible** to the two cross-tool integrators — `clibo search`
+and `clibo tags`.
+
+```
+clibo search "Atomic Habits"  → No matches for 'Atomic'.
+clibo search inspiration      → No matches.
+clibo tags                    → No tags yet (lists only 8 sources)
+```
+
+- 🔍 **`clibo/search.py`** — SOURCES grew from 13 → 22: added `books`,
+  `films`, `income`, `ideas`, `quotes`, `lessons`, `cv`, `dreams`,
+  `gratitude`. Each with snippet formatter and the right text columns.
+- 🏷️ **`clibo/tags.py`** — TAG_SOURCES grew from 7 → 11: added
+  `ideas`, `quotes`, `lessons`, `cv` (the four post-v1.0 tools that
+  carry a `tags` column).
+- 🧪 Two new tests pin this behaviour so it can't silently regress
+  again: `test_search_covers_beyond_50_tools` and
+  `test_tags_covers_beyond_50_tools` — both seed every new source
+  with a shared keyword and assert the integrator picks it up.
+- 📖 `AGENTS.md` quick-reference updated (13 → 22 text-bearing tables).
+- 🎤 NL flow re-verified end-to-end:
+  • "Atomic Habits" → `search atomic` → 3 hits across books, dreams,
+    gratitude.
+  • tagged 4 post-v1.0 records with `-t marketing` →
+    `tags` → "marketing 4 · cv (1), ideas (1), lessons (1), quotes (1)".
+- **Tests:** 419 passing (+2); ruff clean.
+
+---
+
 ### Iteration 51 — `dreams` (dream journal) · 2026-05-23
 
 Self-test: "Strange dream about flying over the city" went to `journal`

@@ -53,3 +53,17 @@ def test_tags_spans_many_sources(cli):
     vip = next(r for r in data["tags"] if r["tag"] == "vip")
     assert vip["count"] == 3
     assert vip["by_source"] == {"crm": 1, "brag": 1, "recipes": 1}
+
+
+def test_tags_covers_beyond_50_tools(cli):
+    """ideas, quotes, lessons and cv all have a tags column."""
+    cli.run("ideas", "add", "thing", "-t", "marketing")
+    cli.run("quotes", "add", "wisdom", "-t", "marketing")
+    cli.run("lessons", "add", "lesson one", "-t", "marketing")
+    cli.run("cv", "add", "Marketing lead", "-o", "X", "-t", "marketing")
+    data = cli.json("tags")
+    marketing = next(r for r in data["tags"] if r["tag"] == "marketing")
+    assert marketing["count"] == 4
+    assert marketing["by_source"] == {
+        "ideas": 1, "quotes": 1, "lessons": 1, "cv": 1
+    }

@@ -24,6 +24,11 @@ TAG_SOURCES: list[tuple[str, str]] = [
     ("brag", "brag_achievement"),
     ("recipes", "recipes_recipe"),
     ("journal", "journal_entry"),
+    # ── beyond the original 50 ────────────────────────────────────────
+    ("ideas", "ideas_idea"),
+    ("quotes", "quotes_quote"),
+    ("lessons", "lessons_lesson"),
+    ("cv", "cv_entry"),
 ]
 
 

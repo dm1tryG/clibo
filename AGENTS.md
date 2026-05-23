@@ -29,7 +29,7 @@ Each tool is a sub-command: `clibo calorie`, `clibo crm`, `clibo todo`, … Run
 
 ```bash
 clibo today --json    # one snapshot across 12 tools — fastest "what's going on?"
-clibo search Q --json # full-text search across 13 text-bearing tables
+clibo search Q --json # full-text search across 22 text-bearing tables
 clibo export --json   # dump the entire local state to one JSON document
 ```
 
