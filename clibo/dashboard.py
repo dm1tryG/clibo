@@ -17,6 +17,7 @@ from sqlmodel import select
 from clibo.checkins import collect_checkins
 from clibo.clis.bills import Bill
 from clibo.clis.birthdays import Occasion
+from clibo.clis.books import Book, BookSession
 from clibo.clis.caffeine import (
     CaffeineEntry,
     _bedtime,
@@ -45,12 +46,14 @@ from clibo.clis.steps import StepEntry
 from clibo.clis.todo import Task
 from clibo.clis.water import WaterLog
 from clibo.clis.workout import Workout
+from clibo.clis.writing import WritingSession
 from clibo.core.db import session
 from clibo.core.output import _emit_json, bar, console
 from clibo.core.settings import get_setting
 from clibo.models import (
     BillDue,
     BirthdayToday,
+    BooksToday,
     CaffeineToday,
     ChallengePending,
     DocumentExpiring,
@@ -69,7 +72,24 @@ from clibo.models import (
     TaskSummary,
     TodaySnapshot,
     WorkoutsToday,
+    WritingToday,
 )
+
+
+def _streak_from_days(days: set[date], today: date) -> int:
+    """Consecutive-day streak ending at ``today`` (or yesterday if today empty)."""
+    if not days:
+        return 0
+    cursor = today
+    if cursor not in days:
+        cursor -= timedelta(days=1)
+    if cursor not in days:
+        return 0
+    streak = 0
+    while cursor in days:
+        streak += 1
+        cursor -= timedelta(days=1)
+    return streak
 
 
 def collect_today(on: date | None = None) -> TodaySnapshot:
@@ -262,6 +282,30 @@ def collect_today(on: date | None = None) -> TodaySnapshot:
             ).all()
         )
 
+        # ✍️ Writing — today's words across all projects, goal & streak
+        writing_today_rows = list(
+            db.exec(
+                select(WritingSession).where(WritingSession.entry_date == today)
+            ).all()
+        )
+        writing_words = sum(s.words for s in writing_today_rows)
+        writing_goal = int(get_setting("writing", "daily_words", "500") or 500)
+        writing_days = {
+            s.entry_date for s in db.exec(select(WritingSession)).all()
+        }
+        writing_streak = _streak_from_days(writing_days, today)
+
+        # 📖 Books — today's reading sessions (pages + minutes + book titles)
+        book_sessions_today = list(
+            db.exec(
+                select(BookSession).where(BookSession.entry_date == today)
+            ).all()
+        )
+        book_titles = {b.id: b.title for b in db.exec(select(Book)).all()}
+        books_today_titles = sorted({
+            book_titles.get(s.book_id, "?") for s in book_sessions_today
+        })
+
         # 📊 Daily check-ins — every actively-used tracker with today's status
         daily_checkins = collect_checkins(db, today=today)
 
@@ -337,6 +381,19 @@ def collect_today(on: date | None = None) -> TodaySnapshot:
             )
             for d in documents_expiring
         ],
+        writing=WritingToday(
+            total_words=writing_words,
+            goal_words=writing_goal,
+            reached=writing_words >= writing_goal,
+            sessions=len(writing_today_rows),
+            current_streak=writing_streak,
+        ),
+        books=BooksToday(
+            pages=sum(s.pages for s in book_sessions_today),
+            minutes=sum(s.duration_min for s in book_sessions_today),
+            sessions=len(book_sessions_today),
+            books=books_today_titles,
+        ),
         checkins=daily_checkins,
     )
 
@@ -460,6 +517,29 @@ def render_today(json_out: bool, on: date | None = None) -> None:
         today_lines.append(
             f"🏋️ Workouts {wo.sessions} session{'s' if wo.sessions != 1 else ''}"
             f"{min_part}{kcal_part}"
+        )
+    wr = data.writing
+    if wr.sessions:
+        streak_part = (f"   ·   🔥 {wr.current_streak}-day streak"
+                       if wr.current_streak > 1 else "")
+        goal_marker = " 🎉" if wr.reached else ""
+        today_lines.append(
+            f"✍️ Writing  {wr.total_words}/{wr.goal_words} w{goal_marker}"
+            f"   ·   {wr.sessions} session{'s' if wr.sessions != 1 else ''}"
+            f"{streak_part}"
+        )
+    bk = data.books
+    if bk.sessions:
+        title_part = ""
+        if bk.books:
+            shown = bk.books[:2]
+            more = f" + {len(bk.books) - 2} more" if len(bk.books) > 2 else ""
+            title_part = f"   ·   [dim]{', '.join(shown)}{more}[/dim]"
+        min_part = f"   ·   ⏱ {bk.minutes} min" if bk.minutes else ""
+        today_lines.append(
+            f"📖 Reading  {bk.pages}p"
+            f"   ·   {bk.sessions} session{'s' if bk.sessions != 1 else ''}"
+            f"{min_part}{title_part}"
         )
     if today_lines:
         for line in today_lines:

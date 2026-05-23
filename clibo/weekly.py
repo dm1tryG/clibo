@@ -11,6 +11,7 @@ from datetime import date, timedelta
 
 from sqlmodel import select
 
+from clibo.clis.books import Book, BookSession
 from clibo.clis.caffeine import CaffeineEntry
 from clibo.clis.calorie import CalorieEntry
 from clibo.clis.donations import Donation
@@ -30,10 +31,12 @@ from clibo.clis.todo import Task
 from clibo.clis.water import WaterLog
 from clibo.clis.worklog import WorkLogEntry
 from clibo.clis.workout import Workout
+from clibo.clis.writing import WritingSession
 from clibo.core.db import session
 from clibo.core.output import _emit_json, bar, console
 from clibo.core.settings import get_setting
 from clibo.models import (
+    BooksWeek,
     CaffeineWeek,
     CalorieWeek,
     CategoryTotal,
@@ -55,6 +58,7 @@ from clibo.models import (
     WeekSnapshot,
     WorklogWeek,
     WorkoutWeek,
+    WritingWeek,
 )
 
 WINDOW_DAYS = 7
@@ -162,6 +166,21 @@ def collect_week(start: date | None = None) -> WeekSnapshot:
         donations = list(
             db.exec(select(Donation).where(Donation.entry_date >= start).where(Donation.entry_date <= today)).all()
         )
+        writing_sessions = list(
+            db.exec(
+                select(WritingSession)
+                .where(WritingSession.entry_date >= start)
+                .where(WritingSession.entry_date <= today)
+            ).all()
+        )
+        book_sessions = list(
+            db.exec(
+                select(BookSession)
+                .where(BookSession.entry_date >= start)
+                .where(BookSession.entry_date <= today)
+            ).all()
+        )
+        book_titles = {b.id: b.title for b in db.exec(select(Book)).all()}
 
     # Sleep
     sleep_summary = SleepWeek(
@@ -337,6 +356,39 @@ def collect_week(start: date | None = None) -> WeekSnapshot:
         ),
         recipients=len({d.recipient for d in donations}),
     )
+    # ✍️ Writing
+    writing_total = sum(s.words for s in writing_sessions)
+    writing_days = {s.entry_date for s in writing_sessions}
+    writing_by_project: dict[str, int] = {}
+    for s in writing_sessions:
+        writing_by_project[s.project] = writing_by_project.get(s.project, 0) + s.words
+    writing_top = sorted(
+        writing_by_project.items(), key=lambda kv: kv[1], reverse=True
+    )[:3]
+    writing_summary = WritingWeek(
+        sessions=len(writing_sessions),
+        total_words=writing_total,
+        total_minutes=sum(s.duration_min for s in writing_sessions),
+        days_written=len(writing_days),
+        avg_words_per_active_day=(
+            _round(writing_total / len(writing_days), 0) if writing_days else 0.0
+        ),
+        top_projects=[
+            CategoryTotal(category=p, amount=w) for p, w in writing_top
+        ],
+    )
+    # 📖 Books — reading sessions
+    book_days = {s.entry_date for s in book_sessions}
+    week_book_titles = sorted({
+        book_titles.get(s.book_id, "?") for s in book_sessions
+    })
+    books_summary = BooksWeek(
+        sessions=len(book_sessions),
+        pages=sum(s.pages for s in book_sessions),
+        minutes=sum(s.duration_min for s in book_sessions),
+        days_read=len(book_days),
+        books=week_book_titles,
+    )
 
     return WeekSnapshot(
         start=start,
@@ -361,6 +413,8 @@ def collect_week(start: date | None = None) -> WeekSnapshot:
         mileage=mileage_summary,
         gratitude=gratitude_summary,
         donations=donation_summary,
+        writing=writing_summary,
+        books=books_summary,
     )
 
 
@@ -510,11 +564,12 @@ def render_week(json_out: bool) -> None:
             console.print(f"  {line}")
         console.print()
 
-    # ✅ Tasks, 📔 Journal, 🗒️ Worklog, 🙏 Gratitude
+    # ✅ Tasks, 📔 Journal, 🗒️ Worklog, 🙏 Gratitude, ✍️ Writing
     gr = data.gratitude
+    wr = data.writing
     has_productivity = (
         data.tasks.completed or data.journal.entries
-        or data.worklog.entries or gr.entries
+        or data.worklog.entries or gr.entries or wr.sessions
     )
     if has_productivity:
         console.print("[bold]✅ Productivity[/bold]")
@@ -536,8 +591,31 @@ def render_week(json_out: bool) -> None:
                 f"  Gratitude:        {gr.entries} entries  "
                 f"[dim]({gr.days_logged} days)[/dim]"
             )
+        if wr.sessions:
+            top = (f"   [dim]top: {wr.top_projects[0].category} "
+                   f"({wr.top_projects[0].amount}w)[/dim]"
+                   if wr.top_projects else "")
+            console.print(
+                f"  Writing:          {wr.total_words}w  "
+                f"[dim]({wr.sessions} sessions, "
+                f"{wr.days_written} days, "
+                f"avg {wr.avg_words_per_active_day:g}w/day)[/dim]{top}"
+            )
+        console.print()
+
+    # 🎨 Hobbies — 📖 Reading
+    bk = data.books
+    if bk.sessions:
+        shown = bk.books[:3]
+        more = f" + {len(bk.books) - 3} more" if len(bk.books) > 3 else ""
+        console.print("[bold]🎨 Hobbies[/bold]")
+        min_part = f", {bk.minutes} min" if bk.minutes else ""
+        console.print(
+            f"  Reading:          {bk.pages}p across {bk.sessions} sessions  "
+            f"[dim]({bk.days_read} days{min_part}; {', '.join(shown)}{more})[/dim]"
+        )
         console.print()
 
     if not metric_lines and not data.habits.tracked and not money_lines \
-            and not has_productivity:
+            and not has_productivity and not bk.sessions:
         console.print("  [dim]Nothing logged in the last 7 days yet.[/dim]\n")

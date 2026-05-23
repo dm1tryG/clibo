@@ -54,3 +54,26 @@ def test_recent_includes_ago(cli):
     cli.run("notes", "add", "Just now")
     events = cli.json("recent")["events"]
     assert "ago" in events[0] or events[0]["ago"] == "just now"
+
+
+# ── writing + reading-sessions in the activity feed (iter 93) ──
+
+
+def test_recent_includes_writing_events(cli):
+    cli.run("writing", "log", "novel", "-w", "1200", "-t", "45")
+    events = cli.json("recent")["events"]
+    writing = [e for e in events if e["source"] == "writing"]
+    assert len(writing) == 1
+    assert "1200w" in writing[0]["summary"]
+    assert "novel" in writing[0]["summary"]
+    assert "45 min" in writing[0]["summary"]
+
+
+def test_recent_includes_reading_sessions(cli):
+    cli.run("books", "add", "Atomic Habits", "-p", "320")
+    cli.run("books", "read", "Atomic Habits", "30", "-t", "45")
+    events = cli.json("recent")["events"]
+    reading = [e for e in events if e["source"] == "reading"]
+    assert len(reading) == 1
+    assert "30p" in reading[0]["summary"]
+    assert "Atomic Habits" in reading[0]["summary"]

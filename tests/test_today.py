@@ -198,3 +198,54 @@ def test_yesterday_command(cli):
     data = cli.json("yesterday")
     assert data["date"] == str(date_.today() - timedelta(days=1))
     assert data["water"]["total_ml"] == 500
+
+
+# ── writing + books on today (iter 93) ──
+
+
+def test_today_includes_writing_block(cli):
+    data = cli.json("today")
+    assert "writing" in data
+    # Empty case — no sessions yet
+    assert data["writing"]["sessions"] == 0
+    assert data["writing"]["total_words"] == 0
+
+
+def test_today_writing_aggregates_sessions(cli):
+    cli.run("writing", "log", "novel", "-w", "1200", "-t", "45")
+    cli.run("writing", "log", "blog", "-w", "400")
+    data = cli.json("today")
+    w = data["writing"]
+    assert w["sessions"] == 2
+    assert w["total_words"] == 1600
+    assert w["reached"] is True  # default goal 500
+    assert w["current_streak"] == 1
+
+
+def test_today_writing_respects_goal(cli):
+    cli.run("writing", "goal", "1667")
+    cli.run("writing", "log", "novel", "-w", "1200")
+    data = cli.json("today")
+    assert data["writing"]["goal_words"] == 1667
+    assert data["writing"]["reached"] is False
+
+
+def test_today_includes_books_block(cli):
+    data = cli.json("today")
+    assert "books" in data
+    assert data["books"]["sessions"] == 0
+    assert data["books"]["pages"] == 0
+    assert data["books"]["books"] == []
+
+
+def test_today_books_aggregates_sessions(cli):
+    cli.run("books", "add", "Atomic Habits", "-p", "320")
+    cli.run("books", "read", "Atomic Habits", "30", "-t", "45")
+    cli.run("books", "add", "Range", "-p", "260")
+    cli.run("books", "read", "Range", "20", "-t", "30")
+    data = cli.json("today")
+    b = data["books"]
+    assert b["sessions"] == 2
+    assert b["pages"] == 50
+    assert b["minutes"] == 75
+    assert sorted(b["books"]) == ["Atomic Habits", "Range"]

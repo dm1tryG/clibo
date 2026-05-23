@@ -23,6 +23,15 @@ TIME_COLUMN_OVERRIDES = {
     "fast_session": "start_time",
 }
 
+#: Populated each call by ``collect_recent`` — lets per-row formatters
+#: cheaply resolve ``book_id`` → title without a per-row SQL join.
+_BOOK_TITLES: dict[int, str] = {}
+
+
+def _book_title(row: sqlite3.Row) -> str:
+    """Return the book title for a ``books_session`` row (or ``'?'``)."""
+    return _BOOK_TITLES.get(row["book_id"], "?")
+
 
 #: ``(label, emoji, table, columns to fetch, format(row) -> str)`` for every
 #: activity stream. ``id`` and the table's timestamp column are always pulled.
@@ -189,6 +198,14 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
      ["start_time", "end_time", "target_hours"],
      lambda r: ("started" if r["end_time"] is None
                 else f"finished ({r['target_hours']:g}h target)")),
+    ("writing", "✍️", "writing_session",
+     ["project", "words", "duration_min"],
+     lambda r: f"wrote {r['words']}w on {r['project']}"
+                + (f" ({r['duration_min']} min)" if r["duration_min"] else "")),
+    ("reading", "📖", "books_session",
+     ["book_id", "pages", "duration_min"],
+     lambda r: f"read {r['pages']}p of {_book_title(r)}"
+                + (f" ({r['duration_min']} min)" if r["duration_min"] else "")),
 ]
 
 
@@ -218,6 +235,17 @@ def collect_recent(limit: int = 20) -> list[dict]:
     out: list[dict] = []
     conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
+    # Refresh the book-title cache so the ``reading`` formatter can resolve
+    # `book_id → title` without a per-row join.
+    _BOOK_TITLES.clear()
+    try:
+        if conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='books_book'"
+        ).fetchone():
+            for row in conn.execute('SELECT id, title FROM "books_book"'):
+                _BOOK_TITLES[row["id"]] = row["title"]
+    except sqlite3.Error:
+        pass
     try:
         for source, emoji, table, cols, fmt in SOURCES:
             table_exists = conn.execute(

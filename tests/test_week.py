@@ -151,3 +151,45 @@ def test_week_donations_aggregates(cli):
     assert data["donations"]["total"] == 150.0
     assert data["donations"]["deductible_total"] == 50.0
     assert data["donations"]["recipients"] == 2
+
+
+# ── writing + books on week (iter 93) ──
+
+
+def test_week_includes_writing_block(cli):
+    data = cli.json("week")
+    assert "writing" in data
+    assert data["writing"]["sessions"] == 0
+
+
+def test_week_writing_aggregates_across_days(cli):
+    cli.run("writing", "log", "novel", "-w", "1200", "-t", "45")
+    cli.run("writing", "log", "novel", "-w", "1000", "-d", "yesterday")
+    cli.run("writing", "log", "blog", "-w", "400", "-d", "yesterday")
+    data = cli.json("week")
+    w = data["writing"]
+    assert w["sessions"] == 3
+    assert w["total_words"] == 2600
+    assert w["days_written"] == 2
+    top = {p["category"]: p["amount"] for p in w["top_projects"]}
+    assert top["novel"] == 2200
+    assert top["blog"] == 400
+
+
+def test_week_includes_books_block(cli):
+    data = cli.json("week")
+    assert "books" in data
+    assert data["books"]["sessions"] == 0
+    assert data["books"]["books"] == []
+
+
+def test_week_books_aggregates_sessions(cli):
+    cli.run("books", "add", "Atomic Habits", "-p", "320")
+    cli.run("books", "read", "Atomic Habits", "30", "-t", "45")
+    cli.run("books", "read", "Atomic Habits", "25", "-d", "yesterday")
+    data = cli.json("week")
+    b = data["books"]
+    assert b["sessions"] == 2
+    assert b["pages"] == 55
+    assert b["days_read"] == 2
+    assert b["books"] == ["Atomic Habits"]

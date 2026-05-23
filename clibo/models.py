@@ -150,6 +150,25 @@ class DocumentExpiring(_BaseSnapshot):
     days_until: int
 
 
+class WritingToday(_BaseSnapshot):
+    """Words written today across all projects, with goal & streak."""
+
+    total_words: int
+    goal_words: int
+    reached: bool
+    sessions: int
+    current_streak: int
+
+
+class BooksToday(_BaseSnapshot):
+    """Reading sessions today — pages, minutes, and which book(s)."""
+
+    pages: int
+    minutes: int
+    sessions: int
+    books: list[str]
+
+
 class CheckinStatus(_BaseSnapshot):
     name: str
     emoji: str
@@ -183,6 +202,8 @@ class TodaySnapshot(_BaseSnapshot):
     challenges_pending: list[ChallengePending]
     packages: PackagesBlock
     documents_expiring: list[DocumentExpiring]
+    writing: WritingToday
+    books: BooksToday
     checkins: list[CheckinStatus]
 
 
@@ -318,6 +339,23 @@ class DonationsWeek(_BaseSnapshot):
     recipients: int
 
 
+class WritingWeek(_BaseSnapshot):
+    sessions: int
+    total_words: int
+    total_minutes: int
+    days_written: int
+    avg_words_per_active_day: float
+    top_projects: list[CategoryTotal]
+
+
+class BooksWeek(_BaseSnapshot):
+    sessions: int
+    pages: int
+    minutes: int
+    days_read: int
+    books: list[str]
+
+
 class WeekSnapshot(_BaseSnapshot):
     start: date
     end: date
@@ -341,6 +379,8 @@ class WeekSnapshot(_BaseSnapshot):
     mileage: MileageWeek
     gratitude: GratitudeWeek
     donations: DonationsWeek
+    writing: WritingWeek
+    books: BooksWeek
 
 
 # ──────────────────────────────────────────────────────────────────────

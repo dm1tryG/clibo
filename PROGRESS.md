@@ -4,6 +4,64 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 93 — wire `writing` + `books-session` into the dashboards · 2026-05-24
+
+Agent-mode self-test on `clibo today --json` after iters 90 + 91
+showed both new tools were **invisible to the cross-tool views**.
+Writing was logged but didn't appear on the daily dashboard; books
+reading sessions were tracked but didn't show up on `today`,
+`week`, or `recent`. Tools that drop off the headline UX get
+forgotten — fix that before adding more.
+
+- 📅 **`clibo today`** — two new blocks:
+  • `writing`: words today, goal progress, sessions count, current
+    streak. Renders as `✍️ Writing  1600/500 w 🎉 · 2 sessions
+    · 🔥 1-day streak`.
+  • `books`: pages, minutes, sessions, list of titles read today.
+    Renders as `📖 Reading  50p · 2 sessions · ⏱ 75 min ·
+    Atomic Habits, Range`.
+  Both shadow the `🏋️ Workouts` line shape from iter 88 — same
+  conditional display (omitted when no sessions).
+- 📅 **`clibo week`** — new blocks for the same two tools.
+  Writing slots into the *Productivity* group (with a `top:
+  PROJECT (Nw)` annotation); reading gets a new *🎨 Hobbies*
+  section that's ready for future hobby trackers.
+- 🌀 **`clibo recent`** — two new sources in the activity feed:
+  • `writing` reads from `writing_session` ("wrote 1200w on novel
+    (45 min)")
+  • `reading` reads from `books_session` and joins to `books_book`
+    titles via a module-level `_BOOK_TITLES` cache populated once
+    per `collect_recent` call. So the feed shows "read 30p of
+    Atomic Habits (45 min)" not "read 30p of book #1".
+- 🆕 **Pydantic models added**: `WritingToday` + `BooksToday` for
+  `TodaySnapshot`; `WritingWeek` + `BooksWeek` for `WeekSnapshot`.
+  Existing snapshots stay backward-compatible — every consumer
+  just gets two new fields.
+- 🆕 **`_streak_from_days(days, today)`** helper in `dashboard.py`
+  — extracted the consecutive-day streak logic that's also in
+  `gratitude` and `writing`. Future tools that want a daily-
+  practice streak can import it directly.
+- 🎤 NL flow verified end-to-end with a seeded day (1.2k + 0.4k
+  writing words, 30p + 20p across two books):
+  • `today` prints both new rows in the right place ✓
+  • `today --json` exposes `writing.{total_words, goal_words,
+    reached, sessions, current_streak}` + `books.{pages, minutes,
+    sessions, books}` ✓
+  • `week` aggregates writing across days with `top_projects` ✓
+  • `recent` shows writing + reading events with full titles ✓
+- 🧪 **11 new tests**: today writing/books empty + populated +
+  goal-respect; week writing/books with cross-day aggregation +
+  top_projects; recent shows writing + reading events with the
+  right summary text.
+- **Tests:** 898 passing (+11); ruff clean.
+
+Three dashboards (today / week / recent) now all surface the four
+media-log tools — calorie / water / weight / workout (original),
+writing / books / films (iters 87, 90, 91). Nothing built in the
+last three iterations sits invisibly in the DB anymore.
+
+---
+
 ### 🏷️ Iteration 92 — v1.10.0 release · 2026-05-24
 
 Seven iterations stacked since v1.9.0 (iters 85-91) including a
