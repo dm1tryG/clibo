@@ -24,6 +24,7 @@ from clibo.core.output import JsonOpt, _emit_json, console, fail, ok
 from clibo.core.settings import get_setting, set_setting
 from clibo.dashboard import render_today
 from clibo.search import search_all
+from clibo.tags import collect_tags
 from clibo.weekly import render_week
 
 app = typer.Typer(
@@ -326,6 +327,36 @@ def init_cmd(
         if flag in updated:
             cell = f"[green]{cell}[/green]"
         table.add_row(label, cell)
+    console.print(table)
+    console.print()
+
+
+@app.command()
+def tags(json_out: JsonOpt = False) -> None:
+    """🏷️  List every tag used across clibo, with counts and sources."""
+    rows = collect_tags()
+    if json_out:
+        _emit_json({"count": len(rows), "tags": rows})
+        return
+    if not rows:
+        console.print(
+            "\n  [dim]No tags yet — add tags with `-t/--tag` in notes, "
+            "todo, bookmark, crm, network, brag, recipes or journal.[/dim]\n"
+        )
+        return
+    table = Table(
+        box=ROUNDED, header_style="bold cyan",
+        title=f"🏷️  Tags  [dim]({len(rows)})[/dim]",
+        title_style="bold magenta", title_justify="left", pad_edge=False,
+    )
+    table.add_column("Tag", style="bold")
+    table.add_column("Count", justify="right")
+    table.add_column("Sources")
+    for row in rows:
+        sources = ", ".join(
+            f"{src} ({n})" for src, n in sorted(row["by_source"].items())
+        )
+        table.add_row(row["tag"], str(row["count"]), sources)
     console.print(table)
     console.print()
 

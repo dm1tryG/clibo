@@ -150,6 +150,7 @@ A handful of root commands tie all 50 tools together:
 | `clibo export [PATH]` | Dump every clibo table to one JSON file — ideal for an agent to read the whole local state in one go. |
 | `clibo import PATH` | Load rows from a `clibo export` JSON file; `--replace` wipes each table first. |
 | `clibo search QUERY` | One query across notes, journal, tasks, bookmarks, contacts, meetings, achievements, recipes, worklog, network, gifts, expenses and the wishlist. |
+| `clibo tags` | Every tag used across notes, todo, bookmark, crm, brag, recipes and journal — with counts and source breakdown. |
 | `clibo doctor` | Health check — version, paths, DB size and row counts per table. |
 
 ## Shell completion

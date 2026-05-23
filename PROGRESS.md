@@ -4,6 +4,25 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 36 — `clibo tags` · 2026-05-23
+
+A real gap closed: seven tools accept `-t/--tag`, but nothing told you
+which tags you'd actually used. Now `clibo tags` does.
+
+- 🏷️ `clibo tags` walks the tag column of every tag-bearing table
+  (notes, todo, bookmark, crm, brag, recipes, journal), normalises
+  to lowercase, and shows tag · count · per-source breakdown.
+- Defensive PRAGMA-based column check skips tables that exist but
+  don't have a `tags` column (e.g. `network` & `gifts` use `notes`
+  only).
+- Tests caught a real bug on the first run: `network_connection`
+  was in the source list but lacks a `tags` column — removed and
+  guarded against.
+- README's Cross-tool commands table lists `tags` next to `search`.
+- **Tests:** 325 passing (+6).
+
+---
+
 ### Iteration 35 — Stage `v1.1.0` in the changelog · 2026-05-23
 
 Honest natural stop. Eight polish iterations have landed on `main` since
