@@ -4,6 +4,24 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 29 — `AGENTS.md` · 2026-05-23
+
+Post-v1.0 polish, focused on the project's primary audience.
+
+- 📝 [`AGENTS.md`](AGENTS.md) — a one-page guide for AI agents at the
+  repo root, covering: the universal contract (verbs, `--json`,
+  stderr, name-or-ID resolution, forgiving date parsing); the
+  integrating commands (`today` / `search` / `export` / `doctor`);
+  five common agent recipes; and pitfalls to avoid (don't shell out
+  to sqlite3, don't write the DB file, etc.).
+- All documented recipes smoke-tested against the live CLI; the
+  `export → cat path` flow was clarified after testing showed the
+  command emits metadata, not the dump itself.
+- README's "For AI agents" section now points at AGENTS.md.
+- **Tests:** 307 passing (doc-only iteration, no test changes).
+
+---
+
 ### Iteration 28 — `clibo import` · 2026-05-23
 
 Another post-v1.0 polish: a seventh cross-tool command, the counterpart

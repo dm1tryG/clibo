@@ -256,6 +256,10 @@ Each tool also ships a **micro-skill** in [`skills/`](skills/) — a short
 `SKILL.md` describing exactly what the tool does and how to call it, ready to
 drop into an agent's skill set.
 
+[**`AGENTS.md`**](AGENTS.md) is the one-page guide for agents: the contract,
+the integrating commands (`today` / `search` / `export` / `doctor`), and
+copy-paste recipes for the most common things you'll want to do.
+
 ## Tech
 
 Python · [Typer](https://typer.tiangolo.com/) · [SQLModel](https://sqlmodel.tiangolo.com/) · [Rich](https://rich.readthedocs.io/). One SQLite database. Zero external services.
