@@ -52,6 +52,7 @@ curl -fsSL https://raw.githubusercontent.com/dm1tryG/clibo/main/install.sh | bas
 Then:
 
 ```bash
+clibo init --currency USD --calorie-goal 2000 --water-goal-ml 2500  # one-shot onboarding
 clibo --help          # the full menu
 clibo today           # a dashboard of everything actionable today
 clibo info            # what's built, what's coming
@@ -141,6 +142,7 @@ A handful of root commands tie all 50 tools together:
 
 | Command | What it does |
 |---|---|
+| `clibo init` | Set common defaults in one call — currency, height (for BMI), calorie/water/focus/sleep/meditation goals. |
 | `clibo today` | A one-screen dashboard pulling from every tool — tasks, habits, meals, events, bills, water/calorie/focus progress, plants & chores due, today's birthdays. |
 | `clibo backup [PATH]` | Copy the local SQLite database to a timestamped `.db` backup (default: `~/.clibo/backups/`). |
 | `clibo restore PATH` | Replace the live database with a backup. |

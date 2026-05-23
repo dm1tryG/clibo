@@ -4,6 +4,24 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 32 — `clibo init` · 2026-05-23
+
+Onboarding command — turns six per-tool `goal --set` calls into one.
+
+- 🚀 `clibo init` accepts `--currency`, `--height-cm`, `--calorie-goal`,
+  `--water-goal-ml`, `--focus-goal-min`, `--sleep-goal-hours` and
+  `--meditate-goal-min`. With no flags it just prints the current
+  defaults — handy as `clibo init --json` for an agent to read the
+  user's profile at once.
+- Sets the shared `money/currency` and writes per-tool goal settings
+  that the individual `goal` commands already read from.
+- Mismatch validation (negative numbers, blank currency) fails fast.
+- README's Cross-tool commands table now leads with `clibo init`;
+  install section suggests one-shot onboarding.
+- **Tests:** 313 passing (+6).
+
+---
+
 ### Iteration 31 — Automated release workflow · 2026-05-23
 
 Future releases are now one command. `v1.0.0` was built and uploaded

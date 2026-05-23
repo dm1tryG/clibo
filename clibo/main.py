@@ -21,6 +21,7 @@ from clibo.catalog import CATALOG, CATEGORIES
 from clibo.core import config
 from clibo.core.db import init_db
 from clibo.core.output import JsonOpt, _emit_json, console, fail, ok
+from clibo.core.settings import get_setting, set_setting
 from clibo.dashboard import render_today
 from clibo.search import search_all
 
@@ -249,6 +250,76 @@ def doctor(json_out: JsonOpt = False) -> None:
             for name, count in top:
                 table.add_row(name, str(count))
             console.print(table)
+    console.print()
+
+
+#: ``cli flag → (settings scope, settings key, validator, label)`` for ``clibo init``.
+_INIT_SETTINGS = {
+    "currency": ("money", "currency", lambda v: bool(v), "Currency"),
+    "height_cm": ("weight", "height_cm", lambda v: v > 0, "Height cm"),
+    "calorie_goal": ("calorie", "daily_kcal", lambda v: v > 0, "Calorie goal (kcal/day)"),
+    "water_goal_ml": ("water", "daily_ml", lambda v: v > 0, "Water goal (ml/day)"),
+    "focus_goal_min": ("focus", "daily_min", lambda v: v > 0, "Focus goal (min/day)"),
+    "sleep_goal_hours": ("sleep", "goal_hours", lambda v: v > 0, "Sleep goal (hours/night)"),
+    "meditate_goal_min": ("meditate", "daily_min", lambda v: v > 0, "Meditation goal (min/day)"),
+}
+
+
+@app.command(name="init")
+def init_cmd(
+    currency: str = typer.Option(None, "--currency", "-c", help="Money currency code, e.g. USD/EUR"),
+    height_cm: float = typer.Option(None, "--height-cm", help="Body height in cm (enables BMI)"),
+    calorie_goal: int = typer.Option(None, "--calorie-goal", help="Daily calorie target"),
+    water_goal_ml: int = typer.Option(None, "--water-goal-ml", help="Daily water target (ml)"),
+    focus_goal_min: int = typer.Option(None, "--focus-goal-min", help="Daily focus target (min)"),
+    sleep_goal_hours: float = typer.Option(None, "--sleep-goal-hours", help="Nightly sleep target (hours)"),
+    meditate_goal_min: int = typer.Option(None, "--meditate-goal-min", help="Daily meditation target (min)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🚀 Set common goals in one command — currency, height, daily targets."""
+    values = {
+        "currency": currency.upper() if currency is not None else None,
+        "height_cm": height_cm,
+        "calorie_goal": calorie_goal,
+        "water_goal_ml": water_goal_ml,
+        "focus_goal_min": focus_goal_min,
+        "sleep_goal_hours": sleep_goal_hours,
+        "meditate_goal_min": meditate_goal_min,
+    }
+    updated: dict[str, object] = {}
+    for flag, value in values.items():
+        if value is None:
+            continue
+        scope, key, valid, label = _INIT_SETTINGS[flag]
+        if not valid(value):
+            fail(f"{label} must be positive", json_out=json_out)
+        set_setting(scope, key, str(value))
+        updated[flag] = value
+    current = {
+        flag: get_setting(scope, key)
+        for flag, (scope, key, _, _) in _INIT_SETTINGS.items()
+    }
+    if json_out:
+        _emit_json({"updated": updated, "current": current})
+        return
+    if updated:
+        console.print(f"\n[green]✓[/green] Updated [bold]{len(updated)}[/bold] setting(s)\n")
+    else:
+        console.print("\n  [dim]No flags given — showing current defaults.[/dim]\n")
+    table = Table(
+        box=ROUNDED, header_style="bold cyan",
+        title="🚀 clibo defaults", title_style="bold magenta",
+        title_justify="left", pad_edge=False,
+    )
+    table.add_column("Setting", style="bold")
+    table.add_column("Value")
+    for flag, (_, _, _, label) in _INIT_SETTINGS.items():
+        value = current[flag]
+        cell = "[dim]—[/dim]" if value is None else str(value)
+        if flag in updated:
+            cell = f"[green]{cell}[/green]"
+        table.add_row(label, cell)
+    console.print(table)
     console.print()
 
 
