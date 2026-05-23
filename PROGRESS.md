@@ -4,6 +4,34 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 49 — `clibo dashboard` (configurable widgets) · 2026-05-23
+
+User request: customizable dashboard distinct from the fixed `clibo today`.
+
+- 🎛️ **New tool `dashboard` (60th)** — pick which widgets show, save
+  the selection, render. Sub-commands: `add NAME` / `remove NAME` /
+  `list` (every widget with active state) / `reset` / `clear`. The
+  base `clibo dashboard` command (no sub-command) renders the saved
+  widget set.
+- 🧩 New `clibo/widgets.py` registry — **18 widgets** so far: tasks,
+  habits, water, calories, focus, sleep, mood, events, bills,
+  followups, plants, chores, birthdays, mileage, gratitude, weight,
+  expense, income. Each is a small function returning
+  `{title, lines, data}` so adding a 19th widget is one entry.
+- ⚙️ Widget selection stored in shared settings (`dashboard.widgets`)
+  so it survives across calls; defaults to a sensible 6-widget set.
+- 🧪 Renamed the old `tests/test_dashboard.py` → `test_today.py`
+  (it had always been testing `clibo today`, never the new
+  dashboard command).
+- 📄 `docs/SCHEMA.md` regenerated (72 tables, no new tables — the
+  widget config rides in the shared `clibo_setting` KV store).
+- 🎤 Demo: `clibo dashboard` shows tasks/habits/water/calories/focus/
+  events out of the box; `clibo dashboard add sleep mileage` extends
+  it to 8 widgets next call.
+- **Tests:** 408 passing (+7); ruff clean.
+
+---
+
 ### Iteration 48 — `lessons` (structured takeaways) · 2026-05-23
 
 Self-test pass: "Lesson: retry logic should always have max-attempts"

@@ -86,6 +86,7 @@ CATALOG: list[Tool] = [
     Tool("quotes", "💬", "Hobbies & Culture", "A commonplace book of quotes worth keeping"),
     Tool("flashcards", "🃏", "Hobbies & Culture", "Spaced-repetition flashcards (Leitner-style)"),
     Tool("lessons", "📓", "Hobbies & Culture", "Lessons learned — context + takeaway"),
+    Tool("dashboard", "🎛️", "Hobbies & Culture", "Customizable widget dashboard"),
 ]
 
 CATEGORIES: list[str] = list(dict.fromkeys(t.category for t in CATALOG))

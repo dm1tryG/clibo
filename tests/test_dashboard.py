@@ -1,58 +1,56 @@
-"""Tests for ``clibo today`` and the dashboard collector."""
+"""Tests for ``clibo dashboard`` — customizable widget dashboard."""
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+
+def test_default_widgets(cli):
+    data = cli.json("dashboard")
+    names = {w["name"] for w in data["widgets"]}
+    # The default set includes at least these three.
+    assert {"tasks", "habits", "water"} <= names
 
 
-def test_today_empty_state(cli):
-    data = cli.json("today")
-    assert data["tasks"]["pending"] == 0
-    assert data["habits"]["total"] == 0
-    assert data["events"] == []
-    assert data["bills"] == []
-
-
-def test_today_aggregates_tasks(cli):
-    past = (date.today() - timedelta(days=2)).isoformat()
-    cli.run("todo", "add", "Overdue thing", "-d", past, "-p", "high")
-    cli.run("todo", "add", "Today thing", "-d", "today")
-    data = cli.json("today")
-    assert data["tasks"]["pending"] == 2
-    assert len(data["tasks"]["overdue"]) == 1
-    assert data["tasks"]["overdue"][0]["title"] == "Overdue thing"
-    assert len(data["tasks"]["due_today"]) == 1
-
-
-def test_today_includes_water_and_habits(cli):
+def test_widget_data_populates(cli):
+    cli.run("todo", "add", "Ship it", "-p", "high", "-d", "today")
     cli.run("water", "drink", "500")
-    cli.run("habit", "add", "Read")
-    cli.run("habit", "check", "Read")
-    data = cli.json("today")
-    assert data["water"]["total_ml"] == 500
-    assert data["habits"]["total"] == 1
-    assert data["habits"]["done_today"] == 1
+    data = cli.json("dashboard")
+    by = {w["name"]: w for w in data["widgets"]}
+    assert by["tasks"]["data"]["pending"] == 1
+    assert by["water"]["data"]["total_ml"] == 500
 
 
-def test_today_bills_and_followups(cli):
-    past = (date.today() - timedelta(days=1)).isoformat()
-    cli.run("bills", "add", "Internet", "-d", past, "-a", "40")
-    cli.run("followup", "add", "Anna", "-d", past)
-    data = cli.json("today")
-    assert any(b["overdue"] for b in data["bills"])
-    assert any(f["overdue"] for f in data["followups"])
+def test_add_remove_widget(cli):
+    cli.run("dashboard", "add", "sleep")
+    after_add = cli.json("dashboard")
+    assert any(w["name"] == "sleep" for w in after_add["widgets"])
+    cli.run("dashboard", "remove", "sleep")
+    after_remove = cli.json("dashboard")
+    assert not any(w["name"] == "sleep" for w in after_remove["widgets"])
 
 
-def test_today_birthdays(cli):
-    today = date.today()
-    cli.run("birthdays", "add", "Mom", "-d", f"{today.month:02d}-{today.day:02d}")
-    data = cli.json("today")
-    assert any(b["person"] == "Mom" for b in data["birthdays"])
+def test_add_unknown_widget_fails(cli):
+    result = cli.run("dashboard", "add", "nonsense")
+    assert result.exit_code != 0
 
 
-def test_today_plants_and_chores(cli):
-    cli.run("plants", "add", "Basil", "-w", "1")
-    cli.run("chores", "add", "Dishes", "-e", "1")
-    data = cli.json("today")
-    assert any(p["name"] == "Basil" for p in data["plants_thirsty"])
-    assert any(c["name"] == "Dishes" for c in data["chores_due"])
+def test_remove_not_active_fails(cli):
+    # `mileage` is registered but not in the default set.
+    result = cli.run("dashboard", "remove", "mileage")
+    assert result.exit_code != 0
+
+
+def test_clear_and_reset(cli):
+    cli.run("dashboard", "clear")
+    cleared = cli.json("dashboard")
+    assert cleared["widgets"] == []
+    cli.run("dashboard", "reset")
+    reset_data = cli.json("dashboard")
+    names = {w["name"] for w in reset_data["widgets"]}
+    assert "tasks" in names
+
+
+def test_list_marks_active(cli):
+    rows = cli.json("dashboard", "list")
+    by = {r["name"]: r for r in rows}
+    assert by["tasks"]["active"] is True
+    assert by["sleep"]["active"] is False

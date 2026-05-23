@@ -16,6 +16,7 @@ from clibo.clis import (
     chores,
     clients,
     crm,
+    dashboard,
     debt,
     events,
     expense,
@@ -128,4 +129,5 @@ ALL = [
     quotes,
     flashcards,
     lessons,
+    dashboard,
 ]

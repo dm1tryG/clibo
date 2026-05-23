@@ -254,6 +254,7 @@ sub-command and every flag.
 | ✅ | `quotes` 💬 | A commonplace book of quotes worth keeping |
 | ✅ | `flashcards` 🃏 | Spaced-repetition flashcards (Leitner-style) |
 | ✅ | `lessons` 📓 | Lessons learned — context + takeaway |
+| ✅ | `dashboard` 🎛️ | Customizable widget dashboard |
 
 ## For AI agents
 
