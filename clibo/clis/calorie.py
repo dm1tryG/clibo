@@ -110,6 +110,10 @@ def log(
     ok(f"Logged {EMOJI} {food} — {kcal} kcal ({meal})", json_out=json_out, data=data)
 
 
+# `add` is a friendlier alias for `log` (predictable verbs across tools).
+app.command(name="add", help="Alias for `log`")(log)
+
+
 @app.command()
 def today(json_out: JsonOpt = False) -> None:
     """🍎 Show today's food log with calorie & macro totals."""

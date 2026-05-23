@@ -142,6 +142,10 @@ def log(
        json_out=json_out, data=data)
 
 
+# `add` is a friendlier alias for `log` (predictable verbs across tools).
+app.command(name="add", help="Alias for `log`")(log)
+
+
 @app.command(name="list")
 def list_entries(
     limit: int = typer.Option(12, "--limit", help="How many recent periods to show"),

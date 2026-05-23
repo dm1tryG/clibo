@@ -89,6 +89,10 @@ def log(
     )
 
 
+# `add` is a friendlier alias for `log` (predictable verbs across tools).
+app.command(name="add", help="Alias for `log`")(log)
+
+
 @app.command()
 def last(json_out: JsonOpt = False) -> None:
     """😴 Show your most recent night of sleep."""

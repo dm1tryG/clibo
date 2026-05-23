@@ -85,6 +85,10 @@ def log(
     ok(f"Logged {EMOJI} {minutes} min focus{label}", json_out=json_out, data=data)
 
 
+# `add` is a friendlier alias for `log` (predictable verbs across tools).
+app.command(name="add", help="Alias for `log`")(log)
+
+
 @app.command()
 def timer(
     minutes: int = typer.Option(DEFAULT_POMODORO, "--minutes", "-m", help="Pomodoro length"),

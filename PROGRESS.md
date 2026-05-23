@@ -4,6 +4,39 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 53 — polish: `add` is now a universal alias for `log` · 2026-05-23
+
+Agent-mode self-test: a user saying "I felt anxious today" or "I weigh
+78kg" wants `clibo mood add ...` / `clibo weight add ...` — but those
+tools (and 8 more) only exposed `log`, breaking the predictable-verb
+promise the README makes ("`add`, `list`, `show`, `edit`, `rm`,
+`stats`").
+
+```
+$ clibo mood add 4 -e calm    → No such command 'add'.
+$ clibo weight add 78         → No such command 'add'.
+```
+
+- 🪄 **One-line `app.command(name="add")(log)` alias** added to ten
+  time-stamped tools: `mood`, `weight`, `sleep`, `calorie`, `focus`,
+  `meditate`, `mileage`, `period`, `time`, `workout`. `log` still
+  works (it's the semantically right primary verb for these); `add`
+  is the friendly one agents reach for.
+- 🛑 **NOT aliased**: `clients` and `pets` — both already have an
+  `add` command meaning "add a new entity" (a client, a pet), which is
+  the right meaning for those nouns. Their `log` (touchpoint /
+  vet-visit) stays separate.
+- 🧪 New file `tests/test_add_alias.py` — parametrized test covering
+  all 10 aliased tools, plus two behavioural tests confirming
+  `mood add` and `weight add` actually persist a row.
+- 🎤 NL flow re-verified end-to-end:
+  • "I felt anxious today" → `mood add 2 -e anxious` ✓
+  • "I weigh 78kg" → `weight add 78` ✓
+  • "I slept 7.5 hours" → `sleep add 7.5` ✓
+- **Tests:** 431 passing (+12); ruff clean.
+
+---
+
 ### Iteration 52 — polish: search / tags now index the beyond-50 tools · 2026-05-23
 
 Agent-mode smoke test exposed a silent regression: every tool added

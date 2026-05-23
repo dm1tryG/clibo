@@ -75,6 +75,10 @@ def log(
         ok(f"Logged {EMOJI} {weight_kg:g}kg", json_out=json_out, data=data)
 
 
+# `add` is a friendlier alias for `log` (predictable verbs across tools).
+app.command(name="add", help="Alias for `log`")(log)
+
+
 @app.command(name="list")
 def list_entries(
     days: int = typer.Option(30, "--days", help="Look back this many days"),
