@@ -4,6 +4,63 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 87 — `films` gains episode progress + show/edit · 2026-05-24
+
+Agent-mode self-test on "Watching Better Call Saul S6E5" surfaced
+that `films` had **no progress tracking** for TV shows — a row was
+either `watching` or `watched`, with no way to record *where* you
+were. The film tool also still had integer-only `rm` (carryover
+from before the name-resolution rollout) and no `show` or `edit`.
+
+- 📺 **Two new columns** on `Film`: nullable `season` and
+  `episode`, added via the existing `_add_missing_columns` ALTER
+  TABLE migration so existing v1.9.0 DBs upgrade transparently.
+- 📺 **`films add … -S N -E N`** — record a show's current pointer
+  at creation time. If you set either, status auto-bumps from
+  `watchlist` to `watching` (if you're tracking progress, you're
+  watching it).
+- 📺 **New `films progress FILM`** — three modes:
+  • `-S 6 -E 5` sets the pointer absolutely
+  • `-E 5` keeps season, sets episode (typical "next episode")
+  • `--bump` increments episode by 1 (no flags needed — fastest)
+- 📺 **`progress` rejects movies** — `progress Dune -S 1 -E 1`
+  fails with "Dune is a movie, not a show". Surfacing the kind
+  mismatch up-front is friendlier than silently corrupting a
+  movie row.
+- 🎬 **New `films show <title>`** — print one film/show with the
+  S/E pointer rendered as `S06E10`.
+- 🎬 **New `films edit`** — change title, kind, year, status,
+  rating, season, episode, note in place. Setting status to
+  `watched` stamps `watched_on` automatically.
+- 🎬 **`films rm`** — now accepts title (fuzzy) or ID, not just
+  ID. Last carry-over from before the name-resolve rollouts.
+- 🎬 **`_resolve` prefers exact over substring** — so
+  `films show "Dune"` finds *Dune* and not *Dune: Part Two*.
+- 🎬 **List view** — new `Progress` column shows `S06E05` etc.
+- 🎤 NL flow verified end-to-end:
+  • `films add "Better Call Saul" -k show -S 6 -E 5` → status
+    auto-`watching`, progress `S06E05` ✓
+  • `films progress "Better Call Saul" --bump` → `S06E06` ✓
+  • `films progress "Better Call Saul" -S 6 -E 10` → `S06E10` ✓
+  • `films show "Better Call Saul"` → renders the pointer ✓
+  • `films progress Dune -S 1 -E 1` → fails (movie) ✓
+- 🧪 **14 new tests**: progress add/set/bump/episode-only/no-args/
+  zero-reject/movie-reject; show; edit (title rename + status to
+  watched sets date); rm by title; exact-match wins resolver.
+- 📚 **SKILL.md** rewritten with a "Natural language → command"
+  table covering the 8 most common film/TV phrasings, including
+  the three progress modes.
+- 📚 **docs/SCHEMA.md** — regenerated; `season` and `episode`
+  columns now documented on `films_film`.
+- **Tests:** 831 passing (+14); ruff clean.
+
+The films tool now fits the modern watchlist mental model
+(Trakt / Letterboxd-style "where am I in this show?") in one
+extra column and three subcommands, without bloating into a
+per-episode log.
+
+---
+
 ### Iteration 86 — `split owe` / `split lent`: direct IOU verbs · 2026-05-24
 
 Agent-mode self-test surfaced a real friction on `split`: when the

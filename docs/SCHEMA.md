@@ -1026,6 +1026,8 @@ _86 tables in total._
 | `status` | `VARCHAR` | NOT NULL, default |
 | `rating` | `INTEGER` | — |
 | `watched_on` | `DATE` | — |
+| `season` | `INTEGER` | — |
+| `episode` | `INTEGER` | — |
 | `note` | `VARCHAR` | — |
 | `created_at` | `DATETIME` | NOT NULL, default |
 
