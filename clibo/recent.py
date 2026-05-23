@@ -141,6 +141,9 @@ SOURCES: list[tuple[str, str, str, list[str], Callable[[sqlite3.Row], str]]] = [
      lambda r: f"grateful for: {r['text']}"),
     ("ideas", "💡", "ideas_idea", ["title", "status"],
      lambda r: f"[{r['status']}] {r['title']}"),
+    ("quotes", "💬", "quotes_quote", ["text", "author"],
+     lambda r: f"\"{r['text'][:60]}{'…' if len(r['text']) > 60 else ''}\""
+                + (f" — {r['author']}" if r["author"] else "")),
 ]
 
 

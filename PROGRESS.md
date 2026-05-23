@@ -4,6 +4,31 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 46 — `quotes` (commonplace book) · 2026-05-23
+
+Self-test surfaced three new gaps (quotes, lessons, flashcards); closing
+the most ergonomic — quotes is a classic ask and structurally distinct
+from `notes` (no structure) and `bookmark` (URLs).
+
+- 💬 **New tool `quotes` (57th)** — a personal commonplace book with
+  structured `text / author / source / tags`.
+- Commands: `add` / `list -a AUTHOR -t TAG` / `show ID` (pretty italic
+  block with attribution) / `search` (across all four fields) /
+  `random` (inspiration pick, like `recipes random`) / `rm` / `stats`
+  (top authors).
+- 📜 `recent` picks up quotes with text snippet + author.
+- 📄 `docs/SCHEMA.md` regenerated (70 tables).
+- 🐛 **Fixed test regression** in `test_dump_schema.py` — assertion
+  `"0 tables in total" not in text` was a substring trap ("70 tables"
+  contains "0 tables"). Tightened to the exact italic empty-state
+  phrase.
+- 🎤 NL mappings:
+  • "Quote: 'X' — Kent Beck" → `quotes add "X" -a "Kent Beck"`
+  • "Give me a quote"        → `quotes random`
+- **Tests:** 387 passing (+7); ruff clean.
+
+---
+
 ### Iteration 45 — `ideas` with lifecycle · 2026-05-23
 
 Self-test: "Idea: build a marketplace" only fit via `notes add` — but

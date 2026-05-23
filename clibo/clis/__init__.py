@@ -47,6 +47,7 @@ from clibo.clis import (
     period,
     pets,
     plants,
+    quotes,
     recipes,
     savings,
     sleep,
@@ -122,4 +123,5 @@ ALL = [
     gratitude,
     income,
     ideas,
+    quotes,
 ]

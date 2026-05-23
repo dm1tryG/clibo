@@ -251,6 +251,7 @@ sub-command and every flag.
 | ✅ | `films` 🎬 | Movie & show watchlist with ratings |
 | ✅ | `mileage` 🏃 | Running, cycling, walking distance log |
 | ✅ | `gratitude` 🙏 | Daily gratitude practice with streaks |
+| ✅ | `quotes` 💬 | A commonplace book of quotes worth keeping |
 
 ## For AI agents
 

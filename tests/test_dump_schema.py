@@ -30,5 +30,5 @@ def test_dump_schema_runs(tmp_path, monkeypatch):
     for table in ("clibo_setting", "calorie_entry", "expense_entry",
                   "todo_task", "crm_contact", "groceries_item"):
         assert f"`{table}`" in text
-    # The header should reflect the actual table count, not zero.
-    assert "0 tables in total" not in text
+    # The header should reflect a real, non-zero table count.
+    assert "_0 tables in total._" not in text
