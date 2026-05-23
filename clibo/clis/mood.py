@@ -212,6 +212,12 @@ def stats(
         if entry.emotion:
             emotions[entry.emotion] = emotions.get(entry.emotion, 0) + 1
     top = sorted(emotions.items(), key=lambda kv: kv[1], reverse=True)[:3]
+    # Daily-average sparkline (so multiple check-ins on one day average together).
+    from clibo.core.sparkline import sparkline_days
+    daily_sum: dict[date, list[int]] = {}
+    for entry in entries:
+        daily_sum.setdefault(entry.entry_date, []).append(entry.score)
+    daily_avg = {d: sum(v) / len(v) for d, v in daily_sum.items()}
     data = {
         "window_days": days,
         "checkins": len(entries),
@@ -221,5 +227,6 @@ def stats(
         "worst_score": min(scores),
         "distribution": distribution,
         "top_emotions": [{"emotion": name, "count": count} for name, count in top],
+        "chart": sparkline_days(daily_avg, since, date.today()),
     }
     render_record(data, json_out=json_out, title=f"📊 Mood stats · last {days}d")

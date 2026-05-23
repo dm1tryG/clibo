@@ -222,9 +222,11 @@ def stats(
         entries = list(db.exec(select(SleepLog).where(SleepLog.entry_date >= since)).all())
     if not entries:
         fail("No sleep logged in this window", json_out=json_out)
+    from clibo.core.sparkline import sparkline_days
     hours = [e.hours for e in entries]
     quality = [e.quality for e in entries]
     goal = _goal()
+    by_date = {e.entry_date: e.hours for e in entries}
     data = {
         "window_days": days,
         "nights_logged": len(entries),
@@ -234,5 +236,6 @@ def stats(
         "avg_quality": round(sum(quality) / len(quality), 1),
         "nights_goal_reached": sum(1 for h in hours if h >= goal),
         "goal_hours": goal,
+        "chart": sparkline_days(by_date, since, date.today()),
     }
     render_record(data, json_out=json_out, title=f"📊 Sleep stats · last {days}d")

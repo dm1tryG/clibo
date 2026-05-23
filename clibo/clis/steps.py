@@ -353,6 +353,7 @@ def stats(
         else:
             current = 0
             prev_day = None
+    from clibo.core.sparkline import sparkline_days
     data = {
         "window_days": days,
         "days_logged": days_logged,
@@ -365,5 +366,8 @@ def stats(
         "best_day": {"date": best_day, "count": best_count},
         "current_streak": _streak(totals, goal),
         "longest_streak": longest,
+        "chart": sparkline_days(
+            {d: float(n) for d, n in totals.items()}, since, date.today()
+        ),
     }
     render_record(data, json_out=json_out, title=f"📊 Steps · last {days}d")

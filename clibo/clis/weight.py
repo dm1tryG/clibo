@@ -183,6 +183,7 @@ def stats(
         )
     if not entries:
         fail("No measurements in this window", json_out=json_out)
+    from clibo.core.sparkline import sparkline
     weights = [e.weight_kg for e in entries]
     first, last = weights[0], weights[-1]
     change = round(last - first, 1)
@@ -196,6 +197,7 @@ def stats(
         "avg_kg": round(sum(weights) / len(weights), 1),
         "change_kg": change,
         "trend": trend,
+        "chart": sparkline(weights),
     }
     height_cm = get_setting(NAME, "height_cm")
     if height_cm:

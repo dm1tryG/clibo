@@ -426,6 +426,7 @@ def stats(
     days_logged = len(per_day)
     over_limit_days = sum(1 for mg in per_day.values() if mg > limit)
     biggest_day, biggest_mg = max(per_day.items(), key=lambda kv: kv[1])
+    from clibo.core.sparkline import sparkline_days
     data = {
         "window_days": days,
         "entries": len(entries),
@@ -436,6 +437,9 @@ def stats(
         "over_limit_days": over_limit_days,
         "biggest_day": {"date": biggest_day, "mg": biggest_mg},
         "by_drink_count": dict(drinks),
+        "chart": sparkline_days(
+            {d: float(v) for d, v in per_day.items()}, since, date.today()
+        ),
     }
     render_record(data, json_out=json_out,
                   title=f"📊 Caffeine · last {days}d")

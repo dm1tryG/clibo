@@ -241,6 +241,12 @@ def stats(
     for entry in entries:
         by_cat[entry.category] = round(by_cat.get(entry.category, 0) + entry.amount, 2)
     top = sorted(by_cat.items(), key=lambda kv: kv[1], reverse=True)[:5]
+    from clibo.core.sparkline import sparkline_days
+    by_day: dict[date, float] = {}
+    for entry in entries:
+        by_day[entry.entry_date] = round(
+            by_day.get(entry.entry_date, 0) + entry.amount, 2
+        )
     data = {
         "window_days": days,
         "expenses": len(entries),
@@ -249,5 +255,6 @@ def stats(
         "biggest": max(e.amount for e in entries),
         "top_categories": [{"category": c, "amount": a} for c, a in top],
         "currency": get_currency(),
+        "chart": sparkline_days(by_day, since, date.today()),
     }
     render_record(data, json_out=json_out, title=f"📊 Expense stats · last {days}d")

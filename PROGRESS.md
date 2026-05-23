@@ -4,6 +4,38 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 76 — ASCII sparklines in six `stats` commands · 2026-05-23
+
+Agent-mode self-test: "I want to plot my weight over time" — the
+`stats` views show numbers, no visual trend. A tiny inline sparkline
+(`█▇▅▄▂▁`) gives a glance-able shape without any external plotting
+library or leaving the terminal.
+
+- 🆕 **`clibo/core/sparkline.py`** — two pure helpers:
+  • `sparkline(values)` — flat sequence → block-character line.
+    Constant series renders mid-level; `None` entries become `·`.
+  • `sparkline_days(by_date, start, end)` — daily-metric variant
+    that gap-fills missing days as `·` so time progression stays
+    honest.
+- ✨ **Wired into 6 stats commands** as a `chart` field:
+  • `weight stats` — last N weighing measurements
+  • `sleep stats` — daily hours
+  • `steps stats` — daily totals
+  • `mood stats` — daily average score
+  • `caffeine stats` — daily mg
+  • `expense stats` — daily spending
+- 🎨 Uses Unicode block-element chars `▁▂▃▄▅▆▇█` for 8 brightness
+  levels — enough resolution to see direction at a glance.
+- 🧪 13 new tests: 7 unit tests for the helper (empty input,
+  constant series, monotonic rise, None-gap handling, day-range
+  gap-fill) + 6 integration tests confirming each stats command
+  now exposes a `chart` field in its JSON output.
+- 🎤 Visual smoke confirms the killer view — `clibo weight stats`
+  now shows `Chart  █▇▅▄▂▁` (declining over 6 days).
+- **Tests:** 711 passing (+13); ruff clean.
+
+---
+
 ### Iteration 75 — `clibo compare` (week-over-week) + info header fix + v1.6.0 to PyPI · 2026-05-23
 
 Agent-mode self-test: "Show me this week vs last week" — no matching
