@@ -4,6 +4,47 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### 🏷️ Iteration 92 — v1.10.0 release · 2026-05-24
+
+Seven iterations stacked since v1.9.0 (iters 85-91) including a
+new tool (`writing`) and substantial per-session tracking on
+`books`, `films`, and `workout`. Cut a minor release.
+
+- 🆙 **`pyproject.toml`** `1.9.0 → 1.10.0`. Description rewritten
+  to feature the headline additions: word-count writer, episode
+  tracker, bench-press PRs, IOU shortcuts.
+- 🆙 **`clibo/__init__.py`** `__version__ = "1.10.0"`. Docstring
+  shifted from "73+" to plain "73" since we're stable on that
+  count for now.
+- 📦 **Build** — `uv build` produced `dist/clibo-1.10.0.tar.gz`
+  (375.3 kB) and `dist/clibo-1.10.0-py3-none-any.whl` (295.8 kB).
+- ✅ **`twine check`** — both PASSED.
+- 🚀 **`twine upload`** — pushed to PyPI:
+  https://pypi.org/project/clibo/1.10.0/
+- 🧪 **End-to-end verified from PyPI** after index sync:
+  • `pip install clibo==1.10.0` from `/tmp/v1100` venv ✓
+  • `clibo --version` → `clibo 1.10.0` ✓
+  • `writing log novel -w 1200 -t 45` → wpm=26.7, streak=1 ✓
+  • `books read "Atomic Habits" 30 -t 45` → 40 pages/hour ✓
+  • `films add "Better Call Saul" -k show -S 6 -E 5` → S06E05 ✓
+  • `workout pr` → heaviest=90kg ✓
+  • `split owe Anna 50` → IOU stored as 1-participant split ✓
+- 🏷️ **Git tag `v1.10.0`** pushed to GitHub.
+- 🚀 **GitHub release** created with a detailed changelog:
+  https://github.com/dm1tryG/clibo/releases/tag/v1.10.0
+- 📊 Release scoreboard:
+  • 887 tests passing (+80 vs v1.9.0's 770)
+  • 73 tools (+1 — `writing`)
+  • 88 SQLite tables (+2 — `writing_session`, `books_session`)
+
+This is the **per-session tracking** release. Three media logs
+(`books`, `films`, `workout`) now all answer "what did I do this
+week and how fast?" with a consistent shape. The 73rd tool
+(`writing`) is in the same family, completing the read/watch/
+write/lift quartet.
+
+---
+
 ### Iteration 91 — `books` gains per-session tracking · 2026-05-24
 
 Agent-mode self-test on "Read 30 pages of Atomic Habits in 45
