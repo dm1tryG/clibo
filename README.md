@@ -268,6 +268,10 @@ copy-paste recipes for the most common things you'll want to do.
 [**`examples/`**](examples/) has working scripts that build on the contract:
 a daily-brief renderer (Python + Bash) and a `search`-then-act agent pattern.
 
+[**`docs/PHILOSOPHY.md`**](docs/PHILOSOPHY.md) explains the seven design
+trade-offs every clibo tool is built on — read this before suggesting bigger
+changes.
+
 ## Tech
 
 Python · [Typer](https://typer.tiangolo.com/) · [SQLModel](https://sqlmodel.tiangolo.com/) · [Rich](https://rich.readthedocs.io/). One SQLite database. Zero external services.

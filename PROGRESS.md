@@ -4,6 +4,27 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 40 — `docs/PHILOSOPHY.md` + CHANGELOG catch-up · 2026-05-23
+
+Two pieces of honest documentation upkeep.
+
+- 🎯 `docs/PHILOSOPHY.md` — the seven design trade-offs every clibo
+  tool is built on, articulated for the first time: local-first, the
+  `--json` contract as the API, 50 tools rather than a library,
+  predictable verbs, forgiving dates, beautiful output as part of
+  correctness, and the pragmatic test bar. Each gives the *why* and
+  the trade-off we accepted.
+- 📝 `CHANGELOG.md` `[Unreleased]` section rewritten to match what's
+  actually on `main` since v1.0.0: six new cross-tool commands
+  (init/week/recent/tags/doctor/import), four new docs (AGENTS,
+  PHILOSOPHY, SCHEMA, examples/), CONTRIBUTING/templates, automated
+  release workflow, ruff in CI. 332 tests vs 299 at v1.0.0.
+- 🔗 README and CONTRIBUTING link to `PHILOSOPHY.md` so it shows up
+  before contributors propose big changes.
+- **Tests:** 332 passing; ruff clean.
+
+---
+
 ### Iteration 39 — Ruff lint config + CI step · 2026-05-23
 
 Maintenance: 50 cli modules can drift in style fast without a linter.

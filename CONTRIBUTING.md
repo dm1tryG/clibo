@@ -21,6 +21,8 @@ The full developer guide for adding a new clibo tool lives at
 [`clibo/clis/calorie.py`](clibo/clis/calorie.py) is the canonical reference.
 [`docs/SCHEMA.md`](docs/SCHEMA.md) lists every existing table; regenerate it
 with `python scripts/dump_schema.py` after adding a new model.
+[`docs/PHILOSOPHY.md`](docs/PHILOSOPHY.md) explains the design trade-offs every
+tool is built on — please read it before proposing structural changes.
 
 ## What a "done" tool looks like
 
