@@ -67,3 +67,20 @@ def test_jobs_rm_by_company_name(cli):
     cli.run("jobs", "rm", "Stripe")
     listing = cli.json("jobs", "list")
     assert not any(j["company"] == "Stripe" for j in listing)
+
+
+
+# ── bare-command default (iter 110) ──
+
+
+def test_bare_jobs_runs_pipeline(cli):
+    """`clibo jobs` (no subcommand) runs `pipeline`."""
+    result = cli.run("jobs")
+    assert result.exit_code == 0
+
+
+def test_jobs_help_still_works(cli):
+    """`clibo jobs --help` still shows the menu after the bare change."""
+    result = cli.run("jobs", "--help")
+    assert result.exit_code == 0
+    assert "pipeline" in result.stdout

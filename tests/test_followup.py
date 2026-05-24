@@ -83,3 +83,20 @@ def test_followup_rm_by_name(cli):
     cli.run("followup", "rm", "Bob")
     listing = cli.json("followup", "list", "--all")
     assert not any(f["person"] == "Bob" for f in listing)
+
+
+
+# ── bare-command default (iter 110) ──
+
+
+def test_bare_followup_runs_due(cli):
+    """`clibo followup` (no subcommand) runs `due`."""
+    result = cli.run("followup")
+    assert result.exit_code == 0
+
+
+def test_followup_help_still_works(cli):
+    """`clibo followup --help` still shows the menu after the bare change."""
+    result = cli.run("followup", "--help")
+    assert result.exit_code == 0
+    assert "due" in result.stdout

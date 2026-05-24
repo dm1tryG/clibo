@@ -71,3 +71,20 @@ def test_birthdays_rm_by_person(cli):
     cli.run("birthdays", "rm", "Dad")
     listing = cli.json("birthdays", "list")
     assert not any(o["person"] == "Dad" for o in listing)
+
+
+
+# ── bare-command default (iter 110) ──
+
+
+def test_bare_birthdays_runs_upcoming(cli):
+    """`clibo birthdays` (no subcommand) runs `upcoming`."""
+    result = cli.run("birthdays")
+    assert result.exit_code == 0
+
+
+def test_birthdays_help_still_works(cli):
+    """`clibo birthdays --help` still shows the menu after the bare change."""
+    result = cli.run("birthdays", "--help")
+    assert result.exit_code == 0
+    assert "upcoming" in result.stdout

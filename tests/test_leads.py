@@ -55,3 +55,20 @@ def test_leads_move_by_name(cli):
     cli.run("leads", "move", "BigCorp", "won")
     data = cli.json("leads", "show", "BigCorp")
     assert data["stage"] == "won"
+
+
+
+# ── bare-command default (iter 110) ──
+
+
+def test_bare_leads_runs_pipeline(cli):
+    """`clibo leads` (no subcommand) runs `pipeline`."""
+    result = cli.run("leads")
+    assert result.exit_code == 0
+
+
+def test_leads_help_still_works(cli):
+    """`clibo leads --help` still shows the menu after the bare change."""
+    result = cli.run("leads", "--help")
+    assert result.exit_code == 0
+    assert "pipeline" in result.stdout

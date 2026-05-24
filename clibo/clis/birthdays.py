@@ -33,7 +33,14 @@ class Occasion(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context) -> None:
+    """Default: ``clibo birthdays`` (bare) runs the ``upcoming`` summary."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(upcoming, days=30, json_out=False)
 
 
 def _parse_md(text: str) -> tuple[int, int, int | None]:

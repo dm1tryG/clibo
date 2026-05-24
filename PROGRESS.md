@@ -4,6 +4,56 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 110 — bare-command default on 4 entity tools (pipeline / upcoming / due) · 2026-05-24
+
+Agent-mode self-test on three entity-tool questions — *"What books
+am I reading?"*, *"What's my sales pipeline?"*, *"Whose birthday
+is coming up?"* — surfaced that four entity tools have a clear
+non-`list` dominant summary verb that bare-command should run. The
+earlier blanket exclusion (iter 107's note about entity-tools where
+the dominant action is `list`/`add`) was too broad.
+
+- 🎯 **4 more tools updated** with the bare-command pattern:
+
+  | Tool | Bare runs |
+  |---|---|
+  | `leads` | `pipeline` — open deals grouped by stage |
+  | `birthdays` | `upcoming` — next 30 days |
+  | `followup` | `due` — overdue + due-soon follow-ups |
+  | `jobs` | `pipeline` — application counts by status |
+
+  All four answer the dominant *"what's the current state?"* ask
+  better than `list` would: a pipeline view, a date-windowed
+  upcoming view, or an urgency-filtered due view.
+
+- 🛡 **Sentinel-bug avoidance** continued from iter 106/107: the
+  two callbacks with optional `--days` (`birthdays.upcoming`,
+  `followup.due`) pass explicit defaults (`days=30`, `days=7`).
+- 🎤 NL flow verified on empty + seeded DBs:
+  • Empty `clibo leads` → renders empty 📊 Pipeline table ✓
+  • Empty `clibo birthdays` → "Nothing coming up." ✓
+  • Empty `clibo followup` → "Nothing to follow up on — you're on
+    top of it! ✨" ✓
+  • Empty `clibo jobs` → renders empty 📊 Application pipeline ✓
+  • Seeded versions show the relevant pipeline / list ✓
+- 🧪 **8 new tests** (2 per tool).
+- **Tests:** 1,081 passing (+8); ruff clean.
+
+**Tally**: **40 of 74 tools** now follow *"bare command = the
+answer"*. The remaining ~34 are mostly pure entity tools (`crm`,
+`books`, `films`, `clients`, `notes`, `todo`, `quotes`, `pets`,
+`network`, `gifts`, `cv`, `brag`, `ideas`, `lessons`, `meetings`,
+`groceries`, `pantry`, `recipes`, `home`, `travel`, `bookmark`,
+`wishlist`, `savings`, `debt`, `invoice`, `invest`, `tip`,
+`weight`, `period`, `goals`) where the dominant view is `list` —
+bare-help is still defensible there since `list` doesn't help an
+agent who's coming in cold and doesn't know what to look for.
+A broader rollout could change that for the user-favourites
+(`books`/`films`/`todo`), but this iter stops at the clear
+non-`list` summary wins.
+
+---
+
 ### Iteration 109 — `meetings` polish: inline actions + fuzzy resolve + edit · 2026-05-24
 
 Agent-mode self-test on *"Just finished a Zoom with Acme — discussed
