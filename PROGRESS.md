@@ -4,6 +4,55 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 115 — `clibo search` finishes the entity-tool sweep · 2026-05-24
+
+Iter 114 added 7 entity tools (events/birthdays/goals/jobs/leads/
+travel/pets). Audit of `clibo/search.py` showed **9 more** still
+unindexed across money + home/life. This iter closes them out.
+
+- 🔍 **9 new sources** in `clibo search`:
+
+  | Source | Searches | Snippet |
+  |---|---|---|
+  | `bills` | name, category, note | `Electricity (utilities)` (`✓ paid` if paid) |
+  | `subs` | name, category, note | `Netflix · monthly` |
+  | `savings` | name, note | `Vacation fund` |
+  | `debt` | name, creditor, note | `Car loan → Toyota Finance` |
+  | `invoice` | number, client, description, note | `INV-101 for Acme Corp — Q2 retainer` |
+  | `clients` | name, company, email, notes | `Alice · BigCorp Inc` |
+  | `home` | title, location, contractor, note | `improvement: Painted bedroom @ master bedroom` |
+  | `plants` | name, species, location | `Monstera (Monstera deliciosa) @ living room` |
+  | `chores` | name, assignee | `Vacuum · me` |
+
+- 🎤 NL flow verified across all 9:
+  • `search Electricity` → bills ✓
+  • `search Netflix` → subs ✓
+  • `search Vacation` → savings ✓
+  • `search Toyota` → debt (by creditor) ✓
+  • `search Acme` → invoice ✓
+  • `search alice@bigcorp.com` → clients (by email) ✓
+  • `search bedroom` → home (by title); `search Behr` → home (by note) ✓
+  • `search kitchen` → plants (by location) ✓
+  • `search Vacuum` → chores; `search Sarah` → chores (by assignee) ✓
+- 🛡 **Test-shape correctness**: caught two flag-mismatch errors
+  in the tests (`savings -g` is actually `-t`, `invoice` doesn't
+  accept `--number`). Tests use the real CLI signatures now.
+- 🧪 **13 new tests** spanning all 9 sources, often hitting two
+  fields (primary name + secondary like email/location/breed/
+  assignee).
+- **Tests:** 1,127 passing (+13); ruff clean.
+
+`clibo search` now reaches **51 sources** (up from 35 before iter
+114, 42 after). The only remaining tools left out are health
+logs without meaningful text (calorie/water/weight/sleep/mood/
+workout/meds/period/vitals/mileage/steps/meditate/stretches/
+caffeine/fasting), and a couple where text is already covered
+elsewhere (books_session → 'reading', writing_session). The
+agent question *"when did I last do X?"* now lands wherever X
+was recorded.
+
+---
+
 ### Iteration 114 — `clibo search` indexes 7 more entity tools · 2026-05-24
 
 Agent-mode probe on *"When was the last time I went to the

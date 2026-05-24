@@ -177,3 +177,87 @@ def test_search_finds_pets_by_breed(cli):
     cli.run("pets", "add", "Rex", "-s", "dog", "-b", "Golden Retriever")
     res = cli.json("search", "Golden")
     assert any(r["source"] == "pets" for r in res["results"])
+
+
+# ── search indexes 9 more finance + home tools (iter 115) ──
+
+
+def test_search_finds_bills_by_name(cli):
+    cli.run("bills", "add", "Electricity", "-d", "2026-06-01", "-a", "80")
+    res = cli.json("search", "Electricity")
+    assert any(r["source"] == "bills" for r in res["results"])
+
+
+def test_search_finds_subs_by_name(cli):
+    cli.run("subs", "add", "Netflix", "-a", "16")
+    res = cli.json("search", "Netflix")
+    assert any(r["source"] == "subs" for r in res["results"])
+
+
+def test_search_finds_savings_by_name(cli):
+    cli.run("savings", "add", "Vacation fund", "-t", "5000")
+    res = cli.json("search", "Vacation")
+    assert any(r["source"] == "savings" for r in res["results"])
+
+
+def test_search_finds_debt_by_name(cli):
+    cli.run("debt", "add", "Car loan", "-a", "12000", "-c", "Toyota Finance")
+    res = cli.json("search", "Toyota")
+    assert any(r["source"] == "debt" for r in res["results"])
+
+
+def test_search_finds_invoice_by_client(cli):
+    cli.run("invoice", "add", "Acme Corp", "-a", "5000",
+            "--desc", "Q2 retainer")
+    res = cli.json("search", "Acme")
+    assert any(r["source"] == "invoice" for r in res["results"])
+
+
+def test_search_finds_clients_by_company(cli):
+    cli.run("clients", "add", "BigCorp", "-c", "BigCorp Inc")
+    res = cli.json("search", "BigCorp")
+    assert any(r["source"] == "clients" for r in res["results"])
+
+
+def test_search_finds_clients_by_email(cli):
+    cli.run("clients", "add", "Alice", "-e", "alice@bigcorp.com")
+    res = cli.json("search", "alice@bigcorp.com")
+    assert any(r["source"] == "clients" for r in res["results"])
+
+
+def test_search_finds_home_by_title(cli):
+    cli.run("home", "add", "Painted bedroom", "-k", "improvement",
+            "-l", "master bedroom")
+    res = cli.json("search", "bedroom")
+    assert any(r["source"] == "home" for r in res["results"])
+
+
+def test_search_finds_home_by_note(cli):
+    cli.run("home", "add", "Painted", "-k", "improvement",
+            "--note", "used Behr Marquee paint")
+    res = cli.json("search", "Behr")
+    assert any(r["source"] == "home" for r in res["results"])
+
+
+def test_search_finds_plants_by_name(cli):
+    cli.run("plants", "add", "Monstera", "-s", "Monstera deliciosa")
+    res = cli.json("search", "Monstera")
+    assert any(r["source"] == "plants" for r in res["results"])
+
+
+def test_search_finds_plants_by_location(cli):
+    cli.run("plants", "add", "Basil", "-l", "kitchen window")
+    res = cli.json("search", "kitchen")
+    assert any(r["source"] == "plants" for r in res["results"])
+
+
+def test_search_finds_chores_by_name(cli):
+    cli.run("chores", "add", "Vacuum")
+    res = cli.json("search", "Vacuum")
+    assert any(r["source"] == "chores" for r in res["results"])
+
+
+def test_search_finds_chores_by_assignee(cli):
+    cli.run("chores", "add", "Dishes", "-a", "Sarah")
+    res = cli.json("search", "Sarah")
+    assert any(r["source"] == "chores" for r in res["results"])

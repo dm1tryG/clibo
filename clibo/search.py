@@ -11,14 +11,18 @@ from __future__ import annotations
 from sqlalchemy import or_
 from sqlmodel import select
 
+from clibo.clis.bills import Bill
 from clibo.clis.birthdays import Occasion
 from clibo.clis.bookmark import Bookmark
 from clibo.clis.books import Book, BookSession
 from clibo.clis.brag import Achievement
 from clibo.clis.caffeine import CaffeineEntry
 from clibo.clis.challenge import Challenge
+from clibo.clis.chores import Chore
+from clibo.clis.clients import Client
 from clibo.clis.crm import Contact
 from clibo.clis.cv import CvEntry
+from clibo.clis.debt import Debt
 from clibo.clis.documents import Document
 from clibo.clis.donations import Donation
 from clibo.clis.dreams import Dream
@@ -29,9 +33,11 @@ from clibo.clis.films import Film
 from clibo.clis.gifts import Gift
 from clibo.clis.goals import Goal
 from clibo.clis.gratitude import GratitudeEntry
+from clibo.clis.home import HomeEntry
 from clibo.clis.ideas import Idea
 from clibo.clis.income import IncomeEntry
 from clibo.clis.invest import Transaction as InvestTransaction
+from clibo.clis.invoice import Invoice
 from clibo.clis.jobs import JobApplication
 from clibo.clis.journal import JournalEntry
 from clibo.clis.leads import Lead
@@ -41,10 +47,13 @@ from clibo.clis.network import Connection
 from clibo.clis.notes import Note
 from clibo.clis.packages import Package
 from clibo.clis.pets import Pet
+from clibo.clis.plants import Plant
 from clibo.clis.quotes import Quote
 from clibo.clis.recipes import Recipe
+from clibo.clis.savings import SavingsGoal
 from clibo.clis.steps import StepEntry
 from clibo.clis.stretches import StretchSession
+from clibo.clis.subs import Subscription
 from clibo.clis.symptom import Symptom
 from clibo.clis.tip import TipEntry
 from clibo.clis.todo import Task
@@ -208,6 +217,44 @@ SOURCES: list[tuple] = [
      [Pet.name, Pet.species, Pet.breed, Pet.notes],
      lambda p: f"{p.name}"
                 + (f" ({p.species})" if p.species else "")),
+    # ── finance + home entity tools (iter 115) ───────────────────────────
+    ("bills", Bill,
+     [Bill.name, Bill.category, Bill.note],
+     lambda b: f"{b.name}"
+                + (f" ({b.category})" if b.category != "other" else "")
+                + (" ✓ paid" if b.paid else "")),
+    ("subs", Subscription,
+     [Subscription.name, Subscription.category, Subscription.note],
+     lambda s: f"{s.name} · {s.cycle}"),
+    ("savings", SavingsGoal,
+     [SavingsGoal.name, SavingsGoal.note],
+     lambda g: g.name),
+    ("debt", Debt,
+     [Debt.name, Debt.creditor, Debt.note],
+     lambda d: d.name
+                + (f" → {d.creditor}" if d.creditor else "")),
+    ("invoice", Invoice,
+     [Invoice.number, Invoice.client, Invoice.description, Invoice.note],
+     lambda inv: f"{inv.number} for {inv.client}"
+                + (f" — {inv.description}" if inv.description else "")),
+    ("clients", Client,
+     [Client.name, Client.company, Client.email, Client.notes],
+     lambda c: c.name
+                + (f" · {c.company}" if c.company else "")),
+    ("home", HomeEntry,
+     [HomeEntry.title, HomeEntry.location, HomeEntry.contractor,
+      HomeEntry.note],
+     lambda h: f"{h.kind}: {h.title}"
+                + (f" @ {h.location}" if h.location else "")),
+    ("plants", Plant,
+     [Plant.name, Plant.species, Plant.location],
+     lambda p: p.name
+                + (f" ({p.species})" if p.species else "")
+                + (f" @ {p.location}" if p.location else "")),
+    ("chores", Chore,
+     [Chore.name, Chore.assignee],
+     lambda c: c.name
+                + (f" · {c.assignee}" if c.assignee else "")),
 ]
 
 
