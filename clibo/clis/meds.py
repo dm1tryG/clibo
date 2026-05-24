@@ -42,7 +42,14 @@ class MedDose(SQLModel, table=True):
     note: str | None = None
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context) -> None:
+    """Default: ``clibo meds`` (bare) shows today's meds + what's still due."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(today, json_out=False)
 
 
 def _resolve(db, ident: str) -> Medication | None:

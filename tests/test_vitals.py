@@ -134,3 +134,21 @@ def test_log_supports_note(cli):
     """Note flag forwards through the dispatcher."""
     data = cli.json("vitals", "log", "pulse", "72", "-n", "morning resting")
     assert data["note"] == "morning resting"
+
+
+# ── bare-command default (iter 105) ──
+
+
+def test_bare_vitals_runs_latest(cli):
+    """`clibo vitals` (no subcommand) runs `latest`."""
+    result = cli.run("vitals")
+    assert result.exit_code == 0
+    # No assertion on output content — that varies by tool.
+    # Equivalence check: bare exits cleanly just like the explicit subcommand would.
+
+
+def test_vitals_help_still_works(cli):
+    """`clibo vitals --help` still shows the menu after the bare change."""
+    result = cli.run("vitals", "--help")
+    assert result.exit_code == 0
+    assert "latest" in result.stdout

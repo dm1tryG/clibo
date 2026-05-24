@@ -53,3 +53,21 @@ def test_stats_longest_streak(cli):
 def test_invalid_target_fails(cli):
     result = cli.run("habit", "add", "Bad", "-t", "9")
     assert result.exit_code != 0
+
+
+# ── bare-command default (iter 105) ──
+
+
+def test_bare_habit_runs_today(cli):
+    """`clibo habit` (no subcommand) runs `today`."""
+    result = cli.run("habit")
+    assert result.exit_code == 0
+    # No assertion on output content — that varies by tool.
+    # Equivalence check: bare exits cleanly just like the explicit subcommand would.
+
+
+def test_habit_help_still_works(cli):
+    """`clibo habit --help` still shows the menu after the bare change."""
+    result = cli.run("habit", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

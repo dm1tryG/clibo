@@ -33,7 +33,14 @@ class Workout(SQLModel, table=True):
     note: str | None = None
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context) -> None:
+    """Default: ``clibo workout`` (bare) shows today's session."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(today, json_out=False)
 
 
 def _volume(entry: Workout) -> float:

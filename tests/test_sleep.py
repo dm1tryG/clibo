@@ -34,3 +34,25 @@ def test_stats_averages(cli):
 def test_invalid_quality_fails(cli):
     result = cli.run("sleep", "log", "7", "-q", "9")
     assert result.exit_code != 0
+
+
+# ── bare-command default (iter 105) ──
+
+
+def test_bare_sleep_runs_last(cli):
+    """`clibo sleep` (no subcommand) runs `last`.
+
+    `last` calls fail() on an empty DB, so seed a row first to test the
+    happy path — that's the standard behaviour for `last`, not bare-mode.
+    """
+    cli.run("sleep", "log", "7.5", "-q", "4")
+    result = cli.run("sleep")
+    assert result.exit_code == 0
+    assert "7.5" in result.stdout or "7" in result.stdout
+
+
+def test_sleep_help_still_works(cli):
+    """`clibo sleep --help` still shows the menu after the bare change."""
+    result = cli.run("sleep", "--help")
+    assert result.exit_code == 0
+    assert "last" in result.stdout

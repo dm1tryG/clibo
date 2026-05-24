@@ -40,7 +40,14 @@ class VitalReading(SQLModel, table=True):
     note: str | None = None
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context) -> None:
+    """Default: ``clibo vitals`` (bare) shows the latest reading of each kind."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(latest, json_out=False)
 
 
 def _bp_class(systolic: float, diastolic: float) -> str:

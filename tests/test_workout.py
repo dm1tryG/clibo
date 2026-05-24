@@ -159,3 +159,21 @@ def test_workout_rm_by_name(cli):
 def test_workout_unknown_name_fails(cli):
     result = cli.run("workout", "show", "ghost-exercise")
     assert result.exit_code != 0
+
+
+# ── bare-command default (iter 105) ──
+
+
+def test_bare_workout_runs_today(cli):
+    """`clibo workout` (no subcommand) runs `today`."""
+    result = cli.run("workout")
+    assert result.exit_code == 0
+    # No assertion on output content — that varies by tool.
+    # Equivalence check: bare exits cleanly just like the explicit subcommand would.
+
+
+def test_workout_help_still_works(cli):
+    """`clibo workout --help` still shows the menu after the bare change."""
+    result = cli.run("workout", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

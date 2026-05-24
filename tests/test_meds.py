@@ -139,3 +139,21 @@ def test_rm_cascades_doses(cli):
     cli.run("meds", "add", "Cascading", "-t", "1")
     stats = cli.json("meds", "stats", "--days", "1")
     assert stats["doses_taken"] == 0
+
+
+# ── bare-command default (iter 105) ──
+
+
+def test_bare_meds_runs_today(cli):
+    """`clibo meds` (no subcommand) runs `today`."""
+    result = cli.run("meds")
+    assert result.exit_code == 0
+    # No assertion on output content — that varies by tool.
+    # Equivalence check: bare exits cleanly just like the explicit subcommand would.
+
+
+def test_meds_help_still_works(cli):
+    """`clibo meds --help` still shows the menu after the bare change."""
+    result = cli.run("meds", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

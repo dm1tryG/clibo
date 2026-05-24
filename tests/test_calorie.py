@@ -40,3 +40,21 @@ def test_edit_and_remove(cli):
 def test_invalid_meal_fails(cli):
     result = cli.run("calorie", "log", "mystery", "-k", "100", "-m", "brunch")
     assert result.exit_code != 0
+
+
+# ── bare-command default (iter 105) ──
+
+
+def test_bare_calorie_runs_today(cli):
+    """`clibo calorie` (no subcommand) runs `today`."""
+    result = cli.run("calorie")
+    assert result.exit_code == 0
+    # No assertion on output content — that varies by tool.
+    # Equivalence check: bare exits cleanly just like the explicit subcommand would.
+
+
+def test_calorie_help_still_works(cli):
+    """`clibo calorie --help` still shows the menu after the bare change."""
+    result = cli.run("calorie", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

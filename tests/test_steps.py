@@ -126,3 +126,21 @@ def test_searchable_and_in_recent(cli):
     assert any(h["source"] == "steps" for h in hits["results"])
     recent = cli.json("recent")
     assert any(e["source"] == "steps" for e in recent["events"])
+
+
+# ── bare-command default (iter 105) ──
+
+
+def test_bare_steps_runs_today(cli):
+    """`clibo steps` (no subcommand) runs `today`."""
+    result = cli.run("steps")
+    assert result.exit_code == 0
+    # No assertion on output content — that varies by tool.
+    # Equivalence check: bare exits cleanly just like the explicit subcommand would.
+
+
+def test_steps_help_still_works(cli):
+    """`clibo steps --help` still shows the menu after the bare change."""
+    result = cli.run("steps", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

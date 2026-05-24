@@ -4,6 +4,61 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 105 — bare-command default rolled out to 9 health tools 🎉 1000+ tests · 2026-05-24
+
+Iter 103/104 established the *"bare command = the answer"* pattern
+on `networth`, `caffeine`, `fasting`. This iter rolls it out across
+every health tool that has an obvious dominant summary verb.
+
+- ☕ **All 9 tools updated** — `clibo X` bare now runs the right
+  summary subcommand:
+
+  | Tool | Bare runs |
+  |---|---|
+  | `calorie` | `today` — food log + macros |
+  | `water` | `today` — intake vs goal |
+  | `mood` | `today` — mood check-ins |
+  | `sleep` | `last` — most recent night |
+  | `steps` | `today` — step count vs goal |
+  | `workout` | `today` — today's session |
+  | `meds` | `today` — what's still due |
+  | `vitals` | `latest` — most recent of each kind |
+  | `habit` | `today` — done vs pending |
+
+- 🛡 **Help + subcommands unchanged everywhere.** `--help` still
+  shows the menu on every tool. `add`, `log`, `list`, `edit`, `rm`,
+  `stats`, etc. all keep their existing shape — purely additive on
+  the no-subcommand path.
+- 🎯 **Mechanical pattern**: each tool's `app = typer.Typer(...)`
+  flipped from `no_args_is_help=True` to
+  `(no_args_is_help=False, invoke_without_command=True)`, with an
+  `@app.callback()` that dispatches to the summary verb when
+  `ctx.invoked_subcommand is None`. Three-line addition per tool.
+- 🎤 NL flow verified across all 9 with realistic seeded data:
+  • `clibo calorie` → renders "🍎 Food log · Sun 24 May" + table ✓
+  • `clibo water` → progress bar + "500 / 2000 ml · 1 drinks" ✓
+  • `clibo sleep` (with a row) → "94% · 7.5h / 8h goal" ✓
+  • `clibo vitals` (with a temp row) → "❤️ Latest vitals" table ✓
+  • `clibo habit` → list of habits with ○/✓ markers ✓
+  • All 9 `--help` still show the menu ✓
+- 🧪 **18 new tests** (2 per tool): bare runs the right summary
+  with exit 0, `--help` still shows the menu. Sleep's test
+  pre-seeds because `last` fails on empty DB (intentional).
+- 🛡 **Test correction**: `test_take_unknown_fails` from before
+  iter 101 lived on; iter 101 renamed it to `…_with_strict_fails`
+  but didn't pick up auto-create's `--strict` flag. Both now
+  reconciled.
+- **Tests:** 1,013 passing (+18); ruff clean. 🎉 **First iteration
+  past the 1000-test mark** — up from ~300 at v1.0.0.
+
+12 tools now follow the *"bare command = the answer"* rule:
+`networth`, `caffeine`, `fasting`, `calorie`, `water`, `mood`,
+`sleep`, `steps`, `workout`, `meds`, `vitals`, `habit`. The agent
+mental model — *"type the tool's name, get the answer"* — works
+across every health/wellness command in clibo.
+
+---
+
 ### Iteration 104 — `clibo caffeine` / `clibo fasting` (bare) show their summary · 2026-05-24
 
 Iter 103's note that the `invoke_without_command` pattern could

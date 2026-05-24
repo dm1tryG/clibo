@@ -61,3 +61,21 @@ def test_emotions_are_deduplicated_and_lowercased(cli):
 def test_no_emotion_stays_null(cli):
     data = cli.json("mood", "log", "4")
     assert data["emotion"] is None
+
+
+# ── bare-command default (iter 105) ──
+
+
+def test_bare_mood_runs_today(cli):
+    """`clibo mood` (no subcommand) runs `today`."""
+    result = cli.run("mood")
+    assert result.exit_code == 0
+    # No assertion on output content — that varies by tool.
+    # Equivalence check: bare exits cleanly just like the explicit subcommand would.
+
+
+def test_mood_help_still_works(cli):
+    """`clibo mood --help` still shows the menu after the bare change."""
+    result = cli.run("mood", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

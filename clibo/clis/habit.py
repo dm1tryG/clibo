@@ -38,7 +38,14 @@ class HabitCheck(SQLModel, table=True):
     check_date: date = Field(default_factory=date.today, index=True)
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context) -> None:
+    """Default: ``clibo habit`` (bare) shows today's done / pending habits."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(today, json_out=False)
 
 
 def _resolve(db, ident: str) -> Habit | None:
