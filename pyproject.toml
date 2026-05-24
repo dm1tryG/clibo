@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "clibo"
-version = "1.13.0"
-description = "74 local-first CLI tools for AI agents and humans — type the tool's name to get the answer. Calorie tracker, CRM, daily streaks, todo date filters, cross-tool search, business-mileage log, IOU shortcuts, week/month/year rollups, and more."
+version = "1.14.0"
+description = "74 local-first CLI tools for AI agents and humans — type the tool's name to get the answer. Cross-tool rollups (today/week/month/year/lifetime/upcoming/overdue/stale), at-risk streaks and goals, PR sessions, neglect tracking, daily check-ins, full JSON parity everywhere."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"

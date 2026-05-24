@@ -4,6 +4,65 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Release v1.14.0 — temporal vocabulary + attention surface · 2026-05-24
+
+Ships everything since 1.13.0. Bumped `pyproject.toml` and
+`clibo/__init__.py` to `1.14.0`. Highlights:
+
+**New top-level rollups (the temporal vocabulary)**
+- `clibo upcoming` / `agenda` — next-N-days view across tasks, bills,
+  events, follow-ups, birthdays, chores, packages, document expiry
+- `clibo overdue` — everything past its deadline, most-overdue first
+- `clibo year [-y Y]` — calendar-year rollup (money + productivity +
+  hobbies + health, one screen)
+- `clibo lifetime` — all-time aggregates (companion to `year`)
+- `clibo stale [-d N]` — cross-tool neglect aggregator (crm + ideas
+  + books). Sister to `overdue` on the "haven't touched" axis.
+
+**Attention surface**
+- `clibo streaks --at-risk` + per-row `done_today` field — at-a-glance
+  morning check
+- `clibo goals list --at-risk` — slipping under their own deadlines
+- `clibo today` shows per-habit streak risk inline
+- `clibo today.tasks.done_today` — what you finished today/yesterday
+
+**Bare-default + JSON parity**
+- 73 entity tools now respond to `clibo <tool>` (bare) with a sensible
+  list view, AND to `clibo <tool> --json` everywhere. Contract test
+  pins all 73.
+
+**PR / best-session everywhere**
+- `mileage stats.best_pace_session`, `writing stats.best_session`,
+  `focus stats.best_session` + `best_day`, `stretches stats.longest_session`,
+  `meditate stats.longest_session_entry`, `sleep stats.longest_night`/
+  `shortest_night`, `mood stats.best_score_entry`/`worst_score_entry`.
+
+**Top / annual / filters**
+- `expense top` / `income top` / `books top` — biggest-first, all-time
+- `expense/income year` gained `--category` / `--source` filters
+- `writing year` (mirrors books/expense/income)
+- `compare --year-mode` — year-over-year on 17 metrics
+
+**Neglect tracking (per-tool)**
+- `crm dormant` — contacts not touched
+- `ideas stale` — open ideas not updated
+- `books stale` — reading books with no recent session
+
+**Misc polish**
+- `clibo checkin --all` — discoverability of every tracker
+- `clibo recent --tool X` — filter the activity feed to one source
+- `clibo tagged TAG` — drill into one tag across 11 tag-bearing sources
+- `clibo crm dormant`, `todo stats.oldest_pending` / `most_overdue` /
+  `avg_backlog_age_days`
+
+- **Tests:** 1,367 passing, ruff clean.
+
+**Tagline**: *"Cross-tool rollups (today/week/month/year/lifetime/
+upcoming/overdue/stale), at-risk streaks and goals, PR sessions,
+neglect tracking, daily check-ins, full JSON parity everywhere."*
+
+---
+
 ### `clibo stale` — cross-tool neglect aggregator · 2026-05-24
 
 Three iterations built per-tool stale views (`crm dormant`,
