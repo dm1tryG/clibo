@@ -48,13 +48,13 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo goals`` (bare) lists active goals.
 
     Mirrors the iter-110 bare-command convention.
     """
     if ctx.invoked_subcommand is None:
-        ctx.invoke(list_goals, show_all=False, json_out=False)
+        ctx.invoke(list_goals, show_all=False, json_out=json_out)
 
 
 def _resolve(db, ident: str) -> Goal | None:

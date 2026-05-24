@@ -50,7 +50,7 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo networth`` (bare) shows your net worth.
 
     The natural agent / human flow for *"what's my net worth?"* is to
@@ -58,7 +58,7 @@ def _default(ctx: typer.Context) -> None:
     are still available — ``add``, ``list``, ``snapshot``, etc.
     """
     if ctx.invoked_subcommand is None:
-        ctx.invoke(worth, json_out=False)
+        ctx.invoke(worth, json_out=json_out)
 
 
 def _totals(db) -> tuple[float, float, float]:

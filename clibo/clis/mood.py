@@ -35,10 +35,10 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo mood`` (bare) shows today's mood check-ins."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(today, json_out=False)
+        ctx.invoke(today, json_out=json_out)
 
 
 def _row(entry: MoodLog) -> dict:

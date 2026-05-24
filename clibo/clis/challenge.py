@@ -61,12 +61,12 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo challenge`` (bare) runs the ``status`` summary."""
     if ctx.invoked_subcommand is None:
         # Pass real `None` so ctx.invoke doesn't forward the Typer
         # ArgumentInfo sentinel as a literal into the DB query.
-        ctx.invoke(status, challenge_id=None, json_out=False)
+        ctx.invoke(status, challenge_id=None, json_out=json_out)
 
 
 def _end_date(c: Challenge) -> date:

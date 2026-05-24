@@ -37,10 +37,10 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo birthdays`` (bare) runs the ``upcoming`` summary."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(upcoming, days=30, json_out=False)
+        ctx.invoke(upcoming, days=30, json_out=json_out)
 
 
 def _parse_md(text: str) -> tuple[int, int, int | None]:

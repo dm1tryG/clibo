@@ -45,10 +45,10 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo time`` (bare) runs the ``status`` summary."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(status, json_out=False)
+        ctx.invoke(status, json_out=json_out)
 
 
 def _hm(minutes: int) -> str:

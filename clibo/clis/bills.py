@@ -37,10 +37,10 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo bills`` (bare) runs the ``due`` summary."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(due, days=7, json_out=False)
+        ctx.invoke(due, days=7, json_out=json_out)
 
 
 def _status(bill: Bill) -> str:

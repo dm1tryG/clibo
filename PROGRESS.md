@@ -4,6 +4,38 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Bare-default commands gain `--json` everywhere · 2026-05-24
+
+Real friction surfaced during a routine NL probe: typing `clibo subs
+--json` (or `clibo expense --json`, or any other bare-default tool)
+failed with `No such option '--json'`. The `@app.callback()` that
+implements the bare-command convention accepted only `ctx` and
+silently dropped the JSON flag — 42 tools affected. The README
+promise *"Every command accepts `--json`"* was therefore wrong
+for an entire class of usage.
+
+- 🔧 **Sweep across 42 tools** — every `_default(ctx)` callback now
+  takes `json_out: JsonOpt = False` and forwards it to the underlying
+  subcommand via `ctx.invoke(..., json_out=json_out)`. Idempotent
+  Python patcher skipped the one already-patched tool + one tool with
+  a non-standard signature (`fasting` — manually fixed).
+- 🎤 NL flow verified across `expense`, `subs`, `networth`, `water`,
+  `fasting`: `clibo <tool> --json` now returns the same JSON shape
+  the explicit subcommand would produce.
+- 🧪 **Contract pinned**: a single new test (`test_bare_command_json.py`)
+  loops over all 42 tools and asserts each returns valid JSON. Future
+  regressions will fail loudly with the offender's name in the diff.
+- **Tests:** 1,236 passing (+2); ruff clean.
+
+**Why this matters:** the bare-command convention (iter 105-110) was
+designed to make `clibo <tool>` answer the natural question without
+a subcommand. Forgetting `--json` on the same path meant agents had
+to memorise per-tool detours (`clibo expense month --json` vs
+`clibo expense --json`). Now `clibo <tool> [--json]` is uniformly
+the canonical entry point, with no special-casing needed.
+
+---
+
 ### Iteration 129 — `clibo checkin --all` for tracker discovery · 2026-05-24
 
 Real-user friction surfaced in conversation: on a fresh install,

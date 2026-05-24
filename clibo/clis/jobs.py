@@ -38,10 +38,10 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo jobs`` (bare) runs the ``pipeline`` summary."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(pipeline, json_out=False)
+        ctx.invoke(pipeline, json_out=json_out)
 
 
 def _resolve(db, ident: str) -> JobApplication | None:

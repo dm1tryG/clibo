@@ -34,10 +34,10 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo budget`` (bare) shows every budget with this month's spending."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(list_budgets, json_out=False)
+        ctx.invoke(list_budgets, json_out=json_out)
 
 
 def _month_start() -> date:

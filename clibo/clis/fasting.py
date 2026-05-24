@@ -44,7 +44,7 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _bare_default(ctx: typer.Context) -> None:
+def _bare_default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo fasting`` (bare) shows your fasting status.
 
     The natural ask *"am I still fasting?"* / *"how long until my
@@ -53,7 +53,7 @@ def _bare_default(ctx: typer.Context) -> None:
     (``start``, ``stop``, ``list``, …) are unaffected.
     """
     if ctx.invoked_subcommand is None:
-        ctx.invoke(status, json_out=False)
+        ctx.invoke(status, json_out=json_out)
 
 
 def _default_target() -> float:

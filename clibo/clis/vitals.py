@@ -44,10 +44,10 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo vitals`` (bare) shows the latest reading of each kind."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(latest, json_out=False)
+        ctx.invoke(latest, json_out=json_out)
 
 
 def _bp_class(systolic: float, diastolic: float) -> str:

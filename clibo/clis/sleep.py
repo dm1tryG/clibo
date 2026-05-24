@@ -38,10 +38,10 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo sleep`` (bare) shows your most recent night."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(last, json_out=False)
+        ctx.invoke(last, json_out=json_out)
 
 
 def _goal() -> float:

@@ -52,12 +52,12 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo calorie`` (bare) shows today's food log + macros."""
     if ctx.invoked_subcommand is None:
         # Explicit `meal=None` so ctx.invoke doesn't forward Typer's
         # OptionInfo sentinel for the new --meal flag (iter 111).
-        ctx.invoke(today, meal=None, json_out=False)
+        ctx.invoke(today, meal=None, json_out=json_out)
 
 
 def _row(entry: CalorieEntry) -> dict:

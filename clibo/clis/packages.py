@@ -56,10 +56,10 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo packages`` (bare) runs the ``pending`` summary."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(pending, show_late_only=False, json_out=False)
+        ctx.invoke(pending, show_late_only=False, json_out=json_out)
 
 
 def _row(pkg: Package) -> dict:

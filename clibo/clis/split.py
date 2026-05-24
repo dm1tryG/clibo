@@ -49,10 +49,10 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo split`` (bare) runs the ``balances`` summary."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(balances, json_out=False)
+        ctx.invoke(balances, json_out=json_out)
 
 
 def _people(csv: str) -> list[str]:

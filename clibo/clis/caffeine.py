@@ -77,7 +77,7 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo caffeine`` (bare) shows today's intake.
 
     The natural ask *"how much caffeine have I had today?"* maps to
@@ -85,7 +85,7 @@ def _default(ctx: typer.Context) -> None:
     ``today`` subcommand. Other subcommands are unaffected.
     """
     if ctx.invoked_subcommand is None:
-        ctx.invoke(today, json_out=False)
+        ctx.invoke(today, json_out=json_out)
 
 
 def _bedtime() -> time:

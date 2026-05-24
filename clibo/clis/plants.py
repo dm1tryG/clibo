@@ -34,10 +34,10 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo plants`` (bare) runs the ``thirsty`` summary."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(thirsty, json_out=False)
+        ctx.invoke(thirsty, json_out=json_out)
 
 
 def _resolve(db, ident: str) -> Plant | None:

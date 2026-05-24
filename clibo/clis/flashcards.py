@@ -39,12 +39,12 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 
 
 @app.callback()
-def _default(ctx: typer.Context) -> None:
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     """Default: ``clibo flashcards`` (bare) runs the ``due`` summary."""
     if ctx.invoked_subcommand is None:
         # Pass real defaults so ctx.invoke doesn't forward Typer's
         # OptionInfo sentinels as literals into the DB query.
-        ctx.invoke(due, deck=None, limit=20, json_out=False)
+        ctx.invoke(due, deck=None, limit=20, json_out=json_out)
 
 
 def _row(card: Flashcard) -> dict:
