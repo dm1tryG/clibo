@@ -36,7 +36,23 @@ class Task(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
+    """Default: ``clibo todo`` (bare) lists pending tasks.
+
+    Same as ``clibo todo list`` — every optional filter passed at its
+    declared default so Typer's ArgumentInfo sentinel doesn't leak in.
+    """
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(
+            list_tasks,
+            show_all=False, project=None, tag=None,
+            due=None, overdue=False, due_within=None,
+            json_out=json_out,
+        )
 
 
 def _row(task: Task) -> dict:

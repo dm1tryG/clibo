@@ -55,7 +55,18 @@ class BookSession(SQLModel, table=True):
     note: str | None = None
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
+    """Default: ``clibo books`` (bare) lists every book.
+
+    Same as ``clibo books list``. Pass ``-s reading`` etc. via the
+    explicit subcommand for filtering.
+    """
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(list_books, status=None, json_out=json_out)
 
 
 def _resolve(db, ident: str) -> Book | None:

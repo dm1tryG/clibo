@@ -4,6 +4,34 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Bare-default lands on 5 more high-traffic entity tools · 2026-05-24
+
+NL-probe gap: `clibo todo`, `clibo books`, `clibo notes`, `clibo crm`,
+`clibo savings` (bare) all still returned help — the iter-105 rollout
+hadn't covered them despite being some of the most-used entry points.
+Now they all run their natural list view.
+
+- ✅ **`clibo todo`** → `list_tasks` (pending tasks)
+- 📚 **`clibo books`** → `list_books` (every book)
+- 📝 **`clibo notes`** → `list_notes` (pinned first, newest first)
+- 👥 **`clibo crm`** → `list_contacts` (every contact)
+- 🐷 **`clibo savings`** → `list_goals` (every goal with progress)
+- Each callback explicitly passes every optional argument at its
+  declared default — avoids the iter-106 ArgumentInfo sentinel bug
+  caught on `calorie today` previously.
+- 🧪 **Contract test extended**: these 5 added to `BARE_DEFAULT_TOOLS`
+  in `tests/test_bare_command_json.py` so `--json` regression is
+  pinned alongside the other 42.
+- **Tests:** 1,273 passing; ruff clean.
+
+**Why this matters:** `clibo <tool>` is now the canonical "show me
+what I have" entry point on the 5 most-used domains. Combined with
+the iter-130 sweep, the entire entity-tool surface now follows
+*"type the tool's name to get the answer"* — no subcommand required,
+JSON works on the bare path everywhere.
+
+---
+
 ### `clibo tagged TAG` — drill into one tag across every source · 2026-05-24
 
 NL-probe friction: *"show me everything tagged #urgent"* had no

@@ -12,13 +12,13 @@ import json
 # All tools that have a bare-default callback (alphabetised).
 # `dashboard` is excluded — its bare form already takes no flags.
 BARE_DEFAULT_TOOLS = [
-    "bills", "birthdays", "budget", "caffeine", "calorie", "challenge",
-    "chores", "documents", "donations", "dreams", "events", "expense",
+    "bills", "birthdays", "books", "budget", "caffeine", "calorie", "challenge",
+    "chores", "crm", "documents", "donations", "dreams", "events", "expense",
     "fasting", "flashcards", "focus", "followup", "goals", "gratitude",
     "habit", "income", "jobs", "journal", "leads", "meals", "meds",
-    "mileage", "mood", "networth", "packages", "plants", "sleep",
-    "split", "steps", "stretches", "subs", "symptom", "time", "vitals",
-    "water", "worklog", "workout", "writing",
+    "mileage", "mood", "networth", "notes", "packages", "plants", "savings",
+    "sleep", "split", "steps", "stretches", "subs", "symptom", "time",
+    "todo", "vitals", "water", "worklog", "workout", "writing",
 ]
 
 

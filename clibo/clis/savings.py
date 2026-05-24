@@ -43,7 +43,14 @@ class SavingsDeposit(SQLModel, table=True):
     note: str | None = None
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
+    """Default: ``clibo savings`` (bare) lists every goal with progress."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(list_goals, json_out=json_out)
 
 
 def _resolve(db, ident: str) -> SavingsGoal | None:
