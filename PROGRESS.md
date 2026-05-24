@@ -4,6 +4,34 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `clibo todo snooze` — push a task's due date forward · 2026-05-24
+
+NL ask: *"snooze this for 2 days"*. The closest existing path was
+`todo edit ID --due "in 2 days"` — works but clunky for what's a
+universal daily-task operation.
+
+- ⏰ **`clibo todo snooze TASK [-d N]`** — pushes the task's due
+  date forward by N days (default 1). Roll-forward semantics:
+  - Has existing due → new_due = current_due + N
+  - No due yet → new_due = today + N
+- Only modifies `due`; title / priority / project / tags unchanged.
+- N must be ≥1 (snoozing by 0 is editing-not-snoozing).
+- 🎤 NL flow verified: snooze defaults to +1 day; `-d 2` from a
+  task due in 3 days lands in 5; no-due task gets today+N; invalid
+  inputs fail loudly.
+- 🧪 **7 new tests** in `tests/test_todo.py`: pushes existing due,
+  anchors on today when no due, rolls forward from future due,
+  default of 1, zero/negative fails, unknown task fails, leaves
+  other fields untouched.
+- 📚 SKILL.md updated.
+- **Tests:** 1,374 passing (+7); ruff clean.
+
+**Why this matters:** snooze is one of the highest-frequency
+operations in a task system. Now it's a first-class verb, matching
+the natural utterance instead of requiring an edit dance.
+
+---
+
 ### Release v1.14.0 — temporal vocabulary + attention surface · 2026-05-24
 
 Ships everything since 1.13.0. Bumped `pyproject.toml` and

@@ -291,3 +291,57 @@ def test_stats_most_overdue_null_when_no_overdue(cli):
     assert data["most_overdue"] is None
     # But oldest_pending still surfaces the future-dated task.
     assert data["oldest_pending"]["title"] == "Future"
+
+
+# ── todo snooze — push due date forward ──
+
+
+def test_snooze_pushes_existing_due_forward(cli):
+    """A task due today snoozed by 1 lands tomorrow."""
+    today_iso = date.today().isoformat()
+    cli.run("todo", "add", "Has due", "-d", today_iso)
+    data = cli.json("todo", "snooze", "1")
+    assert data["due"] == (date.today() + timedelta(days=1)).isoformat()
+
+
+def test_snooze_with_no_prior_due_anchors_on_today(cli):
+    """No due → snooze sets it to today + N."""
+    cli.run("todo", "add", "No due")
+    data = cli.json("todo", "snooze", "1", "--days", "5")
+    assert data["due"] == (date.today() + timedelta(days=5)).isoformat()
+
+
+def test_snooze_rolls_forward_from_existing_due(cli):
+    """A task already 3 days out, snoozed by 2, lands 5 days out."""
+    target = (date.today() + timedelta(days=3)).isoformat()
+    cli.run("todo", "add", "Future", "-d", target)
+    data = cli.json("todo", "snooze", "1", "-d", "2")
+    expected = (date.today() + timedelta(days=5)).isoformat()
+    assert data["due"] == expected
+
+
+def test_snooze_default_is_one_day(cli):
+    """No `--days` → +1 day."""
+    cli.run("todo", "add", "T")
+    data = cli.json("todo", "snooze", "1")
+    assert data["due"] == (date.today() + timedelta(days=1)).isoformat()
+
+
+def test_snooze_zero_or_negative_days_fails(cli):
+    cli.run("todo", "add", "T")
+    assert cli.run("todo", "snooze", "1", "-d", "0").exit_code != 0
+    assert cli.run("todo", "snooze", "1", "-d", "-1").exit_code != 0
+
+
+def test_snooze_unknown_task_fails(cli):
+    result = cli.run("todo", "snooze", "99")
+    assert result.exit_code != 0
+
+
+def test_snooze_does_not_affect_other_fields(cli):
+    """Snooze only touches `due` — title, priority etc. are preserved."""
+    cli.run("todo", "add", "Important", "-p", "high", "-d", "today")
+    data = cli.json("todo", "snooze", "1", "-d", "3")
+    assert data["title"] == "Important"
+    assert data["priority"] == "high"
+    assert data["done"] is False

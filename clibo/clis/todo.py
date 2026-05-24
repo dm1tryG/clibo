@@ -203,6 +203,40 @@ app.command(name="complete", help="Alias for `done`")(done)
 
 
 @app.command()
+def snooze(
+    task_id: int = typer.Argument(..., help="Task ID"),
+    days: int = typer.Option(
+        1, "--days", "-d",
+        help="Days to push the due date forward (default 1)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """⏰ Push a task's due date forward by N days.
+
+    *"Snooze this for 2 days"* → ``clibo todo snooze 1 -d 2``. If the
+    task has no due date yet, the new due is set to ``today + N``.
+    Existing due dates roll forward from their current value, so a
+    task already due tomorrow snoozed by 2 lands the day after that.
+    """
+    if days < 1:
+        fail("--days must be >= 1", json_out=json_out)
+    with session() as db:
+        task = db.get(Task, task_id)
+        if not task:
+            fail(f"No task #{task_id}", json_out=json_out)
+        # Roll forward from existing due if any; otherwise anchor on today.
+        anchor = task.due or date.today()
+        task.due = anchor + timedelta(days=days)
+        db.add(task)
+        db.flush()
+        data = _row(task)
+    ok(
+        f"Snoozed {EMOJI} task #{task_id} → {task.due}",
+        json_out=json_out, data=data,
+    )
+
+
+@app.command()
 def undone(task_id: int = typer.Argument(..., help="Task ID"), json_out: JsonOpt = False) -> None:
     """✅ Mark a task as not done again."""
     with session() as db:

@@ -18,6 +18,7 @@ Task & to-do manager. Local SQLite. Every command accepts `--json`.
 | `clibo todo list --due-within N` | Pending tasks due in the next N days (incl. overdue + today) |
 | `clibo todo done ID` | Mark a task done |
 | `clibo todo undone ID` | Reopen a task |
+| `clibo todo snooze ID [-d N]` | Push due date forward by N days (default 1) |
 | `clibo todo edit ID` | Edit a task |
 | `clibo todo show ID` | One task in detail |
 | `clibo todo rm ID` | Delete a task |
