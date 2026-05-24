@@ -366,6 +366,80 @@ def streak(json_out: JsonOpt = False) -> None:
 
 
 @app.command()
+def year(
+    yr: int = typer.Option(None, "--year", "-y",
+                            help="Calendar year (default: current)"),
+    project: str = typer.Option(
+        None, "--project", "-p",
+        help="Narrow to one project (fuzzy substring on project name)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """📅 Annual writing — total words, sessions, by_month, by_project.
+
+    Mirrors `books year` / `expense year` etc. Answers
+    *"how much did I write this year?"* + the per-month breakdown +
+    *"what's my biggest writing day ever?"* via `biggest_session`.
+    """
+    target_year = yr or date.today().year
+    start = date(target_year, 1, 1)
+    end = date(target_year, 12, 31)
+    with session() as db:
+        query = (
+            select(WritingSession)
+            .where(WritingSession.entry_date >= start)
+            .where(WritingSession.entry_date <= end)
+        )
+        if project:
+            query = query.where(WritingSession.project.ilike(f"%{project}%"))
+        sessions = list(db.exec(query).all())
+    total_words = sum(s.words for s in sessions)
+    by_project: dict[str, int] = {}
+    by_month: dict[int, int] = {}
+    days_logged: set[date] = set()
+    for s in sessions:
+        by_project[s.project] = by_project.get(s.project, 0) + s.words
+        by_month[s.entry_date.month] = by_month.get(s.entry_date.month, 0) + s.words
+        days_logged.add(s.entry_date)
+    biggest_session = max(sessions, key=lambda s: s.words, default=None)
+    biggest_month = (
+        max(by_month.items(), key=lambda kv: kv[1]) if by_month else None
+    )
+    data = {
+        "year": target_year,
+        "sessions": len(sessions),
+        "total_words": total_words,
+        "days_written": len(days_logged),
+        "avg_words_per_session": (
+            round(total_words / len(sessions)) if sessions else 0
+        ),
+        "by_project": [
+            {"project": p, "words": w}
+            for p, w in sorted(by_project.items(), key=lambda kv: -kv[1])
+        ],
+        "by_month": [
+            {"month": m, "words": by_month.get(m, 0)} for m in range(1, 13)
+        ],
+        "biggest_session": (
+            {
+                "id": biggest_session.id,
+                "entry_date": biggest_session.entry_date,
+                "project": biggest_session.project,
+                "words": biggest_session.words,
+                "note": biggest_session.note,
+            } if biggest_session else None
+        ),
+        "biggest_month": (
+            {"month": biggest_month[0], "words": biggest_month[1]}
+            if biggest_month else None
+        ),
+        "project": project if project else None,
+    }
+    label = f"{target_year}" + (f" · {project}" if project else "")
+    render_record(data, json_out=json_out, title=f"📅 Writing · {label}")
+
+
+@app.command()
 def stats(
     days: int = typer.Option(30, "--days", help="Window size in days"),
     json_out: JsonOpt = False,

@@ -4,6 +4,33 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `writing year` — annual rollup, mirroring books/expense/income · 2026-05-24
+
+Gap: every other daily-log money/hobby tool with a year view
+(`books`, `expense`, `income`, `donations`) had a `year` rollup —
+`writing` didn't. Filled.
+
+- ✍️ **`clibo writing year [-y Y] [-p PROJECT]`** — annual total,
+  sessions, days written, by_project, by_month (12 zero-padded
+  slots), biggest_session, biggest_month, avg_words_per_session.
+  `--project` filter uses fuzzy substring (matches `books year`
+  / `income year` semantics).
+- 🎤 NL flows verified: *"how much did I write this year?"*,
+  *"what was my biggest writing day?"*, *"how much novel-only
+  writing in 2026?"*.
+- 🧪 **6 new tests** in `tests/test_writing.py`: total/sessions
+  aggregation, biggest-session picks max, by_month has 12 slots,
+  fuzzy project filter, empty-state safety, specific-year arg.
+- 📚 SKILL.md updated with the new row.
+- **Tests:** 1,266 passing (+6); ruff clean.
+
+**Why this matters:** the `year` pattern is now consistent across
+all five "log over time" domains — books, expense, income,
+donations, writing. Same shape (`total`, `by_month` × 12,
+`biggest_*`, filter flag), same mental model.
+
+---
+
 ### `books top` — longest, best-rated, or most recent · 2026-05-24
 
 NL-probe gap: *"what's the longest book I've read?"* / *"what's

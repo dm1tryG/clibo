@@ -170,3 +170,60 @@ def test_writing_help_still_works(cli):
     result = cli.run("writing", "--help")
     assert result.exit_code == 0
     assert "today" in result.stdout
+
+
+# ── writing year: annual rollup ──
+
+
+def test_writing_year_aggregates_total_and_sessions(cli):
+    cli.run("writing", "log", "novel", "-w", "500")
+    cli.run("writing", "log", "novel", "-w", "1200")
+    cli.run("writing", "log", "blog", "-w", "400")
+    data = cli.json("writing", "year")
+    assert data["total_words"] == 2100
+    assert data["sessions"] == 3
+    assert data["days_written"] == 1
+    # Two projects, sorted by words desc.
+    assert data["by_project"][0] == {"project": "novel", "words": 1700}
+    assert data["by_project"][1] == {"project": "blog", "words": 400}
+
+
+def test_writing_year_biggest_session_picks_max(cli):
+    cli.run("writing", "log", "novel", "-w", "500")
+    cli.run("writing", "log", "novel", "-w", "1200")
+    big = cli.json("writing", "year")["biggest_session"]
+    assert big["words"] == 1200
+    assert big["project"] == "novel"
+
+
+def test_writing_year_by_month_has_12_slots(cli):
+    cli.run("writing", "log", "novel", "-w", "1000")
+    data = cli.json("writing", "year")
+    assert len(data["by_month"]) == 12
+    assert {m["month"] for m in data["by_month"]} == set(range(1, 13))
+
+
+def test_writing_year_project_filter_is_fuzzy(cli):
+    cli.run("writing", "log", "main-novel", "-w", "1000")
+    cli.run("writing", "log", "blog", "-w", "400")
+    data = cli.json("writing", "year", "--project", "novel")
+    assert data["total_words"] == 1000
+    assert data["sessions"] == 1
+    assert data["project"] == "novel"
+
+
+def test_writing_year_empty_state_is_safe(cli):
+    """No sessions → zero totals, biggest_session is null, no crash."""
+    data = cli.json("writing", "year")
+    assert data["total_words"] == 0
+    assert data["sessions"] == 0
+    assert data["biggest_session"] is None
+    assert data["biggest_month"] is None
+
+
+def test_writing_year_specific_year_argument(cli):
+    """--year Y restricts to that calendar year."""
+    cli.run("writing", "log", "novel", "-w", "500")
+    data = cli.json("writing", "year", "--year", "1999")
+    assert data["year"] == 1999
+    assert data["total_words"] == 0

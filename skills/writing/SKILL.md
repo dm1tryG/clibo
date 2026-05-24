@@ -21,6 +21,7 @@ consecutive-day streak. Local SQLite. Every command accepts `--json`.
 | `clibo writing show ENTRY` | One entry (ID or project name) |
 | `clibo writing edit ENTRY [...]` | Update an entry |
 | `clibo writing rm ENTRY` | Delete |
+| `clibo writing year [-y Y] [-p PROJECT]` | Annual rollup — total words, sessions, by month/project, biggest session |
 | `clibo writing stats --days N` | Totals, avg wpm, best day, top projects |
 
 Pace (`wpm`) is auto-computed when both `--words` and `--duration`
