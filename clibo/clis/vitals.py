@@ -96,18 +96,62 @@ def _save(reading: VitalReading) -> dict:
 
 @app.command()
 def bp(
-    systolic: int = typer.Argument(..., help="Systolic pressure"),
-    diastolic: int = typer.Argument(..., help="Diastolic pressure"),
+    systolic: str = typer.Argument(
+        ...,
+        help="Systolic pressure as an int (e.g. 120), or 'SYS/DIA' (e.g. '120/80')",
+    ),
+    diastolic: int = typer.Argument(
+        None,
+        help="Diastolic pressure (omit if systolic was passed as 'SYS/DIA')",
+    ),
     on: str = typer.Option("today", "--date", "-d", help="Date"),
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
 ) -> None:
-    """🩸 Log a blood-pressure reading."""
+    """🩸 Log a blood-pressure reading.
+
+    Accepts either ``clibo vitals bp 120 80`` or the canonical
+    medical notation ``clibo vitals bp 120/80``.
+    """
+    # Parse: SYS/DIA passed as a single string, or two separate ints.
+    if "/" in systolic:
+        if diastolic is not None:
+            fail(
+                "Pass either 'SYS/DIA' OR systolic + diastolic separately, "
+                "not both.",
+                json_out=json_out,
+            )
+        parts = systolic.split("/", 1)
+        try:
+            sys_val = int(parts[0].strip())
+            dia_val = int(parts[1].strip())
+        except (ValueError, IndexError):
+            fail(
+                f"Bad blood-pressure format: {systolic!r}. "
+                "Expected 'SYS/DIA' like '120/80'.",
+                json_out=json_out,
+            )
+    else:
+        try:
+            sys_val = int(systolic)
+        except ValueError:
+            fail(
+                f"Systolic must be an integer or 'SYS/DIA' notation; got "
+                f"{systolic!r}.",
+                json_out=json_out,
+            )
+        if diastolic is None:
+            fail(
+                "Missing diastolic pressure. Pass it as a second argument, "
+                "or use 'SYS/DIA' notation like '120/80'.",
+                json_out=json_out,
+            )
+        dia_val = diastolic
     data = _save(VitalReading(
-        kind="bp", value=systolic, value2=diastolic, unit="mmHg",
+        kind="bp", value=sys_val, value2=dia_val, unit="mmHg",
         entry_date=parse_date(on), note=note,
     ))
-    ok(f"Logged 🩸 BP {systolic}/{diastolic} mmHg — {data['category']}",
+    ok(f"Logged 🩸 BP {sys_val}/{dia_val} mmHg — {data['category']}",
        json_out=json_out, data=data)
 
 

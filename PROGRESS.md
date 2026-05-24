@@ -4,6 +4,31 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `vitals bp` accepts canonical `SYS/DIA` notation · 2026-05-24
+
+NL friction: `clibo vitals bp 120/80` failed — required two separate
+ints `bp 120 80`. But "120/80" is the universal medical convention.
+The `vitals log bp 120/80` dispatcher already accepted it; the
+direct `vitals bp` subcommand didn't.
+
+- 🩸 **`clibo vitals bp 120/80`** now works, parsing the SYS/DIA
+  string into two ints. Two-arg form `bp 120 80` remains valid for
+  back-compat.
+- Passing both forms (`bp 120/80 85`) fails loudly — ambiguous.
+- Bad slash-input (`bp abc/def`) and missing diastolic (`bp 120`)
+  both fail with helpful error messages.
+- 🧪 **6 new tests**: slash works, two-args works, both-forms fails,
+  missing-diastolic fails, bad-slash fails, non-int single arg fails.
+- 📚 SKILL.md updated to show the canonical notation.
+- **Tests:** 1,410 passing (+6); ruff clean.
+
+**Why this matters:** medical data conventions matter for adoption.
+Forcing users to remember `bp 120 80` (with a space) when every
+chart shows `120/80` (with a slash) is unnecessary friction. Both
+forms now work; the natural one is canonical.
+
+---
+
 ### `books stats`: biggest_session + biggest_day · 2026-05-24
 
 The PR-session pattern keeps generalising. `books stats` had

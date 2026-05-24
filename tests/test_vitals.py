@@ -169,3 +169,43 @@ def test_add_alias_supports_bp_slash(cli):
     data = cli.json("vitals", "add", "bp", "120/80")
     assert data["value"] == 120
     assert data["value2"] == 80
+
+
+# ── vitals bp: accepts both 'SYS/DIA' notation and two args (iter 167) ──
+
+
+def test_vitals_bp_accepts_slash_notation(cli):
+    """`clibo vitals bp 120/80` works — the canonical medical notation."""
+    data = cli.json("vitals", "bp", "120/80")
+    assert data["value"] == 120
+    assert data["value2"] == 80
+    assert "category" in data
+
+
+def test_vitals_bp_accepts_two_args(cli):
+    """Back-compat: `clibo vitals bp 120 80` still works."""
+    data = cli.json("vitals", "bp", "120", "80")
+    assert data["value"] == 120
+    assert data["value2"] == 80
+
+
+def test_vitals_bp_both_forms_fails(cli):
+    """`120/80 85` is ambiguous — fail loudly."""
+    result = cli.run("vitals", "bp", "120/80", "85")
+    assert result.exit_code != 0
+
+
+def test_vitals_bp_missing_diastolic_fails(cli):
+    result = cli.run("vitals", "bp", "120")
+    assert result.exit_code != 0
+
+
+def test_vitals_bp_bad_slash_format_fails(cli):
+    result = cli.run("vitals", "bp", "abc/def")
+    assert result.exit_code != 0
+
+
+def test_vitals_bp_invalid_systolic_fails(cli):
+    """Non-int single arg (no slash) is invalid."""
+    result = cli.run("vitals", "bp", "high")
+    assert result.exit_code != 0

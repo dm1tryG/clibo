@@ -13,7 +13,7 @@ Local SQLite. Every command accepts `--json`.
 | Command | What it does |
 |---|---|
 | `clibo vitals log KIND VALUE` | **Generic logger** — works for every kind |
-| `clibo vitals bp SYS DIA` | Log blood pressure directly (auto-classified) |
+| `clibo vitals bp 120/80` (or `bp 120 80`) | Log blood pressure (auto-classified) |
 | `clibo vitals pulse BPM` | Log heart rate |
 | `clibo vitals glucose VALUE` | Log blood glucose (`-u` unit) |
 | `clibo vitals temp CELSIUS` | Log body temperature |
