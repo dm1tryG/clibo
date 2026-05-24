@@ -232,8 +232,19 @@ def _ago(when: datetime) -> str:
     return f"{days}d ago"
 
 
-def collect_recent(limit: int = 20) -> list[dict]:
-    """Pull the most-recent ``limit`` events across all activity sources."""
+def known_sources() -> list[str]:
+    """Every source tag the recent feed knows how to surface."""
+    return sorted({s[0] for s in SOURCES})
+
+
+def collect_recent(limit: int = 20, tool: str | None = None) -> list[dict]:
+    """Pull the most-recent ``limit`` events across all activity sources.
+
+    Pass ``tool`` to filter to a single source (e.g. ``"workout"``).
+    Answers *"when did I last do X?"* without scanning the full feed.
+    Match is case-insensitive against the source tag (see
+    :func:`known_sources`).
+    """
     init_db()
     db_path = config.db_path()
     out: list[dict] = []
@@ -250,8 +261,11 @@ def collect_recent(limit: int = 20) -> list[dict]:
                 _BOOK_TITLES[row["id"]] = row["title"]
     except sqlite3.Error:
         pass
+    target = tool.lower() if tool else None
     try:
         for source, emoji, table, cols, fmt in SOURCES:
+            if target and source != target:
+                continue
             table_exists = conn.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
                 (table,),

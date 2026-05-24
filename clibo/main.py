@@ -705,22 +705,46 @@ def init_cmd(
 @app.command()
 def recent(
     limit: int = typer.Option(20, "--limit", "-n", help="How many entries to show"),
+    tool: str = typer.Option(
+        None, "--tool", "-t",
+        help="Filter to one source (e.g. workout, expense). "
+             "Answers 'when did I last do X?'",
+    ),
     json_out: JsonOpt = False,
 ) -> None:
     """📜 A chronological feed of your most recent actions across every tool."""
-    rows = collect_recent(limit=limit)
+    from clibo.recent import known_sources
+    if tool and tool.lower() not in known_sources():
+        from clibo.core.output import fail
+        valid = ", ".join(known_sources())
+        fail(
+            f"Unknown source {tool!r}. Try one of: {valid}",
+            json_out=json_out,
+        )
+    rows = collect_recent(limit=limit, tool=tool)
     if json_out:
         _emit_json({
             "count": len(rows),
+            "tool": tool.lower() if tool else None,
             "events": [
                 {**row, "ago": _ago(row["created_at"])} for row in rows
             ],
         })
         return
     if not rows:
-        console.print("\n  [dim]Nothing logged yet — try `clibo today` to get started.[/dim]\n")
+        empty = (
+            f"\n  [dim]No recent {tool} activity.[/dim]\n"
+            if tool
+            else "\n  [dim]Nothing logged yet — try `clibo today` to get started.[/dim]\n"
+        )
+        console.print(empty)
         return
-    console.print(f"\n📜 [bold]Recent activity[/bold]  [dim](last {len(rows)})[/dim]\n")
+    title = (
+        f"📜 [bold]Recent {tool}[/bold]  [dim](last {len(rows)})[/dim]"
+        if tool else
+        f"📜 [bold]Recent activity[/bold]  [dim](last {len(rows)})[/dim]"
+    )
+    console.print(f"\n{title}\n")
     for row in rows:
         when = f"[dim]{_ago(row['created_at']):>10}[/dim]"
         console.print(

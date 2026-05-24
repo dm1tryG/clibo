@@ -4,6 +4,33 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `recent --tool X` filters the activity feed to one source · 2026-05-24
+
+NL-probe friction: *"when did I last work out?"* required scanning
+the whole `clibo recent` feed visually. The feed was great as an
+"everything chronologically" view but lacked a focused lens.
+
+- 🎯 **`clibo recent --tool workout`** filters the cross-tool
+  activity feed to a single source. Answers *"when did I last
+  do X?"* in one command. Case-insensitive match against the
+  source tag (workout / expense / journal / …).
+- ✅ **`known_sources()`** in `clibo/recent.py` enumerates every
+  valid tag — used to validate the flag and produce a friendly
+  error listing the options on a typo.
+- 📊 JSON shape extends with a top-level `tool` field that echoes
+  the filter (or `null`) — agents can introspect what was applied.
+- 🧪 **6 new tests** in `tests/test_recent.py`: filter scoping,
+  case-insensitive match, empty-set on no-data, default null,
+  invalid-tool fails loudly, JSON error shape on invalid input.
+- **Tests:** 1,242 passing (+6); ruff clean.
+
+**Why this matters:** `clibo recent` was the answer to *"what have
+I been up to lately?"*. With `--tool`, it now also answers the
+sharper *"when did I last X?"* — same data, narrower lens, no
+need for a per-tool `recent` subcommand on every tracker.
+
+---
+
 ### Bare-default commands gain `--json` everywhere · 2026-05-24
 
 Real friction surfaced during a routine NL probe: typing `clibo subs

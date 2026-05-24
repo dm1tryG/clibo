@@ -5,7 +5,8 @@ from __future__ import annotations
 
 def test_recent_empty(cli):
     data = cli.json("recent")
-    assert data == {"count": 0, "events": []}
+    assert data["count"] == 0
+    assert data["events"] == []
 
 
 def test_recent_lists_across_tools(cli):
@@ -98,3 +99,56 @@ def test_recent_symptom_omits_location_when_missing(cli):
     syms = [e for e in events if e["source"] == "symptom"]
     assert len(syms) == 1
     assert "(" not in syms[0]["summary"]  # no empty parens
+
+
+# ── recent --tool filter: 'when did I last do X?' ──
+
+
+def test_recent_tool_filter_returns_only_matching_source(cli):
+    cli.run("workout", "log", "running", "--duration", "30")
+    cli.run("expense", "add", "coffee", "-a", "5", "-c", "food")
+    cli.run("journal", "write", "Test entry")
+    data = cli.json("recent", "--tool", "workout")
+    sources = {e["source"] for e in data["events"]}
+    assert sources == {"workout"}
+    assert data["count"] == 1
+    assert data["tool"] == "workout"
+
+
+def test_recent_tool_filter_case_insensitive(cli):
+    cli.run("workout", "log", "running", "--duration", "30")
+    data = cli.json("recent", "--tool", "WORKOUT")
+    assert data["count"] == 1
+    assert data["tool"] == "workout"
+
+
+def test_recent_tool_filter_empty_when_no_matching(cli):
+    """Filtering to a tool with no entries returns 0, not all entries."""
+    cli.run("journal", "write", "Test entry")
+    data = cli.json("recent", "--tool", "workout")
+    assert data["count"] == 0
+    assert data["events"] == []
+
+
+def test_recent_no_filter_keeps_tool_null(cli):
+    """Without `--tool`, the `tool` JSON field is null."""
+    cli.run("journal", "write", "Test entry")
+    data = cli.json("recent")
+    assert data["tool"] is None
+
+
+def test_recent_invalid_tool_fails(cli):
+    """Typo'd source name should fail loudly, not silently return nothing."""
+    result = cli.run("recent", "--tool", "nonsense")
+    assert result.exit_code != 0
+    assert "Unknown source" in result.output
+
+
+def test_recent_invalid_tool_json_returns_error(cli):
+    """Same in JSON mode — error shape rather than empty list."""
+    result = cli.run("recent", "--tool", "nonsense", "--json")
+    assert result.exit_code != 0
+    # The shared `fail` helper emits a JSON error object on --json.
+    import json
+    data = json.loads(result.output)
+    assert data.get("ok") is False
