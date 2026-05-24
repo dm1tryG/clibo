@@ -101,15 +101,28 @@ def _week_count(days: set[date]) -> int:
 
 def _row(db, habit: Habit) -> dict:
     checks = _checks(db, habit.id)
+    this_week = _week_count(checks)
+    target = habit.target_per_week
+    today = date.today()
+    days_elapsed = today.weekday() + 1   # Mon=1 … Sun=7
+    days_left_this_week = 7 - days_elapsed
+    # Pace check: by day N you should have at least floor(target * N / 7).
+    # Floor (not ceil) is the kinder definition — Wednesday of a 3-per-week
+    # target needs 1, not 2.
+    expected_by_now = (target * days_elapsed) // 7
+    on_pace = this_week >= expected_by_now
     return {
         "id": habit.id,
         "name": habit.name,
         "current_streak": _streak(checks),
         "longest_streak": _longest_streak(checks),
-        "this_week": _week_count(checks),
-        "target_per_week": habit.target_per_week,
+        "this_week": this_week,
+        "target_per_week": target,
+        "target_remaining": max(0, target - this_week),
+        "days_left_this_week": days_left_this_week,
+        "on_pace": on_pace,
         "total_checks": len(checks),
-        "done_today": date.today() in checks,
+        "done_today": today in checks,
         "active": habit.active,
     }
 

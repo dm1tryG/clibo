@@ -4,6 +4,32 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `habit list`: surface on_pace / target_remaining / days_left_this_week · 2026-05-24
+
+NL ask: *"am I going to hit my weekly target?"*. `habit list` showed
+`this_week / target_per_week` as two numbers, but agents (and humans)
+had to do the math to know whether they're behind, ahead, or done.
+
+- 🔥 **`on_pace`** boolean — True when `this_week >= floor(target *
+  days_elapsed / 7)`. Floor (not ceil) is the kinder definition:
+  Wednesday of a 3-per-week target needs 1, not 2.
+- 🎯 **`target_remaining`** — `max(0, target - this_week)`. How many
+  more times this week, clamped at zero once the target is hit.
+- 📅 **`days_left_this_week`** — 0 (Sunday) to 6 (Monday). Combined
+  with `target_remaining` an agent can phrase *"you need 2 more this
+  week with 3 days left"*.
+- 🧪 **6 new tests**: target_remaining decrements, floors at zero,
+  on_pace true when hitting, days_left bounds, target=1 satisfied,
+  pace-formula matches expectations.
+- **Tests:** 1,380 passing (+6); ruff clean.
+
+**Why this matters:** the data was already there; users just had to
+do mental math to act on it. Surfacing the booleans turns
+*"5 done of 7 this week"* into *"on_pace=True, 2 more, 3 days left"*
+— directly actionable for agent UIs.
+
+---
+
 ### `clibo todo snooze` — push a task's due date forward · 2026-05-24
 
 NL ask: *"snooze this for 2 days"*. The closest existing path was

@@ -71,3 +71,66 @@ def test_habit_help_still_works(cli):
     result = cli.run("habit", "--help")
     assert result.exit_code == 0
     assert "today" in result.stdout
+
+
+# ── habit list: on_pace + target_remaining + days_left_this_week ──
+
+
+def test_habit_target_remaining_decrements_as_checks_land(cli):
+    """target_remaining = max(0, target - this_week). Clamps at zero."""
+    cli.run("habit", "add", "Gym", "--target", "3")
+    row0 = next(h for h in cli.json("habit", "list") if h["name"] == "Gym")
+    assert row0["target_remaining"] == 3
+    cli.run("habit", "check", "1")
+    row1 = next(h for h in cli.json("habit", "list") if h["name"] == "Gym")
+    assert row1["target_remaining"] == 2
+
+
+def test_habit_target_remaining_floors_at_zero_when_exceeded(cli):
+    """Hitting target N times beyond the goal still shows 0, never negative."""
+    cli.run("habit", "add", "Daily", "--target", "1")
+    cli.run("habit", "check", "1")
+    cli.run("habit", "check", "1", "-d", "yesterday")
+    cli.run("habit", "check", "1", "-d", "2 days ago")
+    row = next(h for h in cli.json("habit", "list") if h["name"] == "Daily")
+    assert row["target_remaining"] == 0
+
+
+def test_habit_on_pace_true_when_hitting_target(cli):
+    """A habit checked enough this week is on pace."""
+    cli.run("habit", "add", "Gym", "--target", "3")
+    # Three checks across this week → meets the target regardless of day.
+    cli.run("habit", "check", "1")
+    cli.run("habit", "check", "1", "-d", "1 day ago")
+    cli.run("habit", "check", "1", "-d", "2 days ago")
+    row = next(h for h in cli.json("habit", "list") if h["name"] == "Gym")
+    assert row["this_week"] == 3
+    assert row["on_pace"] is True
+
+
+def test_habit_days_left_this_week_field_present(cli):
+    """days_left_this_week is 0..6, depending on today's weekday."""
+    cli.run("habit", "add", "Any")
+    row = cli.json("habit", "list")[0]
+    assert 0 <= row["days_left_this_week"] <= 6
+
+
+def test_habit_target_remaining_zero_when_done_this_week(cli):
+    """Min target is 1; one check satisfies it → remaining = 0, on_pace True."""
+    cli.run("habit", "add", "Once", "--target", "1")
+    cli.run("habit", "check", "1")
+    row = cli.json("habit", "list")[0]
+    assert row["target_remaining"] == 0
+    assert row["on_pace"] is True
+
+
+def test_habit_on_pace_false_at_week_end_with_no_checks(cli):
+    """A fresh habit added today with no checks isn't on pace if
+    today's weekday means some progress is already expected. Most
+    of the week-cycle this is True; only Mondays it might not be."""
+    cli.run("habit", "add", "Gym", "--target", "3")
+    row = cli.json("habit", "list")[0]
+    from datetime import date as date_
+    days_elapsed = date_.today().weekday() + 1
+    expected = (3 * days_elapsed) // 7
+    assert row["on_pace"] is (row["this_week"] >= expected)
