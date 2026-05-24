@@ -94,13 +94,34 @@ def take(
     medication: str = typer.Argument(..., help="Medication name or ID"),
     on: str = typer.Option("today", "--date", "-d", help="Date taken"),
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
+    strict: bool = typer.Option(
+        False, "--strict",
+        help="Fail if the medication isn't already registered "
+             "(default: auto-create a minimal entry)",
+    ),
     json_out: JsonOpt = False,
 ) -> None:
-    """💊 Log that you took a dose."""
+    """💊 Log that you took a dose.
+
+    If the medication isn't registered yet, it's **auto-created** with a
+    minimal entry (dosage unknown, 1×/day). The natural user statement
+    "took a vitamin D" should work without first running ``meds add`` —
+    pre-registration is for daily-routine meds, not one-off doses.
+
+    Pass ``--strict`` to keep the old behaviour (fail on unknown).
+    """
+    auto_created = False
     with session() as db:
         med = _resolve(db, medication)
         if not med:
-            fail(f"No medication matching {medication!r}", json_out=json_out)
+            if strict or medication.isdigit():
+                # Strict mode (or numeric ID that doesn't exist) → no auto-create.
+                fail(f"No medication matching {medication!r}", json_out=json_out)
+            med = Medication(name=medication.strip())
+            db.add(med)
+            db.flush()
+            db.refresh(med)
+            auto_created = True
         dose = MedDose(med_id=med.id, entry_date=parse_date(on), note=note)
         db.add(dose)
         db.flush()
@@ -108,10 +129,18 @@ def take(
         data = {
             "id": dose.id,
             "medication": med.name,
+            "med_id": med.id,
+            "auto_created": auto_created,
             "taken_today": taken,
             "times_per_day": med.times_per_day,
         }
-    suffix = "✅ all done" if taken >= med.times_per_day else f"{taken}/{med.times_per_day} today"
+    if taken >= med.times_per_day:
+        suffix = "✅ all done"
+    else:
+        suffix = f"{taken}/{med.times_per_day} today"
+    if auto_created:
+        suffix += (f" · [dim]new med — set dosage with: "
+                   f"clibo meds edit \"{med.name}\" -d '<dosage>'[/dim]")
     ok(f"Took {EMOJI} {med.name} — {suffix}", json_out=json_out, data=data)
 
 
@@ -217,28 +246,74 @@ def history(
 
 
 @app.command()
-def stop(med_id: int = typer.Argument(..., help="Medication ID"), json_out: JsonOpt = False) -> None:
-    """💊 Stop a medication (keeps its history)."""
+def edit(
+    medication: str = typer.Argument(..., help="Medication name or ID"),
+    name: str = typer.Option(None, "--name", help="New name"),
+    dosage: str = typer.Option(None, "--dosage", "-d", help="New dosage"),
+    times_per_day: int = typer.Option(
+        None, "--times", "-t", help="New times-per-day target"
+    ),
+    note: str = typer.Option(None, "--note", "-n", help="New note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """💊 Edit a medication. Accepts a numeric ID or a name (fuzzy)."""
+    if times_per_day is not None and times_per_day < 1:
+        fail("Times per day must be ≥ 1", json_out=json_out)
     with session() as db:
-        med = db.get(Medication, med_id)
+        med = _resolve(db, medication)
         if not med:
-            fail(f"No medication #{med_id}", json_out=json_out)
-        med.active = False
+            fail(f"No medication matching {medication!r}", json_out=json_out)
+        if name is not None:
+            med.name = name.strip()
+        if dosage is not None:
+            med.dosage = dosage
+        if times_per_day is not None:
+            med.times_per_day = times_per_day
+        if note is not None:
+            med.note = note
         db.add(med)
-    ok(f"Stopped {EMOJI} {med.name}", json_out=json_out, data={"id": med_id, "active": False})
+        db.flush()
+        data = {
+            "id": med.id, "name": med.name, "dosage": med.dosage,
+            "times_per_day": med.times_per_day, "note": med.note,
+            "active": med.active,
+        }
+    ok(f"Updated {EMOJI} {med.name}", json_out=json_out, data=data)
 
 
 @app.command()
-def rm(med_id: int = typer.Argument(..., help="Medication ID"), json_out: JsonOpt = False) -> None:
-    """💊 Delete a medication and all its dose history."""
+def stop(
+    medication: str = typer.Argument(..., help="Medication name or ID"),
+    json_out: JsonOpt = False,
+) -> None:
+    """💊 Stop a medication (keeps its history). Accepts a name or ID."""
     with session() as db:
-        med = db.get(Medication, med_id)
+        med = _resolve(db, medication)
         if not med:
-            fail(f"No medication #{med_id}", json_out=json_out)
-        for dose in db.exec(select(MedDose).where(MedDose.med_id == med_id)).all():
+            fail(f"No medication matching {medication!r}", json_out=json_out)
+        med.active = False
+        db.add(med)
+        mid = med.id
+        name = med.name
+    ok(f"Stopped {EMOJI} {name}", json_out=json_out,
+       data={"id": mid, "active": False})
+
+
+@app.command()
+def rm(
+    medication: str = typer.Argument(..., help="Medication name or ID"),
+    json_out: JsonOpt = False,
+) -> None:
+    """💊 Delete a medication and all its dose history. Accepts a name or ID."""
+    with session() as db:
+        med = _resolve(db, medication)
+        if not med:
+            fail(f"No medication matching {medication!r}", json_out=json_out)
+        mid = med.id
+        for dose in db.exec(select(MedDose).where(MedDose.med_id == mid)).all():
             db.delete(dose)
         db.delete(med)
-    ok(f"Deleted medication #{med_id}", json_out=json_out, data={"deleted": med_id})
+    ok(f"Deleted medication #{mid}", json_out=json_out, data={"deleted": mid})
 
 
 @app.command()

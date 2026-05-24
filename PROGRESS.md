@@ -4,6 +4,59 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 101 — `meds take` auto-creates + `meds edit` / name-resolve · 2026-05-24
+
+Agent-mode self-test on *"Took my morning vitamins"* caught a real
+friction. The natural human flow is **`meds take "Vitamin D"`** with
+zero ceremony, but the old code required `meds add` first — failing
+with "No medication matching 'Vitamin D'". One-off doses of vitamins,
+aspirin, ibuprofen don't deserve registration overhead.
+
+Plus the same probe surfaced two iter-84/85-style carryovers: no
+`meds edit`, and `stop`/`rm` were integer-only.
+
+- 💊 **`meds take NAME` auto-creates** if the medication isn't
+  registered. New entry has default `times_per_day=1` and no
+  dosage. The success message includes a hint:
+  `new med — set dosage with: clibo meds edit "Vitamin D" -d '<dosage>'`.
+  Agent JSON gets a new `auto_created: bool` field so the agent can
+  follow up to ask for dosage when needed.
+- 🛡 **`--strict` flag** keeps the old fail-on-unknown behaviour for
+  users who want every med pre-registered. Numeric IDs that don't
+  exist **always** fail (no `meds take 99999` silently creating
+  medication '99999').
+- 💊 **New `meds edit NAME` subcommand** — set dosage, times-per-day,
+  rename, update note. Accepts name (fuzzy) or ID. Carryover gap
+  from before the iter-84/85 name-resolve rollout.
+- 💊 **`meds stop` and `meds rm` now accept names** — closes the
+  last integer-only verbs in the tool. `rm` still cascades doses
+  (delete a med → delete its dose history).
+- 🎤 NL flow verified end-to-end:
+  • `meds take "Vitamin D"` (cold start) → `auto_created=true, taken_today=1` ✓
+  • Second `take "Vitamin D"` → `auto_created=false, taken_today=2` (no duplicate row) ✓
+  • Hint command `meds edit "Vitamin D" -d "1000 IU" -t 2` ✓
+  • `meds take "Aspirin" --strict` → fails ✓
+  • `meds take 99999` → fails even without --strict ✓
+  • `meds stop "Vitamin D"`, `meds rm "Vitamin D"` → both work by name ✓
+- 🧪 **12 new tests**: auto-create, second-dose-no-duplicate, default
+  times-per-day=1, strict-mode rejection, numeric-id-always-strict,
+  edit by name, edit rename, edit invalid times-per-day, edit unknown,
+  stop by name, rm by name, rm cascades doses.
+- 📚 **SKILL.md** updated with the auto-create story, `--strict`
+  caveat, and a 7-row natural-language → command table covering
+  the realistic flows (one-off vitamins, daily Lipitor, "stop
+  taking Allegra", "what's still due").
+- 📚 **`test_take_unknown_fails`** updated — was asserting the now-
+  changed behaviour, renamed to `test_take_unknown_with_strict_fails`
+  with the `--strict` flag.
+- **Tests:** 974 passing (+12); ruff clean.
+
+The "I took a thing" flow now matches every other quick-log tool
+in clibo — no pre-registration ceremony. Users who want the
+old guard-rails keep them via `--strict`.
+
+---
+
 ### 🎉 Iteration 100 — `vitals log` dispatcher (verb-shape uniformity) · 2026-05-24
 
 The **100th** iteration. Fittingly, agent-mode self-test caught a
