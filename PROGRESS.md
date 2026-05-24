@@ -4,6 +4,59 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 109 — `meetings` polish: inline actions + fuzzy resolve + edit · 2026-05-24
+
+Agent-mode self-test on *"Just finished a Zoom with Acme — discussed
+Q3 roadmap, Bob to send timeline"* surfaced three real frictions on
+`meetings`:
+
+1. `meetings action "Acme" ...` failed against the seeded title
+   "Acme Q3 roadmap" — the resolver only did **exact** match.
+2. **No way to capture action items inline** at meeting creation,
+   forcing a two-step flow (add → action) for the natural one-breath
+   statement.
+3. **No `edit`** subcommand, and `rm` was integer-only — iter-84/85
+   carryover.
+
+- 🗓️ **Fuzzy meeting resolver** — `_resolve` now does ID → exact
+  title → substring (most-recent wins). Mirrors the iter-84/85
+  pattern. `meetings action "Acme"` finds "Acme Q3 roadmap"; two
+  meetings sharing the substring → picks the newer.
+- 🗓️ **Inline `--action` / `-A` on `meetings add`** — repeatable
+  Typer Option (`list[str]`). Each value can be plain text or
+  `"OWNER: summary"` to set the owner inline:
+  ```bash
+  clibo meetings add "Acme Q3" \
+    -A "Bob: send timeline" \
+    -A "Alice: draft proposal" \
+    -A "me: schedule follow-up"
+  ```
+  Empty strings are silently skipped. Success message includes the
+  action-count: `✓ Added 🗓️ meeting 'Acme Q3' (2026-05-24) · 3 action items`.
+- 🗓️ **New `meetings edit MEETING [...]`** — change title, date,
+  attendees, notes. Accepts name (fuzzy) or ID. Last bit of the
+  edit-subcommand rollout from iters 82-85.
+- 🗓️ **`meetings rm`** — now accepts a name (fuzzy) or ID. Still
+  cascades action items.
+- 🎤 NL flow verified end-to-end with the original failing scenario:
+  • One call: `meetings add "Acme Q3" -A "Bob: send timeline" -A "Alice: draft proposal" -A "me: schedule follow-up"` → 3 action items attached ✓
+  • Follow-up: `meetings action "Acme" "follow up next week"` → resolves to "Acme Q3 roadmap" ✓
+  • `meetings show "Acme"` → 4 action items with owners shown ✓
+  • `meetings edit "Acme" -N "updated notes"` ✓
+  • `meetings rm "Acme"` → cascades the 4 actions ✓
+- 🧪 **12 new tests**: inline actions count, OWNER prefix parses,
+  no-owner text-only, empty `-A` skipped, fuzzy action target,
+  most-recent-wins on ambiguous fuzzy, show by substring, edit by
+  name, edit retitles, edit unknown fails, rm by name, rm cascades.
+- 📚 **SKILL.md** rewritten with the inline-actions story and a
+  6-row NL → command table.
+- **Tests:** 1,073 passing (+12); ruff clean.
+
+The *"finished a meeting, here's the summary"* flow now fits in
+one CLI call, the way it fits in one human sentence.
+
+---
+
 ### 🏷️ Iteration 108 — v1.12.0 release · 2026-05-24
 
 Eight substantive iters stacked since v1.11.0 (iters 100-107)

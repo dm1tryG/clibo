@@ -47,12 +47,25 @@ app = typer.Typer(no_args_is_help=True, help=HELP)
 
 
 def _resolve(db, ident: str) -> Meeting | None:
-    """Look up a meeting by numeric ID or by (case-insensitive) title."""
+    """Look up a meeting by numeric ID, exact title, then substring (most-recent wins).
+
+    Matches the iter-84/85 pattern across the codebase: integer ID
+    first, exact case-insensitive title, then a fuzzy substring
+    match preferring the most-recently-added row.
+    """
+    from clibo.core.base import lookup_by_id_or_name
     if ident.isdigit():
         meeting = db.get(Meeting, int(ident))
         if meeting:
             return meeting
-    return db.exec(select(Meeting).where(Meeting.title.ilike(ident))).first()
+    # Exact wins, then fall back to substring with most-recent.
+    return db.exec(
+        select(Meeting).where(Meeting.title.ilike(ident))
+        .order_by(Meeting.id.desc())
+    ).first() or db.exec(
+        select(Meeting).where(Meeting.title.ilike(f"%{ident}%"))
+        .order_by(Meeting.id.desc())
+    ).first() or lookup_by_id_or_name(db, Meeting, ident, Meeting.title)
 
 
 def _row(db, meeting: Meeting) -> dict:
@@ -74,16 +87,47 @@ def add(
     on: str = typer.Option("today", "--date", "-d", help="Meeting date"),
     attendees: str = typer.Option(None, "--attendees", "-a", help="Comma-separated attendees"),
     notes: str = typer.Option(None, "--notes", "-N", help="Meeting notes"),
+    action_items: list[str] = typer.Option(
+        [], "--action", "-A",
+        help="Action item — repeat for multiple, "
+             "use 'OWNER: summary' to set the owner inline",
+    ),
     json_out: JsonOpt = False,
 ) -> None:
-    """🗓️ Record a meeting."""
-    meeting = Meeting(title=title, meeting_date=parse_date(on), attendees=attendees, notes=notes)
+    """🗓️ Record a meeting.
+
+    Pass ``--action`` (or ``-A``) one or more times to capture action
+    items inline at creation — saves a follow-up ``meetings action``
+    call for the natural *"we discussed X, Bob will do Y"* flow.
+    Prefix with ``OWNER:`` to set the owner: ``-A "Bob: send timeline"``.
+    """
+    meeting = Meeting(title=title, meeting_date=parse_date(on),
+                       attendees=attendees, notes=notes)
     with session() as db:
         db.add(meeting)
         db.flush()
         db.refresh(meeting)
+        for raw in action_items:
+            if not raw.strip():
+                continue
+            # "Bob: send timeline" → owner=Bob, summary=send timeline
+            if ":" in raw:
+                owner, _, summary = raw.partition(":")
+                owner = owner.strip() or None
+                summary = summary.strip()
+            else:
+                owner = None
+                summary = raw.strip()
+            if summary:
+                db.add(ActionItem(
+                    meeting_id=meeting.id, summary=summary, owner=owner
+                ))
+        db.flush()
         data = _row(db, meeting)
-    ok(f"Added {EMOJI} meeting '{title}' ({meeting.meeting_date})",
+    suffix = (f" · {data['action_items']} action item"
+              f"{'s' if data['action_items'] != 1 else ''}"
+              if data["action_items"] else "")
+    ok(f"Added {EMOJI} meeting '{title}' ({meeting.meeting_date}){suffix}",
        json_out=json_out, data=data)
 
 
@@ -204,16 +248,51 @@ def actions(json_out: JsonOpt = False) -> None:
 
 
 @app.command()
-def rm(meeting_id: int = typer.Argument(..., help="Meeting ID"), json_out: JsonOpt = False) -> None:
-    """🗓️ Delete a meeting and its action items."""
+def edit(
+    meeting: str = typer.Argument(..., help="Meeting title (fuzzy) or ID"),
+    title: str = typer.Option(None, "--title", "-t", help="New title"),
+    on: str = typer.Option(None, "--date", "-d", help="New date"),
+    attendees: str = typer.Option(
+        None, "--attendees", "-a", help="New attendees (comma-separated)"
+    ),
+    notes: str = typer.Option(None, "--notes", "-N", help="Replace the notes"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🗓️ Edit a meeting. Accepts a numeric ID or a title (fuzzy)."""
     with session() as db:
-        meeting = db.get(Meeting, meeting_id)
-        if not meeting:
-            fail(f"No meeting #{meeting_id}", json_out=json_out)
-        for item in db.exec(select(ActionItem).where(ActionItem.meeting_id == meeting_id)).all():
+        target = _resolve(db, meeting)
+        if not target:
+            fail(f"No meeting matching {meeting!r}", json_out=json_out)
+        if title is not None:
+            target.title = title
+        if on is not None:
+            target.meeting_date = parse_date(on)
+        if attendees is not None:
+            target.attendees = attendees
+        if notes is not None:
+            target.notes = notes
+        db.add(target)
+        db.flush()
+        data = _row(db, target)
+    ok(f"Updated meeting #{target.id} — {target.title}",
+       json_out=json_out, data=data)
+
+
+@app.command()
+def rm(
+    meeting: str = typer.Argument(..., help="Meeting title (fuzzy) or ID"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🗓️ Delete a meeting and all its action items."""
+    with session() as db:
+        target = _resolve(db, meeting)
+        if not target:
+            fail(f"No meeting matching {meeting!r}", json_out=json_out)
+        mid = target.id
+        for item in db.exec(select(ActionItem).where(ActionItem.meeting_id == mid)).all():
             db.delete(item)
-        db.delete(meeting)
-    ok(f"Deleted meeting #{meeting_id}", json_out=json_out, data={"deleted": meeting_id})
+        db.delete(target)
+    ok(f"Deleted meeting #{mid}", json_out=json_out, data={"deleted": mid})
 
 
 @app.command()
