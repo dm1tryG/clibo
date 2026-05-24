@@ -216,3 +216,78 @@ def test_all_four_delete_synonyms_work(cli):
         added = cli.json("todo", "add", f"task via {verb}")
         result = cli.run("todo", verb, str(added["id"]))
         assert result.exit_code == 0
+
+
+# ── todo stats: oldest pending / most overdue / backlog age ──
+
+
+def test_stats_oldest_pending_picks_earliest_created(cli, tmp_path):
+    """Of two pending tasks, the one with the older created_at is oldest."""
+    cli.run("todo", "add", "Old task")
+    cli.run("todo", "add", "New task")
+    # Backdate task 1's creation via SQL — `todo add` always stamps now.
+    import sqlite3
+    con = sqlite3.connect(f"{tmp_path}/clibo.db")
+    con.execute("UPDATE todo_task SET created_at='2026-04-01 12:00:00' WHERE id=1")
+    con.commit()
+    con.close()
+    data = cli.json("todo", "stats")
+    assert data["oldest_pending"]["id"] == 1
+    assert data["oldest_pending"]["title"] == "Old task"
+    assert data["oldest_pending"]["age_days"] > 0
+
+
+def test_stats_oldest_pending_ignores_done(cli, tmp_path):
+    """Done tasks don't count as 'pending' for oldest_pending."""
+    cli.run("todo", "add", "Old finished")
+    cli.run("todo", "add", "Recent open")
+    import sqlite3
+    con = sqlite3.connect(f"{tmp_path}/clibo.db")
+    con.execute("UPDATE todo_task SET created_at='2026-04-01 12:00:00' WHERE id=1")
+    con.commit()
+    con.close()
+    cli.run("todo", "done", "1")
+    data = cli.json("todo", "stats")
+    # Only "Recent open" is pending now.
+    assert data["oldest_pending"]["title"] == "Recent open"
+
+
+def test_stats_most_overdue_picks_largest_days_past(cli):
+    cli.run("todo", "add", "Less late", "-d", "2 days ago")
+    cli.run("todo", "add", "Most late", "-d", "10 days ago")
+    cli.run("todo", "add", "On time", "-d", "today")
+    data = cli.json("todo", "stats")
+    assert data["most_overdue"]["title"] == "Most late"
+    assert data["most_overdue"]["days_overdue"] == 10
+
+
+def test_stats_avg_backlog_age_days(cli, tmp_path):
+    """Average of pending tasks' ages."""
+    cli.run("todo", "add", "T1")
+    cli.run("todo", "add", "T2")
+    import sqlite3
+    con = sqlite3.connect(f"{tmp_path}/clibo.db")
+    con.execute("UPDATE todo_task SET created_at='2026-05-04 12:00:00' WHERE id=1")  # 20d
+    con.execute("UPDATE todo_task SET created_at='2026-05-14 12:00:00' WHERE id=2")  # 10d
+    con.commit()
+    con.close()
+    data = cli.json("todo", "stats")
+    # 20 + 10 = 30, avg 15
+    assert data["avg_backlog_age_days"] == 15.0
+
+
+def test_stats_empty_returns_null_extremes(cli):
+    """Empty DB → oldest_pending and most_overdue are null."""
+    data = cli.json("todo", "stats")
+    assert data["oldest_pending"] is None
+    assert data["most_overdue"] is None
+    assert data["avg_backlog_age_days"] == 0.0
+
+
+def test_stats_most_overdue_null_when_no_overdue(cli):
+    """No overdue → most_overdue is null even if there are pending tasks."""
+    cli.run("todo", "add", "Future", "-d", "tomorrow")
+    data = cli.json("todo", "stats")
+    assert data["most_overdue"] is None
+    # But oldest_pending still surfaces the future-dated task.
+    assert data["oldest_pending"]["title"] == "Future"

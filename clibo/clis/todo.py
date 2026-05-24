@@ -277,18 +277,52 @@ def rm(task_id: int = typer.Argument(..., help="Task ID"), json_out: JsonOpt = F
 
 @app.command()
 def stats(json_out: JsonOpt = False) -> None:
-    """📊 Task stats — pending, done and overdue counts."""
+    """📊 Task stats — pending, done, overdue, oldest pending, backlog age."""
     with session() as db:
         tasks = list(db.exec(select(Task)).all())
+    today = date.today()
     pending = [t for t in tasks if not t.done]
-    overdue = [t for t in pending if t.due and t.due < date.today()]
+    overdue = [t for t in pending if t.due and t.due < today]
     by_priority = {p: sum(1 for t in pending if t.priority == p) for p in PRIORITIES}
+
+    # Oldest pending — *"what's been sitting on my list longest?"*.
+    # Picks by created_at; ties broken by id ascending.
+    oldest = min(pending, key=lambda t: (t.created_at, t.id)) if pending else None
+    most_overdue = (
+        max(overdue, key=lambda t: (today - t.due).days) if overdue else None
+    )
+    avg_age_days = (
+        round(sum((today - t.created_at.date()).days for t in pending) / len(pending), 1)
+        if pending else 0.0
+    )
+
     data = {
         "total": len(tasks),
         "pending": len(pending),
         "done": sum(1 for t in tasks if t.done),
         "overdue": len(overdue),
         "pending_by_priority": by_priority,
+        "avg_backlog_age_days": avg_age_days,
+        "oldest_pending": (
+            {
+                "id": oldest.id,
+                "title": oldest.title,
+                "priority": oldest.priority,
+                "created_at": oldest.created_at,
+                "age_days": (today - oldest.created_at.date()).days,
+            }
+            if oldest else None
+        ),
+        "most_overdue": (
+            {
+                "id": most_overdue.id,
+                "title": most_overdue.title,
+                "priority": most_overdue.priority,
+                "due": most_overdue.due,
+                "days_overdue": (today - most_overdue.due).days,
+            }
+            if most_overdue else None
+        ),
     }
     render_record(data, json_out=json_out, title="📊 Todo stats")
 

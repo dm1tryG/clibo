@@ -4,6 +4,33 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `todo stats` gains backlog-age, oldest-pending, most-overdue · 2026-05-24
+
+NL-probe friction: *"what's been sitting on my todo list the
+longest?"* / *"how stale is my backlog?"* — `todo stats` reported
+counts (total / pending / done / overdue + by_priority) but
+nothing about *age*. Easy fix using `Task.created_at` and `Task.due`.
+
+- 📊 **New `todo stats` fields**:
+  - `oldest_pending` — the longest-sitting pending task, with id /
+    title / priority / created_at / age_days. Answers *"what have
+    I been avoiding?"*.
+  - `most_overdue` — the task furthest past its due date (only
+    counts pending tasks with a due date). Includes days_overdue.
+  - `avg_backlog_age_days` — mean age of pending tasks. Catches
+    *"is my list getting stale?"* without scanning rows.
+- 🧪 **6 new tests** in `tests/test_todo.py`: oldest picks earliest-
+  created, ignores done tasks, most_overdue picks largest gap,
+  avg backlog age calculation, empty-state nulls, no-overdue case
+  still surfaces oldest_pending.
+- **Tests:** 1,308 passing (+6); ruff clean.
+
+**Why this matters:** counts tell you *how much* is on your plate;
+ages tell you *how long* it's been there. Together they answer
+*"is my todo list working or accumulating?"* in one command.
+
+---
+
 ### `clibo lifetime` — the all-time companion to `clibo year` · 2026-05-24
 
 Natural next question after `clibo year` lands: *"and across all
