@@ -40,7 +40,20 @@ class FastSession(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _bare_default(ctx: typer.Context) -> None:
+    """Default: ``clibo fasting`` (bare) shows your fasting status.
+
+    The natural ask *"am I still fasting?"* / *"how long until my
+    target?"* maps to bare ``clibo fasting``; otherwise users had
+    to remember the ``status`` subcommand. Other subcommands
+    (``start``, ``stop``, ``list``, …) are unaffected.
+    """
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(status, json_out=False)
 
 
 def _default_target() -> float:

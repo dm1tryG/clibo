@@ -140,3 +140,24 @@ def pytest_approx(value, tol=0.5):
         def __eq__(self, other):
             return abs(other - value) <= tol
     return _()
+
+
+# ── bare-command default (iter 104) ──
+
+
+def test_bare_fasting_runs_status(cli):
+    """`clibo fasting` (no subcommand) shows the current fasting status."""
+    cli.run("fasting", "start", "--target", "16")
+    result = cli.run("fasting")
+    assert result.exit_code == 0
+    # Either 'in progress' (active) or 'not fasting' (none) — both valid.
+    out = result.stdout.lower()
+    assert "fasting" in out
+
+
+def test_fasting_help_still_works(cli):
+    """`clibo fasting --help` still shows the menu."""
+    result = cli.run("fasting", "--help")
+    assert result.exit_code == 0
+    assert "start" in result.stdout
+    assert "status" in result.stdout

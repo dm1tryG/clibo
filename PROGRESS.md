@@ -4,6 +4,45 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 104 — `clibo caffeine` / `clibo fasting` (bare) show their summary · 2026-05-24
+
+Iter 103's note that the `invoke_without_command` pattern could
+generalise turned out to be right within one iteration. Agent
+probes on *"How much caffeine have I had today?"* and *"Am I
+still fasting?"* both hit the same bare-command help screen
+that `networth` did — and both have an obvious dominant summary
+verb.
+
+- ☕ **Bare `clibo caffeine` now runs `today`.** Daily total in
+  mg, every drink with its time, projected bedtime residual.
+  The dominant ask for a caffeine tracker is *"how much today?"*
+  — now one keystroke shorter.
+- 🕒 **Bare `clibo fasting` now runs `status`.** Renders the
+  running clock against the target with a progress bar, or
+  "no fast in progress" when idle. Mirrors the `networth → worth`
+  fix from iter 103.
+- 🛡 **Help + subcommands unchanged.** `--help` still shows the
+  menu (Typer's standard flag is unaffected by the callback).
+  `log/add/list/show/edit/rm/stats/start/stop/target/cutoff` —
+  every existing subcommand keeps its identity.
+- 🎤 NL flow verified with realistic state:
+  • `clibo caffeine` (2 drinks logged) → "280 mg total today
+    (limit 400) · 54 mg residual at bedtime" ✓
+  • `clibo fasting` (16h target started) → "Fasting in progress
+    · 0h elapsed · 16h to target" with progress bar ✓
+  • `clibo caffeine list`, `clibo fasting list`, etc. — all
+    unchanged ✓
+- 🧪 **4 new tests**: bare runs the right summary on both tools,
+  `--help` still works on both. Mirrors the iter-103 test shape.
+- **Tests:** 995 passing (+4); ruff clean.
+
+Three tools now follow the *"bare command = the answer"* rule:
+`networth` (iter 103), `caffeine`, `fasting`. The pattern earned
+its name and is documented inline in each tool's callback for
+future maintainers.
+
+---
+
 ### Iteration 103 — `clibo networth` (bare) shows the answer · 2026-05-24
 
 Agent-mode self-test on "What's my net worth?" caught a small but

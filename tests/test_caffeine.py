@@ -171,3 +171,23 @@ def test_residual_decay_math():
     # Two half-lives → 25%.
     later2 = datetime(2026, 5, 23, 12, 0) + timedelta(hours=2 * HALF_LIFE_HOURS)
     assert _residual_at(entry, later2) == pytest.approx(25, rel=0.01)
+
+
+# ── bare-command default (iter 104) ──
+
+
+def test_bare_caffeine_runs_today(cli):
+    """`clibo caffeine` (no subcommand) shows today's intake."""
+    cli.run("caffeine", "log", "coffee", "-m", "200")
+    result = cli.run("caffeine")
+    assert result.exit_code == 0
+    assert "Caffeine" in result.stdout or "caffeine" in result.stdout
+    assert "200" in result.stdout
+
+
+def test_caffeine_help_still_works(cli):
+    """`clibo caffeine --help` still shows the menu."""
+    result = cli.run("caffeine", "--help")
+    assert result.exit_code == 0
+    assert "log" in result.stdout
+    assert "today" in result.stdout

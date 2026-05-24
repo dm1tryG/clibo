@@ -73,7 +73,19 @@ class CaffeineEntry(SQLModel, table=True):
     note: str | None = None
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context) -> None:
+    """Default: ``clibo caffeine`` (bare) shows today's intake.
+
+    The natural ask *"how much caffeine have I had today?"* maps to
+    bare ``clibo caffeine``; otherwise users had to remember the
+    ``today`` subcommand. Other subcommands are unaffected.
+    """
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(today, json_out=False)
 
 
 def _bedtime() -> time:
