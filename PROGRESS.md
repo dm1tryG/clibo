@@ -4,6 +4,33 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `books top` — longest, best-rated, or most recent · 2026-05-24
+
+NL-probe gap: *"what's the longest book I've read?"* / *"what's
+my best-rated book?"* — no single command answered. Books had
+`year` and `stats`, but no top-N view by length or rating.
+
+- 📚 **`clibo books top [-n 10] [--by pages|rating|recent] [-s STATUS]`** —
+  one command for three natural questions. `--by pages` (default,
+  longest first) · `--by rating` (best first; unrated excluded) ·
+  `--by recent` (most recently finished). `--status` defaults to
+  `finished`; pass `--status any` for an all-status view.
+- 🎤 NL flows verified: longest finished books, best-rated finished
+  books, "what did I last finish?", and "longest book in progress"
+  via `--status any`.
+- 🧪 **8 new tests** in `tests/test_books.py`: default sort, by-rating,
+  by-recent, status filter (default + any), limit, invalid input,
+  empty state.
+- 📚 SKILL.md updated with the new row.
+- **Tests:** 1,260 passing (+8); ruff clean.
+
+**Why this matters:** the `top` pattern is now consistent across
+`expense`, `income`, `donations`, and `books` — every entity-with-
+size domain has a "biggest first" lens, parameterised the same
+way. One mental model, four tools.
+
+---
+
 ### `expense/income top` — biggest entries, all-time · 2026-05-24
 
 NL-probe friction: *"what was my biggest expense ever?"* had no

@@ -272,3 +272,65 @@ def test_books_stats_by_year_skips_unfinished(cli):
     cli.run("books", "add", "Wishlist", "-p", "300")  # wishlist
     data = cli.json("books", "stats")
     assert data["by_year"] == []
+
+
+# ── books top: longest / best-rated / most recent ──
+
+
+def test_books_top_default_sorts_by_pages_desc(cli):
+    cli.run("books", "add", "Short", "-p", "100", "-s", "finished", "-r", "3")
+    cli.run("books", "add", "Long", "-p", "800", "-s", "finished", "-r", "5")
+    cli.run("books", "add", "Medium", "-p", "400", "-s", "finished", "-r", "4")
+    rows = cli.json("books", "top")
+    assert [r["title"] for r in rows] == ["Long", "Medium", "Short"]
+
+
+def test_books_top_by_rating(cli):
+    cli.run("books", "add", "Best", "-p", "100", "-s", "finished", "-r", "5")
+    cli.run("books", "add", "OK", "-p", "100", "-s", "finished", "-r", "3")
+    cli.run("books", "add", "Unrated", "-p", "100", "-s", "finished")
+    rows = cli.json("books", "top", "--by", "rating")
+    titles = [r["title"] for r in rows]
+    assert titles == ["Best", "OK"]
+    # Unrated finished books are excluded from the rating sort.
+
+
+def test_books_top_by_recent_skips_never_finished(cli):
+    cli.run("books", "add", "Done", "-p", "100", "-s", "finished")
+    cli.run("books", "add", "Still reading", "-p", "100", "-s", "reading")
+    rows = cli.json("books", "top", "--by", "recent")
+    assert [r["title"] for r in rows] == ["Done"]
+
+
+def test_books_top_status_filter(cli):
+    cli.run("books", "add", "Finished", "-p", "100", "-s", "finished")
+    cli.run("books", "add", "InProgress", "-p", "500", "-s", "reading")
+    # Default status=finished excludes the in-progress book.
+    finished_rows = cli.json("books", "top")
+    assert [r["title"] for r in finished_rows] == ["Finished"]
+    # `--status any` includes both, longest first.
+    any_rows = cli.json("books", "top", "--status", "any")
+    assert [r["title"] for r in any_rows] == ["InProgress", "Finished"]
+
+
+def test_books_top_limit(cli):
+    for n, p in enumerate([100, 200, 300, 400], start=1):
+        cli.run("books", "add", f"Book{n}", "-p", str(p), "-s", "finished")
+    rows = cli.json("books", "top", "--limit", "2")
+    assert len(rows) == 2
+    assert rows[0]["pages"] == 400
+
+
+def test_books_top_invalid_by_fails(cli):
+    result = cli.run("books", "top", "--by", "nonsense")
+    assert result.exit_code != 0
+
+
+def test_books_top_invalid_status_fails(cli):
+    result = cli.run("books", "top", "--status", "nonsense")
+    assert result.exit_code != 0
+
+
+def test_books_top_empty_returns_empty_list(cli):
+    rows = cli.json("books", "top")
+    assert rows == []

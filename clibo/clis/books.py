@@ -460,6 +460,67 @@ def year(
 
 
 @app.command()
+def top(
+    limit: int = typer.Option(10, "--limit", "-n", help="How many to show"),
+    by: str = typer.Option(
+        "pages", "--by", "-b",
+        help="Sort key: pages (longest), rating (best-rated), recent (most recently finished)",
+    ),
+    status: str = typer.Option(
+        "finished", "--status", "-s",
+        help=f"Status to filter to (default: finished). Use 'any' for all. One of: {'/'.join(STATUSES)} / any",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """📚 Top N books by length, rating, or recency.
+
+    Answers *"what's the longest book I've read?"* (default
+    `--by pages`), *"what's my best-rated book?"* (`--by rating`),
+    or *"what did I finish most recently?"* (`--by recent`).
+    """
+    if limit < 1:
+        fail("--limit must be >= 1", json_out=json_out)
+    sort_keys = {"pages", "rating", "recent"}
+    if by not in sort_keys:
+        fail(
+            f"--by must be one of: {', '.join(sorted(sort_keys))}",
+            json_out=json_out,
+        )
+    with session() as db:
+        query = select(Book)
+        if status != "any":
+            if status not in STATUSES:
+                fail(
+                    f"--status must be one of: {', '.join(STATUSES)} or 'any'",
+                    json_out=json_out,
+                )
+            query = query.where(Book.status == status)
+        # rating sort skips unrated; recent skips never-finished.
+        if by == "rating":
+            query = query.where(Book.rating.is_not(None))  # type: ignore[union-attr]
+            query = query.order_by(Book.rating.desc(), Book.title)
+        elif by == "recent":
+            query = query.where(Book.finished.is_not(None))  # type: ignore[union-attr]
+            query = query.order_by(Book.finished.desc())
+        else:  # pages
+            query = query.order_by(Book.pages.desc(), Book.title)
+        books = list(db.exec(query.limit(limit)).all())
+    rows = [_row(b) for b in books]
+    label = "📚 Top " + str(limit) + (
+        f" · by {by}" + (f" · {status}" if status != "any" else "")
+    )
+    render_rows(
+        rows,
+        [("id", "ID"), ("title", "Title"), ("author", "Author"),
+         ("pages", "Pages"), ("rating", "Rating"), ("status", "Status"),
+         ("finished", "Finished")],
+        json_out=json_out,
+        title=label,
+        empty="No books match this filter.",
+    )
+
+
+@app.command()
 def stats(json_out: JsonOpt = False) -> None:
     """📊 Reading stats — finished, in-progress, pages read, session pace."""
     with session() as db:

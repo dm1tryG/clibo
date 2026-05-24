@@ -24,6 +24,7 @@ command accepts `--json`.
 | `clibo books list [-s STATUS]` | List books |
 | `clibo books show BOOK` | Detail |
 | `clibo books rm BOOK` | Delete (ID or title; cascades sessions) |
+| `clibo books top [-n 10] [--by pages\|rating\|recent] [-s STATUS]` | Top N books by length (default), rating, or recency |
 | `clibo books stats` | Reading stats incl. avg pages/hour |
 
 `BOOK` accepts numeric ID or a fuzzy title (exact wins over substring).
