@@ -17,8 +17,11 @@ from clibo.clis.challenge import Challenge, ChallengeCheckin
 from clibo.clis.fasting import FastSession, _duration_hours
 from clibo.clis.gratitude import GratitudeEntry
 from clibo.clis.habit import Habit, HabitCheck, _longest_streak, _streak
+from clibo.clis.meditate import MeditationSession
+from clibo.clis.mileage import MileageEntry
 from clibo.clis.steps import StepEntry
 from clibo.clis.steps import _streak as _steps_streak
+from clibo.clis.stretches import StretchSession
 from clibo.clis.workout import Workout
 from clibo.core.db import session
 from clibo.core.output import _emit_json, console
@@ -120,6 +123,48 @@ def collect_streaks() -> list[StreakRow]:
                     source="workout", emoji="🏋️",
                     name="Workout days",
                     current=w_current, longest=w_longest,
+                ))
+
+        # 🏃 Mileage — consecutive days with any distance entry.
+        mileage_dates = {
+            m.entry_date for m in db.exec(select(MileageEntry)).all()
+        }
+        if mileage_dates:
+            m_current = _streak(mileage_dates)
+            m_longest = _longest_consecutive(mileage_dates)
+            if m_current or m_longest:
+                rows.append(StreakRow(
+                    source="mileage", emoji="🏃",
+                    name="Mileage days",
+                    current=m_current, longest=m_longest,
+                ))
+
+        # 🧘 Meditate — consecutive days with any meditation session.
+        meditate_dates = {
+            e.entry_date for e in db.exec(select(MeditationSession)).all()
+        }
+        if meditate_dates:
+            me_current = _streak(meditate_dates)
+            me_longest = _longest_consecutive(meditate_dates)
+            if me_current or me_longest:
+                rows.append(StreakRow(
+                    source="meditate", emoji="🧘",
+                    name="Meditation",
+                    current=me_current, longest=me_longest,
+                ))
+
+        # 🧎 Stretches — consecutive days with any stretching session.
+        stretch_dates = {
+            e.entry_date for e in db.exec(select(StretchSession)).all()
+        }
+        if stretch_dates:
+            s_current = _streak(stretch_dates)
+            s_longest = _longest_consecutive(stretch_dates)
+            if s_current or s_longest:
+                rows.append(StreakRow(
+                    source="stretches", emoji="🧎",
+                    name="Stretching",
+                    current=s_current, longest=s_longest,
                 ))
 
         # 🕒 Fasting — consecutive completed fasts (each ≥ target) by start date.

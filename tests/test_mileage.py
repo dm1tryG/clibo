@@ -61,3 +61,32 @@ def test_mileage_help_still_works(cli):
     result = cli.run("mileage", "--help")
     assert result.exit_code == 0
     assert "week" in result.stdout
+
+
+# ── streak subcommand (iter 113) ──
+
+
+def test_mileage_streak_empty(cli):
+    data = cli.json("mileage", "streak")
+    assert data["current_streak"] == 0
+    assert data["longest_streak"] == 0
+    assert data["days_logged"] == 0
+
+
+def test_mileage_streak_consecutive(cli):
+    cli.run("mileage", "log", "5", "-a", "run")
+    cli.run("mileage", "log", "3", "-a", "walk", "-d", "yesterday")
+    cli.run("mileage", "log", "8", "-a", "cycle", "-d", "2 days ago")
+    data = cli.json("mileage", "streak")
+    assert data["current_streak"] == 3
+    assert data["longest_streak"] == 3
+    assert data["days_logged"] == 3
+
+
+def test_mileage_streak_breaks_with_gap(cli):
+    cli.run("mileage", "log", "5")
+    cli.run("mileage", "log", "5", "-d", "3 days ago")
+    cli.run("mileage", "log", "5", "-d", "4 days ago")
+    data = cli.json("mileage", "streak")
+    assert data["current_streak"] == 1
+    assert data["longest_streak"] == 2

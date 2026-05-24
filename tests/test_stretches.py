@@ -117,3 +117,21 @@ def test_stretches_help_still_works(cli):
     result = cli.run("stretches", "--help")
     assert result.exit_code == 0
     assert "today" in result.stdout
+
+
+# ── streak subcommand (iter 113) ──
+
+
+def test_stretches_streak_empty(cli):
+    data = cli.json("stretches", "streak")
+    assert data["current_streak"] == 0
+    assert data["longest_streak"] == 0
+
+
+def test_stretches_streak_consecutive(cli):
+    cli.run("stretches", "log", "hamstrings", "-m", "10")
+    cli.run("stretches", "log", "hips", "-m", "15", "-d", "yesterday")
+    data = cli.json("stretches", "streak")
+    assert data["current_streak"] == 2
+    assert data["longest_streak"] == 2
+    assert data["days_logged"] == 2

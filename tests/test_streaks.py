@@ -91,3 +91,30 @@ def test_streaks_includes_workout(cli):
     workout_row = next(s for s in data["streaks"] if s["source"] == "workout")
     assert workout_row["current"] == 2
     assert workout_row["name"] == "Workout days"
+
+
+# ── mileage / meditate / stretches added to the aggregator (iter 113) ──
+
+
+def test_streaks_includes_mileage(cli):
+    cli.run("mileage", "log", "5")
+    cli.run("mileage", "log", "3", "-d", "yesterday")
+    data = cli.json("streaks")
+    sources = [s["source"] for s in data["streaks"]]
+    assert "mileage" in sources
+
+
+def test_streaks_includes_meditate(cli):
+    cli.run("meditate", "log", "15")
+    cli.run("meditate", "log", "10", "-d", "yesterday")
+    data = cli.json("streaks")
+    sources = [s["source"] for s in data["streaks"]]
+    assert "meditate" in sources
+
+
+def test_streaks_includes_stretches(cli):
+    cli.run("stretches", "log", "hamstrings", "-m", "10")
+    cli.run("stretches", "log", "hips", "-m", "15", "-d", "yesterday")
+    data = cli.json("streaks")
+    sources = [s["source"] for s in data["streaks"]]
+    assert "stretches" in sources

@@ -41,3 +41,18 @@ def test_stats_window(cli):
 def test_negative_minutes_fails(cli):
     result = cli.run("meditate", "log", "-5")
     assert result.exit_code != 0
+
+
+# ── streak shape upgrade (iter 113) ──
+
+
+def test_meditate_streak_includes_longest(cli):
+    """The upgraded streak shape now exposes longest_streak (was missing)."""
+    cli.run("meditate", "log", "15")
+    cli.run("meditate", "log", "10", "-d", "yesterday")
+    data = cli.json("meditate", "streak")
+    assert data["current_streak"] == 2
+    assert data["longest_streak"] == 2
+    # days_practiced kept for back-compat; days_logged is the new uniform name.
+    assert data["days_practiced"] == 2
+    assert data["days_logged"] == 2

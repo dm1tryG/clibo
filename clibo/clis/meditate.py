@@ -174,17 +174,40 @@ def goal(
     render_record({"daily_min": _goal()}, json_out=json_out, title="🎯 Meditation goal")
 
 
+def _longest_streak(days: set[date]) -> int:
+    """Longest consecutive-day meditation run in history."""
+    if not days:
+        return 0
+    ordered = sorted(days)
+    longest = run = 1
+    for i in range(1, len(ordered)):
+        run = run + 1 if (ordered[i] - ordered[i - 1]).days == 1 else 1
+        longest = max(longest, run)
+    return longest
+
+
 @app.command()
 def streak(json_out: JsonOpt = False) -> None:
-    """🔥 Show your current meditation streak."""
+    """🔥 Show your current + longest meditation streak."""
     with session() as db:
         days = {e.entry_date for e in db.exec(select(MeditationSession)).all()}
     current = _streak(days)
+    longest = _longest_streak(days)
     if json_out:
-        render_record({"current_streak": current, "days_practiced": len(days)}, json_out=True)
+        # `days_practiced` kept for back-compat; new shape adds longest + days_logged
+        # aliases so consumers reading the uniform streak shape work too.
+        render_record({
+            "current_streak": current,
+            "longest_streak": longest,
+            "days_practiced": len(days),
+            "days_logged": len(days),
+        }, json_out=True)
         return
     flame = "🔥" * min(current, 10) if current else "[dim]—[/dim]"
-    console.print(f"\n  🧘 Meditation streak: [bold cyan]{current}[/bold cyan] days  {flame}\n")
+    console.print(
+        f"\n  🧘 Meditation streak: [bold cyan]{current}[/bold cyan] days  "
+        f"{flame}   [dim](longest ever: {longest})[/dim]\n"
+    )
 
 
 @app.command()

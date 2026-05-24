@@ -4,6 +4,46 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 113 — streak family completed: mileage + stretches + meditate · 2026-05-24
+
+Iter 112 added `workout streak` + workout to the top-level
+aggregator, and noted that *"mileage, meditate, and stretches are
+the remaining candidates"*. This iter closes them out.
+
+- 🏃 **New `mileage streak`** — current + longest + days_logged.
+  Any logged distance counts as a streak day, regardless of
+  activity (run / walk / cycle / hike / swim).
+- 🧎 **New `stretches streak`** — same shape, any logged session
+  counts.
+- 🧘 **`meditate streak` upgraded** — previously returned only
+  `{current_streak, days_practiced}`; now also includes
+  `longest_streak` to match the family. `days_practiced` kept
+  for back-compat; `days_logged` added as the new uniform name.
+- 📊 **Top-level `clibo streaks`** now includes Mileage days,
+  Meditation, and Stretching alongside the existing six sources
+  (habits, gratitude, steps, fasting, challenges, workout).
+- 🎤 NL flow verified:
+  • `mileage streak` over 3 mixed-activity days → `current=3, longest=3` ✓
+  • Mileage with gap (today + 3/4 days ago) → `current=1, longest=2` ✓
+  • `meditate streak` JSON includes `longest_streak` AND old
+    `days_practiced` for back-compat ✓
+  • `stretches streak` over 2 days → `current=2, longest=2` ✓
+  • `streaks` top-level shows 3 new rows: 🏃 Mileage days, 🧘
+    Meditation, 🧎 Stretching ✓
+- 🧪 **9 new tests**: 3 mileage (empty / consecutive / gap),
+  2 stretches (empty / consecutive), 1 meditate shape upgrade,
+  3 aggregator inclusion tests.
+- **Tests:** 1,103 passing (+9); ruff clean.
+
+The streak family is now **complete** — all 9 daily-cadence tools
+(habits, gratitude, steps, fasting, challenges, workout, mileage,
+meditate, stretches) expose a uniform `streak` subcommand AND
+surface in the top-level `clibo streaks` aggregator. The agent
+question *"how many days in a row?"* lands consistently no matter
+which activity is being asked about.
+
+---
+
 ### Iteration 112 — `workout streak` + aggregator inclusion · 2026-05-24
 
 Agent-mode probe on *"How many days in a row have I logged
