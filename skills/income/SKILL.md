@@ -16,6 +16,7 @@ command accepts `--json`. Uses the same shared `money/currency` setting.
 | `clibo income list --days 30 [-c CATEGORY]` | Recent income |
 | `clibo income month [-m YYYY-MM]` | This month's breakdown by category |
 | `clibo income year [-c CATEGORY] [-s SOURCE]` | Annual breakdown; filter to one category or source |
+| `clibo income top [-n 10] [-y YEAR] [-c CATEGORY] [-s SOURCE]` | Top N biggest paydays — all-time by default |
 | `clibo income show ID` | Detail |
 | `clibo income edit ID` | Edit an entry |
 | `clibo income rm ID` | Delete |

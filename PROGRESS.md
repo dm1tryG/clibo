@@ -4,6 +4,33 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `expense/income top` — biggest entries, all-time · 2026-05-24
+
+NL-probe friction: *"what was my biggest expense ever?"* had no
+single-command answer. `expense year` exposes one `biggest_expense`
+per calendar year, but a cross-year answer required scanning every
+year separately. Same gap on `income`. Filled.
+
+- 💸 **`clibo expense top [-n 10] [-y YEAR] [-c CATEGORY]`** —
+  top N expenses sorted by amount descending, all-time by default.
+  Filter scoped consistently with `expense year`'s flags:
+  `-y` restricts to one calendar year, `-c` to one category.
+- 💵 **`clibo income top [-n 10] [-y YEAR] [-c CATEGORY] [-s SOURCE]`** —
+  symmetric. Source filter (fuzzy substring) inherits from
+  `income year` for *"biggest paydays from Acme?"*.
+- 🧪 **10 new tests**: sort order, `--limit` cap, category /
+  year / source filters, empty-state, invalid input fails.
+- 📚 Both SKILL.md updated with the new row.
+- **Tests:** 1,252 passing (+10); ruff clean.
+
+**Why this matters:** the financial trio is now sharper. `month`
+answers *"this month?"*, `year` answers *"this year by category?"*,
+`stats --days N` answers *"the last N days?"*, and now `top`
+answers *"biggest, full-stop?"* — orthogonal queries, each
+returning the right shape for its question.
+
+---
+
 ### `recent --tool X` filters the activity feed to one source · 2026-05-24
 
 NL-probe friction: *"when did I last work out?"* required scanning

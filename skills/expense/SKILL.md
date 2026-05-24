@@ -15,6 +15,7 @@ Personal expense tracker. Local SQLite. Every command accepts `--json`.
 | `clibo expense list --days 30` | Recent expenses (`-c` filter category) |
 | `clibo expense month [-m YYYY-MM]` | Spending by category for a month |
 | `clibo expense year [-c CATEGORY]` | Annual breakdown; `-c food` scopes to one category |
+| `clibo expense top [-n 10] [-y YEAR] [-c CATEGORY]` | Top N biggest expenses — all-time by default |
 | `clibo expense show ID` | One expense in detail |
 | `clibo expense edit ID -a 15` | Edit an expense |
 | `clibo expense rm ID` | Delete an expense |

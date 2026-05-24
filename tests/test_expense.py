@@ -160,3 +160,63 @@ def test_expense_year_category_no_match(cli):
     assert data["total"] == 0
     assert data["expenses"] == 0
     assert data["biggest_expense"] is None
+
+
+# ── expense top: 'what was my biggest expense ever?' ──
+
+
+def test_expense_top_sorts_by_amount_desc(cli):
+    cli.run("expense", "add", "Coffee", "-a", "5", "-c", "food")
+    cli.run("expense", "add", "Laptop", "-a", "2000", "-c", "tech")
+    cli.run("expense", "add", "Rent", "-a", "1500", "-c", "housing")
+    rows = cli.json("expense", "top")
+    amounts = [r["amount"] for r in rows]
+    assert amounts == [2000.0, 1500.0, 5.0]
+
+
+def test_expense_top_respects_limit(cli):
+    cli.run("expense", "add", "A", "-a", "100")
+    cli.run("expense", "add", "B", "-a", "200")
+    cli.run("expense", "add", "C", "-a", "300")
+    rows = cli.json("expense", "top", "--limit", "2")
+    assert len(rows) == 2
+    assert rows[0]["amount"] == 300.0
+
+
+def test_expense_top_filter_by_category(cli):
+    cli.run("expense", "add", "Laptop", "-a", "2000", "-c", "tech")
+    cli.run("expense", "add", "Rent", "-a", "1500", "-c", "housing")
+    rows = cli.json("expense", "top", "-c", "tech")
+    assert [r["description"] for r in rows] == ["Laptop"]
+
+
+def test_expense_top_filter_by_year(cli):
+    """Year filter scopes to one calendar year."""
+    cli.run("expense", "add", "ThisYear", "-a", "500")
+    # Use --date to backdate a row to a prior year via SQL.
+    import os
+    import sqlite3
+    home = os.environ["CLIBO_HOME"]
+    cli.run("expense", "add", "PriorYear", "-a", "9999")
+    con = sqlite3.connect(f"{home}/clibo.db")
+    con.execute(
+        "UPDATE expense_entry SET entry_date='2020-06-01' "
+        "WHERE description='PriorYear'"
+    )
+    con.commit()
+    con.close()
+    rows_2020 = cli.json("expense", "top", "-y", "2020")
+    assert [r["description"] for r in rows_2020] == ["PriorYear"]
+    # All-time still surfaces the biggest regardless of year.
+    rows_all = cli.json("expense", "top")
+    assert rows_all[0]["description"] == "PriorYear"
+
+
+def test_expense_top_empty_returns_empty_list(cli):
+    rows = cli.json("expense", "top")
+    assert rows == []
+
+
+def test_expense_top_invalid_limit_fails(cli):
+    result = cli.run("expense", "top", "--limit", "0")
+    assert result.exit_code != 0

@@ -321,6 +321,64 @@ def year(
 
 
 @app.command()
+def top(
+    limit: int = typer.Option(10, "--limit", "-n", help="How many to show"),
+    yr: int = typer.Option(
+        None, "--year", "-y",
+        help="Restrict to one calendar year (default: all-time)",
+    ),
+    category: str = typer.Option(
+        None, "--category", "-c",
+        help="Restrict to one category (salary/freelance/…)",
+    ),
+    source: str = typer.Option(
+        None, "--source", "-s",
+        help="Restrict to one source (fuzzy substring match)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """💵 Top N biggest income entries — all-time by default.
+
+    Answers *"what was my biggest payday ever?"* (no flags) or
+    *"biggest freelance entries this year?"* (with filters).
+    Mirrors `expense top` for symmetry.
+    """
+    if limit < 1:
+        fail("--limit must be >= 1", json_out=json_out)
+    with session() as db:
+        query = select(IncomeEntry)
+        if yr is not None:
+            query = (
+                query.where(IncomeEntry.entry_date >= date(yr, 1, 1))
+                .where(IncomeEntry.entry_date <= date(yr, 12, 31))
+            )
+        if category:
+            query = query.where(IncomeEntry.category == category.lower())
+        if source:
+            query = query.where(IncomeEntry.source.ilike(f"%{source}%"))
+        entries = list(
+            db.exec(query.order_by(IncomeEntry.amount.desc()).limit(limit)).all()
+        )
+    rows = [_row(e) for e in entries]
+    label_bits = ["💵 Top", f"{limit}"]
+    if yr is not None:
+        label_bits.append(f"· {yr}")
+    if category:
+        label_bits.append(f"· {category.lower()}")
+    if source:
+        label_bits.append(f"· src={source}")
+    render_rows(
+        rows,
+        [("id", "ID"), ("entry_date", "Date"), ("amount", "Amount"),
+         ("source", "Source"), ("category", "Category")],
+        json_out=json_out,
+        title=" ".join(label_bits),
+        formatters={"amount": lambda v, r: money(v)},
+        empty="No income entries match this filter.",
+    )
+
+
+@app.command()
 def stats(
     days: int = typer.Option(30, "--days", help="Window size in days"),
     json_out: JsonOpt = False,

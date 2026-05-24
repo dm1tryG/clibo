@@ -192,3 +192,35 @@ def test_income_year_no_filter_keeps_fields_null(cli):
     data = cli.json("income", "year")
     assert data["category"] is None
     assert data["source"] is None
+
+
+# ── income top: biggest paydays ──
+
+
+def test_income_top_sorts_by_amount_desc(cli):
+    cli.run("income", "add", "Acme", "-a", "5000", "-c", "salary")
+    cli.run("income", "add", "Stripe", "-a", "1000", "-c", "freelance")
+    cli.run("income", "add", "Gift", "-a", "100", "-c", "gift")
+    rows = cli.json("income", "top")
+    assert [r["amount"] for r in rows] == [5000.0, 1000.0, 100.0]
+
+
+def test_income_top_limit_and_source_filter(cli):
+    cli.run("income", "add", "Acme Corp", "-a", "5000", "-c", "salary")
+    cli.run("income", "add", "Acme Corp", "-a", "3000", "-c", "salary")
+    cli.run("income", "add", "Stripe", "-a", "1000")
+    rows = cli.json("income", "top", "-n", "5", "--source", "acme")
+    assert len(rows) == 2
+    assert all("Acme" in r["source"] for r in rows)
+
+
+def test_income_top_category_filter(cli):
+    cli.run("income", "add", "Acme", "-a", "5000", "-c", "salary")
+    cli.run("income", "add", "Stripe", "-a", "1000", "-c", "freelance")
+    rows = cli.json("income", "top", "-c", "freelance")
+    assert [r["amount"] for r in rows] == [1000.0]
+
+
+def test_income_top_invalid_limit_fails(cli):
+    result = cli.run("income", "top", "--limit", "-1")
+    assert result.exit_code != 0

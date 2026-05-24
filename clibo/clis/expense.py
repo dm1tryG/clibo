@@ -306,6 +306,56 @@ def year(
 
 
 @app.command()
+def top(
+    limit: int = typer.Option(10, "--limit", "-n", help="How many to show"),
+    yr: int = typer.Option(
+        None, "--year", "-y",
+        help="Restrict to one calendar year (default: all-time)",
+    ),
+    category: str = typer.Option(
+        None, "--category", "-c",
+        help="Restrict to one category (e.g. food, housing)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """💸 Top N biggest expenses — all-time by default.
+
+    Answers *"what was my biggest expense ever?"* (without flags) or
+    *"biggest 5 food expenses this year?"* (with `--year` + `--category`).
+    """
+    if limit < 1:
+        fail("--limit must be >= 1", json_out=json_out)
+    with session() as db:
+        query = select(Expense)
+        if yr is not None:
+            query = (
+                query.where(Expense.entry_date >= date(yr, 1, 1))
+                .where(Expense.entry_date <= date(yr, 12, 31))
+            )
+        if category:
+            query = query.where(Expense.category == category.lower())
+        entries = list(
+            db.exec(query.order_by(Expense.amount.desc()).limit(limit)).all()
+        )
+    rows = [_row(e) for e in entries]
+    label_bits = ["💸 Top"]
+    label_bits.append(f"{limit}")
+    if yr is not None:
+        label_bits.append(f"· {yr}")
+    if category:
+        label_bits.append(f"· {category.lower()}")
+    render_rows(
+        rows,
+        [("id", "ID"), ("entry_date", "Date"), ("amount", "Amount"),
+         ("description", "Description"), ("category", "Category")],
+        json_out=json_out,
+        title=" ".join(label_bits),
+        formatters={"amount": lambda v, r: money(v)},
+        empty="No expenses match this filter.",
+    )
+
+
+@app.command()
 def stats(
     days: int = typer.Option(30, "--days", help="Window size in days"),
     json_out: JsonOpt = False,
