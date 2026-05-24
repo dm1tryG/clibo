@@ -4,6 +4,50 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Bare-default sweep finishes — 16 more tools, convention now universal · 2026-05-24
+
+The remaining holdouts: car, clients, cv, films, gifts, groceries,
+home, invest, invoice, meditate, meetings, network, period, pets,
+tip, travel. All 16 now respond to `clibo <tool>` (bare) with the
+natural list view.
+
+- 🚗 **`clibo car`** → `list_entries` (fuel + service + drives, 365d)
+- 🧑‍💼 **`clibo clients`** → `list_clients`
+- 📜 **`clibo cv`** → `list_entries` (newest start first)
+- 🎬 **`clibo films`** → `list_films`
+- 🎁 **`clibo gifts`** → `list_gifts`
+- 🛒 **`clibo groceries`** → `list_items` (unbought only)
+- 🏠 **`clibo home`** → `list_entries` (last 365d)
+- 📈 **`clibo invest`** → `stats` (portfolio overview)
+- 📄 **`clibo invoice`** → `list_invoices`
+- 🧘 **`clibo meditate`** → `today` (session + goal progress)
+- 🗓️ **`clibo meetings`** → `list_meetings` (last 30d)
+- 🌐 **`clibo network`** → `list_connections` (last 90d)
+- 🌸 **`clibo period`** → `list_entries` (last 12)
+- 🐾 **`clibo pets`** → `list_pets`
+- 🪙 **`clibo tip`** → `today`
+- ✈️ **`clibo travel`** → `list_trips` (future + current)
+
+Same convention as before — each callback passes every optional
+argument at its declared default to defend against the sentinel bug.
+
+- 🧪 **Contract test** (`BARE_DEFAULT_TOOLS`) now lists **73 tools**.
+  Every entity-tool surface is pinned. `clibo <tool>` and
+  `clibo <tool> --json` both work uniformly across the codebase.
+- 🎯 **Audit result**: zero entity tools remain without a bare-default
+  callback. The iter-105 rollout is fully realised.
+- **Tests:** 1,273 passing; ruff clean.
+
+**Why this matters:** *"type the tool's name to get the answer"* is
+now true everywhere. Three iterations of focused work — first 42
+existing callbacks gained `--json` support (sweep), then 5 high-
+traffic missing tools (todo / books / notes / crm / savings), then
+10 more (weight / ideas / quotes / lessons / recipes / bookmark /
+wishlist / pantry / brag / debt), and finally these 16 — completed
+the convention universally.
+
+---
+
 ### Bare-default lands on 10 more entity tools · 2026-05-24
 
 Continuing the previous sweep. Ten more entity tools now respond

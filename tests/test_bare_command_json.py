@@ -13,14 +13,16 @@ import json
 # `dashboard` is excluded — its bare form already takes no flags.
 BARE_DEFAULT_TOOLS = [
     "bills", "birthdays", "books", "bookmark", "brag", "budget", "caffeine",
-    "calorie", "challenge", "chores", "crm", "debt", "documents", "donations",
-    "dreams", "events", "expense", "fasting", "flashcards", "focus", "followup",
-    "goals", "gratitude", "habit", "ideas", "income", "jobs", "journal",
-    "leads", "lessons", "meals", "meds", "mileage", "mood", "networth",
-    "notes", "packages", "pantry", "plants", "quotes", "recipes", "savings",
-    "sleep", "split", "steps", "stretches", "subs", "symptom", "time",
-    "todo", "vitals", "water", "weight", "wishlist", "worklog", "workout",
-    "writing",
+    "calorie", "car", "challenge", "chores", "clients", "crm", "cv", "debt",
+    "documents", "donations", "dreams", "events", "expense", "fasting",
+    "films", "flashcards", "focus", "followup", "gifts", "goals", "gratitude",
+    "groceries", "habit", "home", "ideas", "income", "invest", "invoice",
+    "jobs", "journal", "leads", "lessons", "meals", "meditate", "meds",
+    "meetings", "mileage", "mood", "network", "networth", "notes", "packages",
+    "pantry", "period", "pets", "plants", "quotes", "recipes", "savings",
+    "sleep", "split", "steps", "stretches", "subs", "symptom", "time", "tip",
+    "todo", "travel", "vitals", "water", "weight", "wishlist", "worklog",
+    "workout", "writing",
 ]
 
 

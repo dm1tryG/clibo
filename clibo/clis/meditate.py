@@ -31,7 +31,14 @@ class MeditationSession(SQLModel, table=True):
     note: str | None = None
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
+    """Default: ``clibo meditate`` (bare) shows today's session + goal progress."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(today, json_out=json_out)
 
 
 def _goal() -> int:

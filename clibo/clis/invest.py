@@ -56,7 +56,14 @@ class LatestPrice(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.now)
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
+    """Default: ``clibo invest`` (bare) shows portfolio stats."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(stats, json_out=json_out)
 
 
 def _row(txn: Transaction) -> dict:
