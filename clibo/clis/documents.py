@@ -270,3 +270,6 @@ def stats(json_out: JsonOpt = False) -> None:
             if farthest else None,
     }
     render_record(data, json_out=json_out, title=f"{EMOJI} Document stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

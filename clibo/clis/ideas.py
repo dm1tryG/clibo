@@ -244,3 +244,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "by_status": {s: sum(1 for i in ideas if i.status == s) for s in STATUSES},
     }
     render_record(data, json_out=json_out, title="📊 Idea stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

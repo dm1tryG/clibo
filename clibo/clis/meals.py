@@ -196,3 +196,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "by_meal_type": by_type,
     }
     render_record(data, json_out=json_out, title="📊 Meal-plan stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

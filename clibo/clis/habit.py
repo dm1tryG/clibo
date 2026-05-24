@@ -275,3 +275,6 @@ def stats(
         "completion_pct": round(in_window / days * 100, 1),
     }
     render_record(data, json_out=json_out, title=f"📊 Habit stats · {target.name}")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

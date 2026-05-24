@@ -234,3 +234,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "locations": len({p.location for p in plants if p.location}),
     }
     render_record(data, json_out=json_out, title="📊 Plant stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

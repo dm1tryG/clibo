@@ -294,3 +294,6 @@ def stats(
         "by_area_minutes": minutes_by_area,
     }
     render_record(data, json_out=json_out, title=f"📊 Stretching · last {days}d")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

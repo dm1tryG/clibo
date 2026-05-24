@@ -237,3 +237,6 @@ def stats(
         "chart": sparkline_days(daily_avg, since, date.today()),
     }
     render_record(data, json_out=json_out, title=f"📊 Mood stats · last {days}d")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

@@ -318,3 +318,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "approx_job_years": round(job_months / 12, 1),
     }
     render_record(data, json_out=json_out, title="📊 CV stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

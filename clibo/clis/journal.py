@@ -246,3 +246,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "avg_mood": round(sum(moods) / len(moods), 1) if moods else None,
     }
     render_record(data, json_out=json_out, title="📊 Journal stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

@@ -168,3 +168,22 @@ def test_done_still_works(cli):
     cli.run("todo", "add", "another task")
     data = cli.json("todo", "done", "1")
     assert data["done"] is True
+
+
+# ── delete alias (iter 121) — applies across every tool with `rm` ──
+
+
+def test_delete_alias_works(cli):
+    """`todo delete` is the English-natural synonym for `rm`."""
+    cli.run("todo", "add", "doomed")
+    data = cli.json("todo", "delete", "1")
+    assert data["deleted"] == 1
+    listing = cli.json("todo", "list")
+    assert not any(t["id"] == 1 for t in listing)
+
+
+def test_rm_still_works(cli):
+    """Back-compat: original `rm` still works."""
+    cli.run("todo", "add", "doomed")
+    data = cli.json("todo", "rm", "1")
+    assert data["deleted"] == 1

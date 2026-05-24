@@ -205,3 +205,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "with_impact": sum(1 for a in achievements if a.impact),
     }
     render_record(data, json_out=json_out, title="📊 Achievement stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

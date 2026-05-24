@@ -236,3 +236,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "done": sum(1 for f in followups if f.done),
     }
     render_record(data, json_out=json_out, title="📊 Follow-up stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

@@ -244,3 +244,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "response_rate_pct": round(len(positive) / len(jobs) * 100, 1) if jobs else 0.0,
     }
     render_record(data, json_out=json_out, title="📊 Job-search stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

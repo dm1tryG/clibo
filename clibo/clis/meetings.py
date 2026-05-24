@@ -308,3 +308,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "done_actions": sum(1 for a in items if a.done),
     }
     render_record(data, json_out=json_out, title="📊 Meeting stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

@@ -188,3 +188,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "assignees": len({c.assignee for c in chores if c.assignee}),
     }
     render_record(data, json_out=json_out, title="📊 Chore stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

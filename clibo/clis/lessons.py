@@ -196,3 +196,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "with_context": sum(1 for ls in lessons if ls.context),
     }
     render_record(data, json_out=json_out, title="📊 Lesson stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

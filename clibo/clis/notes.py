@@ -212,3 +212,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "tagged": sum(1 for n in notes if n.tags),
     }
     render_record(data, json_out=json_out, title="📊 Notes stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

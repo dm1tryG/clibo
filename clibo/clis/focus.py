@@ -213,3 +213,6 @@ def stats(
         "days_focused": len({s.entry_date for s in sessions}),
     }
     render_record(data, json_out=json_out, title=f"📊 Focus stats · last {days}d")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

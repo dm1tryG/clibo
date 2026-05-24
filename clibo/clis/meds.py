@@ -345,3 +345,6 @@ def stats(
         "adherence_pct": round(taken / expected * 100) if expected else 0,
     }
     render_record(data, json_out=json_out, title=f"📊 Meds stats · last {days}d")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

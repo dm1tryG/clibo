@@ -252,3 +252,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "top_symbols": [{"symbol": s, "count": c} for s, c in counter.most_common(5)],
     }
     render_record(data, json_out=json_out, title="📊 Dream stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

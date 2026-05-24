@@ -367,3 +367,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "top_rated": [{"title": f.title, "rating": f.rating} for f in top],
     }
     render_record(data, json_out=json_out, title="📊 Films stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

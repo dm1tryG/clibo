@@ -271,3 +271,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "by_category": by_category,
     }
     render_record(data, json_out=json_out, title="📊 Bookmark stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

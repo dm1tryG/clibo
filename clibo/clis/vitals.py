@@ -244,6 +244,10 @@ def log(
        json_out=json_out, data=data)
 
 
+# `add` is the friendlier verb in agent flows — matches every other tool.
+app.command(name="add", help="Alias for `log`")(log)
+
+
 @app.command(name="list")
 def list_entries(
     kind: str = typer.Option(None, "--kind", "-k", help=f"Filter: {', '.join(KINDS)}"),
@@ -347,3 +351,6 @@ def stats(
             data["avg_diastolic"] = round(sum(dia) / len(dia), 1)
             data["avg_systolic"] = data.pop("avg")
     render_record(data, json_out=json_out, title=f"📊 {KINDS[kind][0]} stats · last {days}d")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

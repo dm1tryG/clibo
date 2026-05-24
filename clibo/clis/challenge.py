@@ -189,6 +189,10 @@ def start(
        json_out=json_out, data=data)
 
 
+# `add` is the friendlier verb in agent flows — matches every other tool.
+app.command(name="add", help="Alias for `start`")(start)
+
+
 @app.command()
 def check(
     challenge_id: int = typer.Argument(..., help="Challenge ID"),
@@ -464,3 +468,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "by_status": by_status,
     }
     render_record(data, json_out=json_out, title=f"{EMOJI} Challenge stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

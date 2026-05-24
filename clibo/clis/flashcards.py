@@ -211,3 +211,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "mastered_box_4": by_box[MAX_BOX],
     }
     render_record(data, json_out=json_out, title="📊 Flashcard stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

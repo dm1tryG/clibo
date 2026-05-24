@@ -393,3 +393,6 @@ def stats(
         "top_exercises": [{"exercise": name, "count": count} for name, count in top],
     }
     render_record(data, json_out=json_out, title=f"📊 Workout stats · last {days}d")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

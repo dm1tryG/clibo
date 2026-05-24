@@ -152,3 +152,20 @@ def test_vitals_help_still_works(cli):
     result = cli.run("vitals", "--help")
     assert result.exit_code == 0
     assert "latest" in result.stdout
+
+
+# ── add alias for log (iter 121) ──
+
+
+def test_add_alias_routes_to_log(cli):
+    """`vitals add temp 38.5` works like `vitals log temp 38.5`."""
+    data = cli.json("vitals", "add", "temp", "38.5")
+    assert data["kind"] == "temp"
+    assert data["value"] == 38.5
+
+
+def test_add_alias_supports_bp_slash(cli):
+    """BP shorthand survives through the alias."""
+    data = cli.json("vitals", "add", "bp", "120/80")
+    assert data["value"] == 120
+    assert data["value2"] == 80

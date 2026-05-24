@@ -176,3 +176,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "by_location": by_location,
     }
     render_record(data, json_out=json_out, title="📊 Pantry stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

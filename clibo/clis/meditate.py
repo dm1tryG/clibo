@@ -236,3 +236,6 @@ def stats(
         "current_streak": _streak(all_days),
     }
     render_record(data, json_out=json_out, title=f"📊 Meditation stats · last {days}d")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

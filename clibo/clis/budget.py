@@ -188,3 +188,6 @@ def rm(
             fail(f"No budget set for {cat!r}", json_out=json_out)
         db.delete(budget)
     ok(f"Deleted budget for {cat}", json_out=json_out, data={"deleted": cat})
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

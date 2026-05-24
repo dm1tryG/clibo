@@ -186,3 +186,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "top_authors": [{"author": a, "count": n} for a, n in top],
     }
     render_record(data, json_out=json_out, title="📊 Quote stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

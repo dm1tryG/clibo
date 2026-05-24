@@ -205,3 +205,6 @@ def stats(
         data["bmi"] = bmi
         data["bmi_class"] = _bmi_class(bmi)
     render_record(data, json_out=json_out, title=f"📊 Weight stats · last {days}d")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

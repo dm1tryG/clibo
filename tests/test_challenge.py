@@ -192,3 +192,19 @@ def test_challenge_help_still_works(cli):
     result = cli.run("challenge", "--help")
     assert result.exit_code == 0
     assert "status" in result.stdout
+
+
+# ── add alias for start (iter 121) ──
+
+
+def test_add_alias_works(cli):
+    """`challenge add` is the natural verb agents reach for."""
+    data = cli.json("challenge", "add", "no sugar", "--days", "30")
+    assert data["name"] == "no sugar"
+    assert data["target_days"] == 30
+
+
+def test_start_still_works(cli):
+    """Back-compat: original `start` unchanged."""
+    data = cli.json("challenge", "start", "early bedtime", "--days", "30")
+    assert data["name"] == "early bedtime"

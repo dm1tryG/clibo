@@ -226,3 +226,6 @@ def stats(json_out: JsonOpt = False) -> None:
         "next_event_date": next_event.event_date if next_event else None,
     }
     render_record(data, json_out=json_out, title="📊 Event stats")
+
+# `delete` is an English-natural synonym for `rm`; both work.
+app.command(name="delete", help="Alias for `rm`")(rm)

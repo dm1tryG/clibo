@@ -4,6 +4,53 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 121 — `delete` everywhere + 2 more `add` aliases · 2026-05-24
+
+Programmatic verb-survey caught two more `add` gaps (challenge,
+vitals) and the universal *"delete vs rm"* gap. Agents naturally
+say "delete this task", but only `rm` worked. Fixed all three in
+one sweep.
+
+- 🗑️ **`delete` alias for `rm` across 73 tools** — every tool with
+  an `rm` subcommand now also accepts `delete`. Patched in one
+  Python pass; collision-checked (zero tools had `delete` already).
+  Same function, same flags, same return shape.
+- 🚀 **`challenge add`** → alias for `start`. Agents listing a new
+  challenge will reach for `add` first (matches every other tool).
+- ❤️ **`vitals add KIND VALUE`** → alias for the iter-100 `log`
+  dispatcher. Routes through the same BP-slash / unit-override /
+  validation paths.
+- 🛡 **No collisions, no breakage**: verb-survey confirmed zero
+  tools already had `delete`. Originals (`rm`/`start`/`log`) all
+  keep their identities — pure addition.
+- 🛡 **Self-documenting help**: Typer renders `Alias for \`rm\``
+  etc. inline in the command list, so `clibo todo --help` shows
+  both verbs without ambiguity.
+- 🎤 NL flow verified across 5 sample tools (todo / notes / calorie
+  / events / books): `delete` works everywhere, returns `{"deleted": id}` JSON.
+  • `challenge add "no sugar" --days 30` ✓
+  • `vitals add temp 38.5` ✓
+  • `vitals add bp 120/80` (BP shorthand survives) ✓
+- 🧪 **6 new tests**: todo `delete` + back-compat `rm`, challenge
+  `add` + back-compat `start`, vitals `add` + BP-slash through alias.
+- **Tests:** 1,165 passing (+6); ruff clean.
+
+**Verb-shape survey complete.** Every tool now accepts both the
+domain-natural verb AND the agent-natural `add`/`delete` variants:
+
+- **Creation**: `add` works on all 74 tools (via aliasing where
+  needed — iters 100, 101, 119, 120, 121).
+- **Deletion**: both `rm` (short) and `delete` (English-natural)
+  work on all 73 tools that have one.
+- **Logging**: `log` works on vitals (iter 100), `take` for meds
+  (iter 101), session-style add for everything else.
+
+Six iterations of cross-cutting verb consistency — agents writing
+clibo flows can default to `<tool> add` and `<tool> delete` and
+they'll just work.
+
+---
+
 ### Iteration 120 — three more verb-shape aliases (journal/todo/meals) · 2026-05-24
 
 Iter 119 caught `budget add` (was only `set`). Agent-mode probes
