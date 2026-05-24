@@ -4,6 +4,33 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `water/focus/steps/meditate today`: remaining + pct_of_goal · 2026-05-24
+
+Symmetry with last iter's calorie budget fields. The four target-
+type daily tools (`water`/`focus`/`steps`/`meditate`) already had
+`reached` (bool) but no `remaining` or `pct_of_goal`. Easy compute,
+high value for agents that want to phrase progress without doing the
+math.
+
+- 💧 **`water today.remaining_ml` + `pct_of_goal`**
+- 🍅 **`focus today.remaining_minutes` + `pct_of_goal`**
+- 👟 **`steps today.remaining` + `pct_of_goal`**
+- 🧘 **`meditate today.remaining_minutes` + `pct_of_goal`**
+- All four `remaining` fields floor at zero (no negatives when
+  exceeding the target). All four are `null` when `goal == 0`.
+- `reached` defaults to `False` when no goal — was previously
+  computed as `total >= 0` which would always be True; now
+  consistent across all 4 tools.
+- 🧪 **8 new tests** (2 per tool): under-goal shape, over-goal
+  caps `remaining` at zero, `pct_of_goal` rolls past 100.
+- **Tests:** 1,392 passing (+8); ruff clean.
+
+**Why this matters:** an agent asking *"how close am I to my water
+goal?"* now gets `pct_of_goal: 25.0, remaining_ml: 1500` directly,
+not just *"500 ml of 2000 ml goal"* needing math.
+
+---
+
 ### `calorie today`: budget signals (over_budget / remaining_kcal / pct_of_goal) · 2026-05-24
 
 The other daily-goal tools (water/focus/steps/meditate) have a

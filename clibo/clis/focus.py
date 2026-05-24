@@ -121,10 +121,15 @@ def today(json_out: JsonOpt = False) -> None:
         )
     total = sum(s.minutes for s in sessions)
     goal = _goal()
+    remaining_minutes = max(0, goal - total) if goal > 0 else None
+    pct_of_goal = round(total / goal * 100, 1) if goal > 0 else None
     if json_out:
         render_record(
             {"date": day, "sessions": len(sessions), "total_minutes": total,
-             "goal_minutes": goal, "reached": total >= goal},
+             "goal_minutes": goal,
+             "reached": total >= goal if goal > 0 else False,
+             "remaining_minutes": remaining_minutes,
+             "pct_of_goal": pct_of_goal},
             json_out=True,
         )
         return

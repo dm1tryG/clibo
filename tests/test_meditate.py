@@ -73,3 +73,24 @@ def test_meditate_stats_longest_session_entry(cli):
     assert entry["id"] == 2
     assert entry["minutes"] == 25
     assert entry["kind"] == "guided"
+
+
+# ── meditate today: remaining_minutes + pct_of_goal ──
+
+
+def test_meditate_today_remaining_and_pct(cli):
+    cli.run("meditate", "log", "5")
+    data = cli.json("meditate", "today")
+    assert data["total_minutes"] == 5
+    assert data["goal_minutes"] == 10
+    assert data["remaining_minutes"] == 5
+    assert data["pct_of_goal"] == 50.0
+    assert data["reached"] is False
+
+
+def test_meditate_today_remaining_floors_at_zero_when_reached(cli):
+    cli.run("meditate", "log", "20")
+    data = cli.json("meditate", "today")
+    assert data["remaining_minutes"] == 0
+    assert data["reached"] is True
+    assert data["pct_of_goal"] == 200.0

@@ -145,13 +145,17 @@ def today(json_out: JsonOpt = False) -> None:
     total = sum(e.count for e in entries)
     goal = _goal()
     sources = Counter(e.source for e in entries if e.source)
+    remaining = max(0, goal - total) if goal > 0 else None
+    pct_of_goal = round(total / goal * 100, 1) if goal > 0 else None
     if json_out:
         render_record(
             {
                 "date": day,
                 "total": total,
                 "goal": goal,
-                "reached": total >= goal,
+                "reached": total >= goal if goal > 0 else False,
+                "remaining": remaining,
+                "pct_of_goal": pct_of_goal,
                 "entries": len(entries),
                 "sources": dict(sources),
             },

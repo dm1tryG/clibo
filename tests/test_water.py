@@ -52,3 +52,24 @@ def test_water_help_still_works(cli):
     result = cli.run("water", "--help")
     assert result.exit_code == 0
     assert "today" in result.stdout
+
+
+# ── water today: remaining_ml + pct_of_goal ──
+
+
+def test_water_today_remaining_and_pct(cli):
+    cli.run("water", "drink", "500")
+    data = cli.json("water", "today")
+    assert data["total_ml"] == 500
+    assert data["goal_ml"] == 2000
+    assert data["remaining_ml"] == 1500
+    assert data["pct_of_goal"] == 25.0
+    assert data["reached"] is False
+
+
+def test_water_today_remaining_floors_at_zero_when_reached(cli):
+    cli.run("water", "drink", "2500")
+    data = cli.json("water", "today")
+    assert data["remaining_ml"] == 0
+    assert data["reached"] is True
+    assert data["pct_of_goal"] == 125.0

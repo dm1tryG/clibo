@@ -144,3 +144,24 @@ def test_steps_help_still_works(cli):
     result = cli.run("steps", "--help")
     assert result.exit_code == 0
     assert "today" in result.stdout
+
+
+# ── steps today: remaining + pct_of_goal ──
+
+
+def test_steps_today_remaining_and_pct(cli):
+    cli.run("steps", "log", "3000")
+    data = cli.json("steps", "today")
+    assert data["total"] == 3000
+    assert data["goal"] == 10000
+    assert data["remaining"] == 7000
+    assert data["pct_of_goal"] == 30.0
+    assert data["reached"] is False
+
+
+def test_steps_today_remaining_floors_at_zero_when_reached(cli):
+    cli.run("steps", "log", "12000")
+    data = cli.json("steps", "today")
+    assert data["remaining"] == 0
+    assert data["reached"] is True
+    assert data["pct_of_goal"] == 120.0

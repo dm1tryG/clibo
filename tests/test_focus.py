@@ -83,3 +83,24 @@ def test_focus_stats_best_day_is_largest_total(cli):
     assert data["best_day"]["minutes"] == 70
     # But the longest individual session is today's 60.
     assert data["best_session"]["minutes"] == 60
+
+
+# ── focus today: remaining_minutes + pct_of_goal ──
+
+
+def test_focus_today_remaining_and_pct(cli):
+    cli.run("focus", "log", "25")
+    data = cli.json("focus", "today")
+    assert data["total_minutes"] == 25
+    assert data["goal_minutes"] == 100
+    assert data["remaining_minutes"] == 75
+    assert data["pct_of_goal"] == 25.0
+    assert data["reached"] is False
+
+
+def test_focus_today_remaining_floors_at_zero_when_reached(cli):
+    cli.run("focus", "log", "120")
+    data = cli.json("focus", "today")
+    assert data["remaining_minutes"] == 0
+    assert data["reached"] is True
+    assert data["pct_of_goal"] == 120.0
