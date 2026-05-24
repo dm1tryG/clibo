@@ -59,3 +59,49 @@ def test_search_covers_beyond_50_tools(cli):
     sources = {hit["source"] for hit in result["results"]}
     assert {"books", "films", "ideas", "quotes", "lessons", "cv",
             "dreams", "gratitude", "income"} <= sources
+
+
+# ── search covers writing + book-sessions + symptom (iter 97) ──
+
+
+def test_search_finds_writing_session_note(cli):
+    cli.run("writing", "log", "novel", "-w", "500",
+            "--note", "draft of chapter 3")
+    res = cli.json("search", "chapter")
+    sources = [r["source"] for r in res["results"]]
+    assert "writing" in sources
+
+
+def test_search_finds_writing_by_project(cli):
+    cli.run("writing", "log", "memoir", "-w", "500")
+    res = cli.json("search", "memoir")
+    assert any(r["source"] == "writing" for r in res["results"])
+
+
+def test_search_finds_book_session_by_note(cli):
+    """`books read --note "..."` text should be findable."""
+    cli.run("books", "add", "Atomic Habits", "-p", "320")
+    cli.run("books", "read", "Atomic Habits", "30",
+            "--note", "great chapter on identity")
+    res = cli.json("search", "identity")
+    sources = [r["source"] for r in res["results"]]
+    assert "reading" in sources
+
+
+def test_search_finds_symptom_by_name(cli):
+    cli.run("symptom", "log", "migraine", "-i", "8")
+    res = cli.json("search", "migraine")
+    assert any(r["source"] == "symptom" for r in res["results"])
+
+
+def test_search_finds_symptom_by_location(cli):
+    cli.run("symptom", "log", "back pain", "-i", "7", "-l", "lumbar")
+    res = cli.json("search", "lumbar")
+    assert any(r["source"] == "symptom" for r in res["results"])
+
+
+def test_search_finds_symptom_by_triggers(cli):
+    cli.run("symptom", "log", "headache", "-i", "5",
+            "--triggers", "poor sleep, bright light")
+    res = cli.json("search", "bright")
+    assert any(r["source"] == "symptom" for r in res["results"])

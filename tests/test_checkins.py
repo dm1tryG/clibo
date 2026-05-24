@@ -87,3 +87,53 @@ def test_checkin_command_no_active_trackers(cli):
     assert data["pending_count"] == 0
     assert data["logged_count"] == 0
     assert data["pending"] == []
+
+
+# ── new trackers: writing + symptom (iter 97) ──
+
+
+def test_writing_active_tracker_surfaces(cli):
+    cli.run("writing", "log", "novel", "-w", "500")
+    cli.run("writing", "log", "novel", "-w", "800", "-d", "yesterday")
+    data = cli.json("checkin")
+    names = [c["name"] for c in data["logged"] + data["pending"]]
+    assert "Writing" in names
+
+
+def test_writing_today_value_shows_words_and_project(cli):
+    cli.run("writing", "log", "novel", "-w", "1200")
+    cli.run("writing", "log", "blog", "-w", "300", "-d", "yesterday")
+    data = cli.json("checkin")
+    writing = next(
+        c for c in data["logged"] + data["pending"] if c["name"] == "Writing"
+    )
+    assert "1200w" in writing["today_value"]
+    assert "novel" in writing["today_value"]
+
+
+def test_symptom_active_tracker_surfaces(cli):
+    cli.run("symptom", "log", "back pain", "-i", "7")
+    cli.run("symptom", "log", "back pain", "-i", "5", "-d", "yesterday")
+    data = cli.json("checkin")
+    names = [c["name"] for c in data["logged"] + data["pending"]]
+    assert "Symptom" in names
+
+
+def test_symptom_today_value_includes_intensity_and_location(cli):
+    cli.run("symptom", "log", "back pain", "-i", "7", "-l", "lumbar")
+    cli.run("symptom", "log", "back pain", "-i", "5", "-d", "yesterday")
+    data = cli.json("checkin")
+    sym = next(
+        c for c in data["logged"] + data["pending"] if c["name"] == "Symptom"
+    )
+    assert "back pain" in sym["today_value"]
+    assert "7/10" in sym["today_value"]
+    assert "lumbar" in sym["today_value"]
+
+
+def test_single_writing_entry_is_not_active(cli):
+    """A single entry shouldn't pollute the check-in list."""
+    cli.run("writing", "log", "novel", "-w", "500")
+    data = cli.json("checkin")
+    names = [c["name"] for c in data["logged"] + data["pending"]]
+    assert "Writing" not in names

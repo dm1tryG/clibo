@@ -34,8 +34,10 @@ from clibo.clis.mood import MoodLog
 from clibo.clis.sleep import SleepLog
 from clibo.clis.steps import StepEntry
 from clibo.clis.stretches import StretchSession
+from clibo.clis.symptom import Symptom
 from clibo.clis.weight import WeightLog
 from clibo.clis.workout import Workout
+from clibo.clis.writing import WritingSession
 from clibo.models import CheckinStatus
 
 ACTIVE_WINDOW_DAYS = 14
@@ -141,6 +143,23 @@ TRACKERS: list[_Tracker] = [
         ),
         question="What are you grateful for today?",
         command="clibo gratitude add \"...\"",
+    ),
+    _Tracker(
+        name="Writing", emoji="✍️",
+        model=WritingSession, date_field="entry_date",
+        format_value=lambda e: f"{e.words}w on {e.project}",
+        question="Did you write today?",
+        command="clibo writing log <project> -w <words>",
+    ),
+    _Tracker(
+        name="Symptom", emoji="🤒",
+        model=Symptom, date_field="entry_date",
+        format_value=lambda e: (
+            f"{e.name} {e.intensity}/10"
+            + (f" ({e.location})" if e.location else "")
+        ),
+        question="Any symptoms today?",
+        command="clibo symptom log <name> -i <1-10>",
     ),
     _Tracker(
         name="Caffeine cutoff", emoji="🕒",  # placeholder, replaced below

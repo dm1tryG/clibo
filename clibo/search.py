@@ -12,7 +12,7 @@ from sqlalchemy import or_
 from sqlmodel import select
 
 from clibo.clis.bookmark import Bookmark
-from clibo.clis.books import Book
+from clibo.clis.books import Book, BookSession
 from clibo.clis.brag import Achievement
 from clibo.clis.caffeine import CaffeineEntry
 from clibo.clis.challenge import Challenge
@@ -39,10 +39,12 @@ from clibo.clis.quotes import Quote
 from clibo.clis.recipes import Recipe
 from clibo.clis.steps import StepEntry
 from clibo.clis.stretches import StretchSession
+from clibo.clis.symptom import Symptom
 from clibo.clis.tip import TipEntry
 from clibo.clis.todo import Task
 from clibo.clis.wishlist import WishlistItem
 from clibo.clis.worklog import WorkLogEntry
+from clibo.clis.writing import WritingSession
 from clibo.core.db import session
 
 
@@ -61,6 +63,17 @@ def _snippet_gift(gift: Gift) -> str:
 
 def _snippet_bookmark(bookmark: Bookmark) -> str:
     return bookmark.title or bookmark.url
+
+
+def _snippet_book_session(book_session: BookSession) -> str:
+    """Look up the parent book's title inside the same session for the snippet."""
+    with session() as db:
+        book = db.get(Book, book_session.book_id)
+    title = book.title if book else f"book #{book_session.book_id}"
+    detail = f"{book_session.pages}p of {title}"
+    if book_session.duration_min:
+        detail += f" ({book_session.duration_min} min)"
+    return detail
 
 
 #: ``(label, model, [columns to search], snippet_fn)`` for every source.
@@ -149,6 +162,18 @@ SOURCES: list[tuple] = [
     ("fasting", FastSession, [FastSession.note],
      lambda f: f"{f.target_hours:g}h target"
                 + (f" — {f.note}" if f.note else "")),
+    ("writing", WritingSession,
+     [WritingSession.project, WritingSession.note],
+     lambda w: f"{w.words}w on {w.project}"
+                + (f" — {w.note}" if w.note else "")),
+    ("reading", BookSession,
+     [BookSession.note],
+     _snippet_book_session),
+    ("symptom", Symptom,
+     [Symptom.name, Symptom.location, Symptom.triggers,
+      Symptom.relief, Symptom.note],
+     lambda s: f"{s.name} {s.intensity}/10"
+                + (f" ({s.location})" if s.location else "")),
 ]
 
 

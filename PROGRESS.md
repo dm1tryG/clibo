@@ -4,6 +4,54 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 97 — wire `writing` / `books-session` / `symptom` into search + checkin · 2026-05-24
+
+Iter 93/94/96 closed the today/week/month/recent gaps. This iter
+closes the **other two cross-tool primitives** that had been
+silently ignoring the new tools — search and the daily check-in
+flow.
+
+- 🔍 **`clibo search`** — three new sources in the index:
+  • `writing` searches `WritingSession.project` + `WritingSession.note`.
+  • `reading` searches `BookSession.note` and resolves the parent
+    book title for the snippet (`30p of Atomic Habits`). New
+    `_snippet_book_session` helper opens its own session to look
+    up the title — keeps the SOURCES tuple shape consistent.
+  • `symptom` searches `Symptom.name` + `location` + `triggers` +
+    `relief` + `note`. Lots of text-bearing fields → high hit rate
+    for queries like "lumbar", "ibuprofen", "bright light".
+- 📋 **`clibo checkin`** — two new active-trackers:
+  • `Writing` — surfaces "Did you write today?" with the last
+    session's words & project (`1200w on novel`).
+  • `Symptom` — surfaces "Any symptoms today?" with the last
+    entry's name + intensity + optional location
+    (`back pain 7/10 (lumbar)`).
+  Both still respect the 2+ entries in 14 days threshold so single
+  exploratory entries don't pollute the check-in list.
+- 📅 Reading (BookSession) intentionally **not** added to checkin —
+  it's event-based, not a daily yes/no, and `books history` already
+  serves the "what did I read?" question without pestering.
+- 🎤 NL flow verified end-to-end:
+  • `search chapter` → hits writing note + reading session ✓
+  • `search lumbar` → hits symptom ✓
+  • `search identity` → hits reading session note ✓
+  • `search bright` → hits symptom by `triggers` field ✓
+  • `checkin --json` with 2 entries each → both Writing + Symptom
+    appear in `logged` with today_value populated ✓
+  • A single writing entry → Writing does NOT appear (below threshold) ✓
+- 🧪 **11 new tests**: 6 search (writing-by-note, writing-by-project,
+  reading-by-session-note, symptom-by-name, symptom-by-location,
+  symptom-by-triggers), 5 checkin (writing tracker appears + value
+  format, symptom tracker appears + value format incl. location,
+  single-entry below threshold).
+- **Tests:** 941 passing (+11); ruff clean.
+
+The 6 cross-tool primitives (today, yesterday, week, month,
+recent, search, tags, checkin) now all cover the full 74-tool
+catalog. No tool is invisible anywhere.
+
+---
+
 ### Iteration 96 — wire `symptom` into today/week/month/recent · 2026-05-24
 
 Iter 95 shipped the new `symptom` tool. Mirroring the writing+books
