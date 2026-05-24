@@ -4,6 +4,44 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 127 — `clibo upcoming` / `agenda`: the next-N-days view · 2026-05-24
+
+NL-probe friction: *"What's coming up this week?"* had no answer.
+`clibo today` is today-only; `clibo week` is the past 7 days
+(retrospective). The forward-looking sister was missing. Built.
+
+- 🔮 **`clibo upcoming [-d N]`** — unified next-N-days view across
+  every date-anchored tracker: tasks (due, not done), bills
+  (unpaid), events, follow-ups, birthdays (next occurrence),
+  chores (next due), packages (expected), and document expiry.
+  Default window: 7 days. Sorted chronologically, grouped by date.
+- 🪞 **`clibo agenda`** — alias for `upcoming`. Reads more
+  naturally when the user thinks in calendar terms.
+- 📦 New module `clibo/upcoming.py` with `UpcomingItem` and
+  `UpcomingSnapshot` dataclasses. JSON shape: `days`, `start`,
+  `end`, `total`, `by_date[]` (grouped), and flat `items[]`.
+- 🎤 NL flow verified:
+  • `clibo upcoming` → 7-day picture across 6 tool types
+  • `clibo upcoming --days 14` → wider window
+  • `clibo agenda` → identical to `upcoming`
+- 🧪 **13 new tests** in `tests/test_upcoming.py`: empty-state,
+  multi-kind aggregation, chronological sort, exclude-overdue
+  (those live on `today`), exclude-done, exclude-paid-bills,
+  window boundary, `--days` widening, follow-ups + birthdays,
+  same-day grouping, validation, agenda alias, human-view smoke.
+- 📚 README updated — `clibo upcoming` row added to the rollup
+  command table (between `today` and `week`).
+- **Tests:** 1,214 passing (+13); ruff clean.
+
+**Why this matters:** the trio is now complete —
+*"how did the past go?"* → `clibo week`,
+*"what's actionable now?"* → `clibo today`,
+*"what's on the horizon?"* → `clibo upcoming`.
+Same data the dashboard already collects, now with the natural
+forward-looking framing as a first-class command.
+
+---
+
 ### Iteration 126 — `expense/income year` gain filter flags · 2026-05-24
 
 NL-probe friction: *"How much did I spend on food this year?"* —

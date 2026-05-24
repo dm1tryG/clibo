@@ -160,6 +160,33 @@ def week(json_out: JsonOpt = False) -> None:
     render_week(json_out=json_out)
 
 
+@app.command()
+def upcoming(
+    days: int = typer.Option(
+        7, "--days", "-d",
+        help="Look ahead this many days (default 7)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """🔮 What's coming up over the next N days.
+
+    Pulls every date-anchored item — tasks, bills, events, follow-ups,
+    birthdays, chores, packages and documents expiring — into a single
+    chronological view. Sister to ``clibo today`` (today-only) and
+    ``clibo week`` (retrospective).
+    """
+    from clibo.upcoming import render_upcoming
+    if days < 1:
+        from clibo.core.output import fail
+        fail("--days must be >= 1", json_out=json_out)
+    render_upcoming(days=days, json_out=json_out)
+
+
+# ``clibo agenda`` reads more naturally for "what's on my agenda?"
+# Same command under a second name.
+app.command(name="agenda", help="Alias for `upcoming`")(upcoming)
+
+
 from clibo.monthly import month_command  # noqa: E402
 
 app.command(name="month")(month_command)
