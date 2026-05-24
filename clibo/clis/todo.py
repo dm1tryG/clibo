@@ -181,6 +181,11 @@ def done(task_id: int = typer.Argument(..., help="Task ID"), json_out: JsonOpt =
     ok(f"Completed {EMOJI} task #{task_id}: {task.title}", json_out=json_out, data=data)
 
 
+# `complete` is the formal-prose verb — agents say "mark this task as complete";
+# `done` is the short form. Both work.
+app.command(name="complete", help="Alias for `done`")(done)
+
+
 @app.command()
 def undone(task_id: int = typer.Argument(..., help="Task ID"), json_out: JsonOpt = False) -> None:
     """✅ Mark a task as not done again."""

@@ -69,6 +69,10 @@ def plan(
     ok(f"Planned {EMOJI} {meal} for {entry.plan_date}: {dish}", json_out=json_out, data=data)
 
 
+# `add` is the friendlier verb in agent flows — matches every other tool.
+app.command(name="add", help="Alias for `plan`")(plan)
+
+
 @app.command()
 def today(json_out: JsonOpt = False) -> None:
     """🍽️ Show today's planned meals."""

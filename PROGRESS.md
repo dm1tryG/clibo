@@ -4,6 +4,49 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 120 — three more verb-shape aliases (journal/todo/meals) · 2026-05-24
+
+Iter 119 caught `budget add` (was only `set`). Agent-mode probes
+this round surfaced three more tools where the natural verb agents
+reach for doesn't match the actual subcommand:
+
+| Tried | Got | Real verb |
+|---|---|---|
+| `journal add "feeling good"` | `No such command 'add'` | `write` |
+| `todo complete 3` | `No such command 'complete'` | `done` |
+| `meals add today dinner pasta` | `No such command 'add'` | `plan` |
+
+All three followed the same iter-100/101/119 fix — a one-line
+alias that re-registers the same function under the friendlier verb.
+
+- 📔 **`journal add`** → alias for `write`. All flags
+  (`--date`, `--mood`, `--tag`) pass through identically.
+- ✅ **`todo complete`** → alias for `done`. Pinned by a test
+  that confirms `done_at` is set.
+- 🍽️ **`meals add today dinner pasta`** → alias for `plan`.
+  Same three-positional shape (DATE MEAL DISH).
+- 🛡 **Help shows the alias annotation** — Typer renders the
+  `name="add"` command in the subcommand list with
+  `Alias for \`write\`` text so the menu is self-documenting.
+- 🎤 NL flow verified end-to-end:
+  • `journal add "x"` + `-m 5 -t happy` ✓
+  • `todo complete 1` → done=True ✓
+  • `meals add today dinner "pasta with pesto"` → meal_type=dinner ✓
+  • Originals (`write`/`done`/`plan`) all still work ✓
+  • `--help` annotates each alias ✓
+- 🧪 **7 new tests**: 3 journal (add works, all flags pass through,
+  same shape as write), 2 todo (complete alias works, done unchanged),
+  2 meals (add alias works, plan unchanged).
+- **Tests:** 1,159 passing (+7); ruff clean.
+
+The verb-shape uniformity sweep continues: `vitals log` (iter 100),
+`meds take` auto-create (iter 101), `budget add` (iter 119), and
+now `journal add` / `todo complete` / `meals add` (iter 120). Each
+fix is a one-line alias that closes a real agent friction without
+breaking the canonical verbs.
+
+---
+
 ### Iteration 119 — `budget add` alias + bare-command default · 2026-05-24
 
 Agent-mode probe on *"Where am I going over budget?"* seeded a

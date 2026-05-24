@@ -59,3 +59,20 @@ def test_meals_help_still_works(cli):
     result = cli.run("meals", "--help")
     assert result.exit_code == 0
     assert "today" in result.stdout
+
+
+# ── add alias for plan (iter 120) ──
+
+
+def test_add_alias_works(cli):
+    """`meals add today dinner pasta` is the natural agent flow."""
+    data = cli.json("meals", "add", "today", "dinner", "pasta with pesto")
+    assert data["meal_type"] == "dinner"
+    assert data["dish"] == "pasta with pesto"
+
+
+def test_plan_still_works(cli):
+    """Back-compat: original `plan` verb unchanged."""
+    data = cli.json("meals", "plan", "tomorrow", "lunch", "salad")
+    assert data["meal_type"] == "lunch"
+    assert data["dish"] == "salad"

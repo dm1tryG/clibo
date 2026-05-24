@@ -57,3 +57,26 @@ def test_journal_help_still_works(cli):
     result = cli.run("journal", "--help")
     assert result.exit_code == 0
     assert "today" in result.stdout
+
+
+# ── add alias for write (iter 120) ──
+
+
+def test_add_alias_works(cli):
+    """`journal add` is the natural verb agents reach for."""
+    data = cli.json("journal", "add", "feeling good today")
+    assert data["body"] == "feeling good today"
+
+
+def test_add_alias_supports_all_flags(cli):
+    """All `write` flags pass through the alias."""
+    data = cli.json("journal", "add", "great day", "-m", "5", "-t", "happy,calm")
+    assert data["mood"] == 5
+    assert "happy" in data["tags"]
+
+
+def test_write_and_add_produce_same_row_shape(cli):
+    """`add` is a true alias — no shape divergence."""
+    a = cli.json("journal", "add", "via add")
+    b = cli.json("journal", "write", "via write")
+    assert set(a.keys()) == set(b.keys())

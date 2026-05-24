@@ -150,3 +150,21 @@ def test_list_date_filters_combine_with_project(cli):
     cli.run("todo", "add", "Other task", "-d", "today", "-P", "Other")
     data = cli.json("todo", "list", "--due", "today", "-P", "Acme")
     assert [t["title"] for t in data] == ["Acme task"]
+
+
+# ── complete alias for done (iter 120) ──
+
+
+def test_complete_alias_works(cli):
+    """`todo complete` is the formal-prose synonym for `done`."""
+    cli.run("todo", "add", "test task")
+    data = cli.json("todo", "complete", "1")
+    assert data["done"] is True
+    assert data["done_at"] is not None
+
+
+def test_done_still_works(cli):
+    """Back-compat: original `done` verb unchanged."""
+    cli.run("todo", "add", "another task")
+    data = cli.json("todo", "done", "1")
+    assert data["done"] is True

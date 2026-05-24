@@ -92,6 +92,10 @@ def write(
     ok(f"Saved {EMOJI} journal entry for {entry.entry_date}", json_out=json_out, data=data)
 
 
+# `add` is the friendlier verb in agent flows — matches every other tool.
+app.command(name="add", help="Alias for `write`")(write)
+
+
 @app.command()
 def today(json_out: JsonOpt = False) -> None:
     """📔 Show today's journal entries."""
