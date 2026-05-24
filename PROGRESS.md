@@ -4,6 +4,49 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 122 — `expense year` + `income year` + lifetime by_year · 2026-05-24
+
+Agent-mode probe on *"What's my best month financially?"* surfaced
+a real symmetry gap: `donations year` (iter ~50) and `books year`
+(iter 116) both existed, but `expense` and `income` only had
+`month` views — no annual rollup and no lifetime-by-year. The
+natural finance retrospective ask had no direct answer.
+
+- 📅 **New `expense year [-y YEAR]`** — annual spending summary.
+  • `total`, `expenses`, `avg_per_month`
+  • `by_category[]` (sorted desc)
+  • `by_month[]` — all 12 months, zeroed where empty
+  • `biggest_month` (which month did I spend the most?)
+  • `biggest_expense` (the single largest line item)
+- 📅 **New `income year [-y YEAR]`** — same shape mirrored:
+  • `total`, `entries`, `avg_per_month`
+  • `by_category[]` + `by_month[]`
+  • `top_sources[]` — top-5 earners (Stripe, Acme, …)
+  • `biggest_month`
+- 📊 **`expense stats.by_year`** + **`income stats.by_year`** —
+  lifetime "which year did I spend/earn the most?" aggregations
+  on the existing stats endpoints. Always populated (independent
+  of the `--days` window).
+- 🎤 NL flow verified across both tools:
+  • Seeded 3 expenses this year + 1 backdated to 2025 →
+    `expense year` shows 2026 total; `expense year -y 2025` shows
+    only the backdated row ✓
+  • `expense stats.by_year` → `[{2026: 3100}, {2025: 3000}]` ✓
+  • `income year` with two earners → `top_sources` ordered
+    correctly ✓
+- 🧪 **9 new tests**: 5 expense (current-year, specific-year,
+  biggest-month/expense, by_month-has-12-entries, by_year),
+  4 income (current-year, by_category, specific-year, by_year).
+- **Tests:** 1,174 passing (+9); ruff clean.
+
+The annual-rollup pattern now reaches all four headline money
+tools (donations year, books year, expense year, income year)
+plus implicit by_year on stats. The agent question *"how did I
+do financially this year?"* lands in one structured JSON field
+for each side of the ledger.
+
+---
+
 ### Iteration 121 — `delete` everywhere + 2 more `add` aliases · 2026-05-24
 
 Programmatic verb-survey caught two more `add` gaps (challenge,

@@ -93,3 +93,50 @@ def test_income_help_still_works(cli):
     result = cli.run("income", "--help")
     assert result.exit_code == 0
     assert "month" in result.stdout
+
+
+# ── income year + stats.by_year (iter 122) ──
+
+
+def test_income_year_current(cli):
+    cli.run("income", "add", "Stripe", "-a", "5000", "-c", "salary")
+    cli.run("income", "add", "Acme freelance", "-a", "2000", "-c", "freelance")
+    data = cli.json("income", "year")
+    from datetime import date
+    assert data["year"] == date.today().year
+    assert data["total"] == 7000
+    assert data["entries"] == 2
+    top_sources = {r["source"]: r["amount"] for r in data["top_sources"]}
+    assert top_sources["Stripe"] == 5000
+    assert top_sources["Acme freelance"] == 2000
+
+
+def test_income_year_by_category(cli):
+    cli.run("income", "add", "Stripe", "-a", "5000", "-c", "salary")
+    cli.run("income", "add", "Acme", "-a", "2000", "-c", "freelance")
+    data = cli.json("income", "year")
+    by_cat = {r["category"]: r["amount"] for r in data["by_category"]}
+    assert by_cat["salary"] == 5000
+    assert by_cat["freelance"] == 2000
+
+
+def test_income_year_specific(cli):
+    cli.run("income", "add", "Stripe", "-a", "5000")
+    cli.run("income", "add", "Old gig", "-a", "1000")
+    import sqlite3
+
+    from clibo.core import config
+    db = sqlite3.connect(str(config.db_path()))
+    db.execute("UPDATE income_entry SET entry_date='2024-12-31' WHERE source='Old gig'")
+    db.commit()
+    db.close()
+    data = cli.json("income", "year", "-y", "2024")
+    assert data["year"] == 2024
+    assert data["total"] == 1000
+
+
+def test_income_stats_includes_by_year(cli):
+    cli.run("income", "add", "Stripe", "-a", "5000")
+    data = cli.json("income", "stats")
+    assert "by_year" in data
+    assert data["by_year"][0]["total"] == 5000

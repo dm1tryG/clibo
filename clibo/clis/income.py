@@ -237,6 +237,67 @@ def rm(
 
 
 @app.command()
+def year(
+    yr: int = typer.Option(None, "--year", "-y",
+                            help="Calendar year (default: current)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """📅 Annual income — total, by_category, by_month, biggest source.
+
+    Mirrors `expense year` / `donations year`. Answers
+    *"how much did I make this year?"* + the per-month breakdown.
+    """
+    target_year = yr or date.today().year
+    start = date(target_year, 1, 1)
+    end = date(target_year, 12, 31)
+    with session() as db:
+        entries = list(
+            db.exec(
+                select(IncomeEntry)
+                .where(IncomeEntry.entry_date >= start)
+                .where(IncomeEntry.entry_date <= end)
+            ).all()
+        )
+    total = round(sum(e.amount for e in entries), 2)
+    by_cat: dict[str, float] = {}
+    by_source: dict[str, float] = {}
+    by_month: dict[int, float] = {}
+    for e in entries:
+        by_cat[e.category] = round(by_cat.get(e.category, 0) + e.amount, 2)
+        by_source[e.source] = round(by_source.get(e.source, 0) + e.amount, 2)
+        by_month[e.entry_date.month] = round(
+            by_month.get(e.entry_date.month, 0) + e.amount, 2
+        )
+    biggest_month = (
+        max(by_month.items(), key=lambda kv: kv[1]) if by_month else None
+    )
+    top_sources = sorted(by_source.items(), key=lambda kv: -kv[1])[:5]
+    data = {
+        "year": target_year,
+        "entries": len(entries),
+        "total": total,
+        "avg_per_month": round(total / 12, 2) if total else 0.0,
+        "by_category": [
+            {"category": c, "amount": a}
+            for c, a in sorted(by_cat.items(), key=lambda kv: -kv[1])
+        ],
+        "by_month": [
+            {"month": m, "amount": by_month.get(m, 0.0)}
+            for m in range(1, 13)
+        ],
+        "top_sources": [
+            {"source": s, "amount": a} for s, a in top_sources
+        ],
+        "biggest_month": (
+            {"month": biggest_month[0], "amount": biggest_month[1]}
+            if biggest_month else None
+        ),
+        "currency": get_currency(),
+    }
+    render_record(data, json_out=json_out, title=f"📅 Income · {target_year}")
+
+
+@app.command()
 def stats(
     days: int = typer.Option(30, "--days", help="Window size in days"),
     json_out: JsonOpt = False,
@@ -254,6 +315,18 @@ def stats(
     for entry in entries:
         by_cat[entry.category] = round(by_cat.get(entry.category, 0) + entry.amount, 2)
     top = sorted(by_cat.items(), key=lambda kv: kv[1], reverse=True)[:5]
+    # Lifetime by-year aggregation — "which year did I earn the most?"
+    with session() as db:
+        all_entries = list(db.exec(select(IncomeEntry)).all())
+    by_year: dict[int, float] = {}
+    for e in all_entries:
+        by_year[e.entry_date.year] = round(
+            by_year.get(e.entry_date.year, 0) + e.amount, 2
+        )
+    by_year_rows = [
+        {"year": y, "total": amt}
+        for y, amt in sorted(by_year.items(), reverse=True)
+    ]
     data = {
         "window_days": days,
         "entries": len(entries),
@@ -262,6 +335,7 @@ def stats(
         "biggest": max(e.amount for e in entries),
         "top_categories": [{"category": c, "amount": a} for c, a in top],
         "currency": get_currency(),
+        "by_year": by_year_rows,
     }
     render_record(data, json_out=json_out, title=f"📊 Income stats · last {days}d")
 

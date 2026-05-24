@@ -61,3 +61,63 @@ def test_expense_help_still_works(cli):
     result = cli.run("expense", "--help")
     assert result.exit_code == 0
     assert "month" in result.stdout
+
+
+# ── expense year + stats.by_year (iter 122) ──
+
+
+def test_expense_year_current(cli):
+    cli.run("expense", "add", "rent", "-a", "1500", "-c", "housing")
+    cli.run("expense", "add", "groceries", "-a", "200", "-c", "food")
+    data = cli.json("expense", "year")
+    from datetime import date
+    assert data["year"] == date.today().year
+    assert data["total"] == 1700
+    assert data["expenses"] == 2
+    by_cat = {r["category"]: r["amount"] for r in data["by_category"]}
+    assert by_cat["housing"] == 1500
+    assert by_cat["food"] == 200
+
+
+def test_expense_year_specific(cli):
+    """`expense year -y 2025` filters by year."""
+    cli.run("expense", "add", "rent", "-a", "1500", "-c", "housing")
+    cli.run("expense", "add", "vacation", "-a", "3000", "-c", "travel")
+    # Backdate one
+    import sqlite3
+
+    from clibo.core import config
+    db = sqlite3.connect(str(config.db_path()))
+    db.execute("UPDATE expense_entry SET entry_date='2025-08-15' WHERE description='vacation'")
+    db.commit()
+    db.close()
+    data = cli.json("expense", "year", "-y", "2025")
+    assert data["year"] == 2025
+    assert data["total"] == 3000
+    assert data["expenses"] == 1
+
+
+def test_expense_year_biggest_month_and_expense(cli):
+    cli.run("expense", "add", "small", "-a", "10", "-c", "food")
+    cli.run("expense", "add", "huge", "-a", "5000", "-c", "travel")
+    data = cli.json("expense", "year")
+    assert data["biggest_expense"]["description"] == "huge"
+    assert data["biggest_expense"]["amount"] == 5000
+    assert data["biggest_month"]["amount"] == 5010
+
+
+def test_expense_year_by_month_has_12(cli):
+    """`by_month` has all 12 months, zeroed where empty."""
+    cli.run("expense", "add", "rent", "-a", "1500", "-c", "housing")
+    data = cli.json("expense", "year")
+    assert len(data["by_month"]) == 12
+    assert {m["month"] for m in data["by_month"]} == set(range(1, 13))
+
+
+def test_expense_stats_includes_by_year(cli):
+    cli.run("expense", "add", "rent", "-a", "1500", "-c", "housing")
+    data = cli.json("expense", "stats")
+    assert "by_year" in data
+    from datetime import date
+    assert data["by_year"][0]["year"] == date.today().year
+    assert data["by_year"][0]["total"] == 1500

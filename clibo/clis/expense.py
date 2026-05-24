@@ -233,6 +233,70 @@ def currency(
 
 
 @app.command()
+def year(
+    yr: int = typer.Option(None, "--year", "-y",
+                            help="Calendar year (default: current)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """📅 Annual spending — total, by_category, by_month, biggest expense.
+
+    Mirrors `donations year` / `books year`. Answers *"what was my
+    most expensive month?"* via `by_month`, *"what's my biggest
+    spending category this year?"* via `by_category`.
+    """
+    target_year = yr or date.today().year
+    start = date(target_year, 1, 1)
+    end = date(target_year, 12, 31)
+    with session() as db:
+        entries = list(
+            db.exec(
+                select(Expense)
+                .where(Expense.entry_date >= start)
+                .where(Expense.entry_date <= end)
+            ).all()
+        )
+    total = round(sum(e.amount for e in entries), 2)
+    by_cat: dict[str, float] = {}
+    by_month: dict[int, float] = {}
+    for e in entries:
+        by_cat[e.category] = round(by_cat.get(e.category, 0) + e.amount, 2)
+        by_month[e.entry_date.month] = round(
+            by_month.get(e.entry_date.month, 0) + e.amount, 2
+        )
+    biggest_month = (
+        max(by_month.items(), key=lambda kv: kv[1]) if by_month else None
+    )
+    biggest_expense = max(entries, key=lambda e: e.amount) if entries else None
+    data = {
+        "year": target_year,
+        "expenses": len(entries),
+        "total": total,
+        "avg_per_month": round(total / 12, 2) if total else 0.0,
+        "by_category": [
+            {"category": c, "amount": a}
+            for c, a in sorted(by_cat.items(), key=lambda kv: -kv[1])
+        ],
+        "by_month": [
+            {"month": m, "amount": by_month.get(m, 0.0)}
+            for m in range(1, 13)
+        ],
+        "biggest_month": (
+            {"month": biggest_month[0], "amount": biggest_month[1]}
+            if biggest_month else None
+        ),
+        "biggest_expense": (
+            {"description": biggest_expense.description,
+             "amount": biggest_expense.amount,
+             "category": biggest_expense.category,
+             "entry_date": biggest_expense.entry_date}
+            if biggest_expense else None
+        ),
+        "currency": get_currency(),
+    }
+    render_record(data, json_out=json_out, title=f"📅 Spending · {target_year}")
+
+
+@app.command()
 def stats(
     days: int = typer.Option(30, "--days", help="Window size in days"),
     json_out: JsonOpt = False,
@@ -254,6 +318,19 @@ def stats(
         by_day[entry.entry_date] = round(
             by_day.get(entry.entry_date, 0) + entry.amount, 2
         )
+    # Lifetime by-year aggregation (independent of the days window) —
+    # answers "which year did I spend the most?"
+    with session() as db:
+        all_entries = list(db.exec(select(Expense)).all())
+    by_year: dict[int, float] = {}
+    for e in all_entries:
+        by_year[e.entry_date.year] = round(
+            by_year.get(e.entry_date.year, 0) + e.amount, 2
+        )
+    by_year_rows = [
+        {"year": y, "total": amt}
+        for y, amt in sorted(by_year.items(), reverse=True)
+    ]
     data = {
         "window_days": days,
         "expenses": len(entries),
@@ -263,6 +340,7 @@ def stats(
         "top_categories": [{"category": c, "amount": a} for c, a in top],
         "currency": get_currency(),
         "chart": sparkline_days(by_day, since, date.today()),
+        "by_year": by_year_rows,
     }
     render_record(data, json_out=json_out, title=f"📊 Expense stats · last {days}d")
 
