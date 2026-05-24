@@ -185,3 +185,90 @@ def test_stats_includes_session_pace(cli):
     assert stats["session_minutes"] == 60
     assert stats["avg_pages_per_hour"] == 50.0
     assert stats["days_read"] == 1
+
+
+# ── books year subcommand + stats.by_year (iter 116) ──
+
+
+def test_books_year_current(cli):
+    """`books year` defaults to current calendar year."""
+    cli.run("books", "add", "Atomic Habits", "-p", "320")
+    cli.run("books", "finish", "Atomic Habits", "-r", "5")
+    from datetime import date
+    data = cli.json("books", "year")
+    assert data["year"] == date.today().year
+    assert data["books_finished"] == 1
+    assert "Atomic Habits" in data["titles"]
+    assert data["avg_rating"] == 5
+
+
+def test_books_year_specific(cli):
+    """`books year -y 2025` filters by the requested year."""
+    cli.run("books", "add", "Atomic Habits", "-p", "320")
+    cli.run("books", "finish", "Atomic Habits", "-r", "5")
+    cli.run("books", "add", "Range", "-p", "280")
+    cli.run("books", "finish", "Range", "-r", "4")
+    # Backdate one of the finished dates via SQLite to a past year
+    import sqlite3
+
+    from clibo.core import config
+    db = sqlite3.connect(str(config.db_path()))
+    db.execute("UPDATE books_book SET finished='2025-08-15' WHERE title='Range'")
+    db.commit()
+    db.close()
+    data = cli.json("books", "year", "-y", "2025")
+    assert data["year"] == 2025
+    assert data["books_finished"] == 1
+    assert data["titles"] == ["Range"]
+
+
+def test_books_year_empty(cli):
+    """`books year` on an empty year returns zero counts (not an error)."""
+    data = cli.json("books", "year", "-y", "1999")
+    assert data["year"] == 1999
+    assert data["books_finished"] == 0
+    assert data["titles"] == []
+
+
+def test_books_year_aggregates_sessions(cli):
+    """Pages-read and minutes in `books year` come from `BookSession`."""
+    cli.run("books", "add", "Dune", "-p", "500")
+    cli.run("books", "read", "Dune", "50", "-t", "60")
+    data = cli.json("books", "year")
+    assert data["sessions"] == 1
+    assert data["pages_read"] == 50
+    assert data["minutes"] == 60
+    assert data["avg_pages_per_hour"] == 50.0
+
+
+def test_books_year_top_rated_limited_to_three(cli):
+    """`top_rated` is capped at 3 entries, sorted desc by rating."""
+    for i, r in enumerate([3, 5, 4, 5, 2], start=1):
+        cli.run("books", "add", f"Book {i}", "-p", "100")
+        cli.run("books", "finish", f"Book {i}", "-r", str(r))
+    data = cli.json("books", "year")
+    assert len(data["top_rated"]) == 3
+    assert data["top_rated"][0]["rating"] == 5
+    # All top three should be the highest-rated books
+    assert all(b["rating"] >= 4 for b in data["top_rated"])
+
+
+def test_books_stats_includes_by_year(cli):
+    """Lifetime `stats` now includes a `by_year` aggregation."""
+    cli.run("books", "add", "Atomic Habits", "-p", "320")
+    cli.run("books", "finish", "Atomic Habits", "-r", "5")
+    data = cli.json("books", "stats")
+    assert "by_year" in data
+    assert len(data["by_year"]) == 1
+    # Most-recent year first
+    from datetime import date
+    assert data["by_year"][0]["year"] == date.today().year
+    assert data["by_year"][0]["books_finished"] == 1
+
+
+def test_books_stats_by_year_skips_unfinished(cli):
+    """Unfinished books (no `finished` date) don't appear in by_year."""
+    cli.run("books", "add", "Reading", "-p", "300", "-s", "reading")
+    cli.run("books", "add", "Wishlist", "-p", "300")  # wishlist
+    data = cli.json("books", "stats")
+    assert data["by_year"] == []

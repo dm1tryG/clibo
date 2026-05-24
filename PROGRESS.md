@@ -4,6 +4,48 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 116 — `books year` + lifetime by_year breakdown · 2026-05-24
+
+Agent-mode probe on *"What was my best year of reading?"* surfaced
+a real gap: `books` had no annual rollup despite `donations year`
+existing as a clear precedent. Lifetime `books stats` also showed
+no year-by-year breakdown — couldn't answer *"which year did I
+read the most?"*.
+
+- 📅 **New `books year [-y YEAR]`** subcommand. Mirrors
+  `donations year`. Shows for the target year (default current):
+  • `books_finished` count + `titles[]`
+  • `avg_rating` of those finishes
+  • `sessions` / `pages_read` / `minutes` / `days_read` from
+    BookSession rows
+  • `avg_pages_per_hour` (when minutes set)
+  • `top_rated[]` (up to 3) — best finishes that year
+- 📊 **`books stats` extended** with `by_year[]` — lifetime
+  finished-books-per-year aggregation, sorted most-recent first.
+  Unfinished books skipped (no `finished` date). Answers
+  *"which year did I read the most?"* in one field.
+- 🛡 Empty-year edge case: `books year -y 1999` returns zeros
+  without erroring (no "no entries" fail).
+- 🎤 NL flow verified end-to-end:
+  • Finished one book this year, one last year (backdated
+    `finished` via SQL to 2025) → `books year` → 2026 view
+    shows 1 book; `books year -y 2025` shows 1 book ("Range") ✓
+  • `books stats.by_year` → `[{year:2026, books_finished:1},
+    {year:2025, books_finished:1}]` ✓
+  • Reading session this year → `books year` includes
+    `pages_read=50, avg_pages_per_hour=50.0` ✓
+  • `top_rated` capped at 3, sorted by rating desc ✓
+- 🧪 **7 new tests**: current-year default, specific-year filter,
+  empty-year, session aggregation, top_rated cap-and-sort, stats
+  by_year shape, stats by_year skips unfinished.
+- **Tests:** 1,134 passing (+7); ruff clean.
+
+`books` now matches the `donations year` pattern. Agents asking
+*"best year of reading"* (or any year-scoped question) land
+directly on a structured answer.
+
+---
+
 ### Iteration 115 — `clibo search` finishes the entity-tool sweep · 2026-05-24
 
 Iter 114 added 7 entity tools (events/birthdays/goals/jobs/leads/

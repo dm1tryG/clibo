@@ -396,6 +396,70 @@ def rm(
 
 
 @app.command()
+def year(
+    yr: int = typer.Option(None, "--year", "-y",
+                            help="Calendar year (default: current)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """📅 Annual reading summary — books finished, pages read, sessions.
+
+    Answers *"how was my year of reading?"* — total books finished
+    that year, avg rating, pages read in sessions during the year,
+    best-rated finishes.
+    """
+    target_year = yr or date.today().year
+    start = date(target_year, 1, 1)
+    end = date(target_year, 12, 31)
+    with session() as db:
+        finished_books = list(
+            db.exec(
+                select(Book)
+                .where(Book.finished != None)  # noqa: E711
+                .where(Book.finished >= start)
+                .where(Book.finished <= end)
+                .order_by(Book.finished.desc())
+            ).all()
+        )
+        year_sessions = list(
+            db.exec(
+                select(BookSession)
+                .where(BookSession.entry_date >= start)
+                .where(BookSession.entry_date <= end)
+            ).all()
+        )
+    ratings = [b.rating for b in finished_books if b.rating]
+    sess_pages = sum(s.pages for s in year_sessions)
+    sess_minutes = sum(s.duration_min for s in year_sessions)
+    days_read = {s.entry_date for s in year_sessions}
+    top_rated = sorted(
+        (b for b in finished_books if b.rating),
+        key=lambda b: (-b.rating, b.title),
+    )[:3]
+    data = {
+        "year": target_year,
+        "books_finished": len(finished_books),
+        "avg_rating": (
+            round(sum(ratings) / len(ratings), 1) if ratings else None
+        ),
+        "sessions": len(year_sessions),
+        "pages_read": sess_pages,
+        "minutes": sess_minutes,
+        "days_read": len(days_read),
+        "avg_pages_per_hour": (
+            round(sess_pages / sess_minutes * 60, 1)
+            if sess_minutes else None
+        ),
+        "titles": [b.title for b in finished_books],
+        "top_rated": [
+            {"title": b.title, "author": b.author, "rating": b.rating}
+            for b in top_rated
+        ],
+    }
+    render_record(data, json_out=json_out,
+                  title=f"📅 Reading · {target_year}")
+
+
+@app.command()
 def stats(json_out: JsonOpt = False) -> None:
     """📊 Reading stats — finished, in-progress, pages read, session pace."""
     with session() as db:
@@ -406,6 +470,15 @@ def stats(json_out: JsonOpt = False) -> None:
     session_pages = sum(s.pages for s in sessions)
     session_minutes = sum(s.duration_min for s in sessions)
     days_read = {s.entry_date for s in sessions}
+    # Lifetime by-year breakdown — "what was my best year?"
+    by_year: dict[int, int] = {}
+    for b in finished:
+        if b.finished is not None:
+            by_year[b.finished.year] = by_year.get(b.finished.year, 0) + 1
+    by_year_rows = [
+        {"year": y, "books_finished": c}
+        for y, c in sorted(by_year.items(), reverse=True)
+    ]
     data = {
         "total": len(books),
         "reading": sum(1 for b in books if b.status == "reading"),
@@ -421,5 +494,6 @@ def stats(json_out: JsonOpt = False) -> None:
             if session_minutes else None
         ),
         "days_read": len(days_read),
+        "by_year": by_year_rows,
     }
     render_record(data, json_out=json_out, title="📊 Reading stats")
