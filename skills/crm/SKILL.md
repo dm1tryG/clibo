@@ -17,6 +17,7 @@ Contacts CRM. Local SQLite. Every command accepts `--json`.
 | `clibo crm edit ID` | Edit a contact |
 | `clibo crm touch ID` | Record that you contacted them |
 | `clibo crm search QUERY` | Search name / company / email / tags |
+| `clibo crm dormant` | Contacts not touched in >90d (`--days N`, `--skip-never`) |
 | `clibo crm rm ID` | Delete a contact |
 | `clibo crm stats` | Counts by status |
 
@@ -29,6 +30,10 @@ clibo crm add "Anna Petrova" -c "Acme Inc" -e anna@acme.com -s customer
 clibo crm touch 1
 clibo crm search acme
 clibo crm list -s lead
+
+# Who needs outreach? (≥90d since last contact + never-contacted)
+clibo crm dormant
+clibo crm dormant --days 30 --skip-never
 ```
 
 ## For agents

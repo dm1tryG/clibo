@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import typer
 from sqlalchemy import or_
@@ -235,6 +235,59 @@ def rm(
         cid = target.id
         db.delete(target)
     ok(f"Deleted contact #{cid}", json_out=json_out, data={"deleted": cid})
+
+
+@app.command()
+def dormant(
+    days: int = typer.Option(
+        90, "--days", "-d",
+        help="Threshold in days since last contact (default 90)",
+    ),
+    include_never: bool = typer.Option(
+        True, "--include-never/--skip-never",
+        help="Include contacts you've never touched (default: include)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """🥶 List contacts you haven't touched in a while.
+
+    Surfaces the data `crm touch` collects: who's overdue for a check-in.
+    Sorted oldest-touch first, with never-contacted at the top.
+    """
+    if days < 0:
+        fail("--days must be non-negative", json_out=json_out)
+    cutoff = date.today() - timedelta(days=days)
+    with session() as db:
+        contacts = list(
+            db.exec(
+                select(Contact).where(Contact.status == "active")
+            ).all()
+        )
+    dormant_rows = []
+    for c in contacts:
+        if c.last_contact is None:
+            if include_never:
+                dormant_rows.append(c)
+        elif c.last_contact <= cutoff:
+            dormant_rows.append(c)
+    # Sort: never-contacted first, then oldest last_contact first.
+    dormant_rows.sort(
+        key=lambda c: (c.last_contact is not None,
+                       c.last_contact or date.min)
+    )
+    rows = [_row(c) | {
+        "last_contact_ago": (
+            humanize_delta(c.last_contact) if c.last_contact else "never"
+        ),
+    } for c in dormant_rows]
+    render_rows(
+        rows,
+        [("id", "ID"), ("name", "Name"), ("company", "Company"),
+         ("last_contact_ago", "Last contact"), ("status", "Status")],
+        json_out=json_out,
+        title=f"🥶 Dormant contacts · >{days}d since touch",
+        empty=f"Nobody's gone dormant (everyone touched within {days} days).",
+    )
 
 
 @app.command()

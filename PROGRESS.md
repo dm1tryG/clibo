@@ -4,6 +4,40 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 124 — `crm dormant`: surface who needs outreach · 2026-05-24
+
+Agent-mode probe of *"what contacts haven't I talked to in a
+while?"* found a data-collection-without-query gap: `crm touch`
+has been logging `last_contact` dates for ages, but nothing
+surfaces stale contacts. Fixed.
+
+- 🥶 **`clibo crm dormant`** — lists active contacts whose last
+  touch is older than the threshold. `--days N` (default 90),
+  `--include-never/--skip-never` (default include). Sorted with
+  never-contacted at the top, then oldest-touched first. Skips
+  non-`active` contacts (cold/lead/customer status doesn't imply
+  staleness — those are their own audiences).
+- 🎤 NL flow verified:
+  • `crm dormant` (defaults) → "Never Met" + "Old Friend (174d ago)"
+  • `crm dormant --skip-never` → only "Old Friend"
+  • `crm dormant --days 7` → both surface earlier
+- 🧪 **6 new tests** in `tests/test_crm.py`: default 90d threshold,
+  never-contacted included by default, `--skip-never` opt-out,
+  `--days N` shorter threshold, non-active contacts excluded,
+  never-touched sort order, negative-days input fails.
+- 📚 SKILL.md updated with the new subcommand + an example for
+  *"Who needs outreach?"*.
+- **Tests:** 1,185 passing (+6); ruff clean.
+
+**Why this matters:** `crm touch` is one of the few verbs in
+clibo that records data *for later retrieval* — the value comes
+from being able to query it. Until now that data went into the
+DB and stayed there. `crm dormant` closes the loop: the agent
+flow *"I want to send a thank-you note to Anna, who haven't I
+talked to lately?"* now resolves in one command.
+
+---
+
 ### Iteration 123 — `update` + `remove` aliases everywhere · 2026-05-24
 
 The verb-shape sweep continues. Iter 121 added `delete` everywhere

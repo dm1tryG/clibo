@@ -101,3 +101,69 @@ def test_crm_name_match_is_substring(cli):
     cli.run("crm", "add", "Bob Smith")
     data = cli.json("crm", "show", "Smith")
     assert data["name"] == "Bob Smith"
+
+
+# ── crm dormant — surface contacts overdue for a check-in (iter 124) ──
+
+
+def test_dormant_lists_stale_contacts(cli):
+    """`crm dormant` finds contacts not touched in >90d (default)."""
+    cli.run("crm", "add", "Recent Pal")
+    cli.run("crm", "add", "Old Friend")
+    cli.run("crm", "touch", "Recent Pal", "-d", "today")
+    cli.run("crm", "touch", "Old Friend", "-d", "2025-01-01")
+    rows = cli.json("crm", "dormant")
+    names = [r["name"] for r in rows]
+    assert "Old Friend" in names
+    assert "Recent Pal" not in names
+
+
+def test_dormant_includes_never_contacted_by_default(cli):
+    """Never-touched contacts are dormant too — they need outreach."""
+    cli.run("crm", "add", "Never Met")
+    rows = cli.json("crm", "dormant")
+    assert any(r["name"] == "Never Met" for r in rows)
+
+
+def test_dormant_skip_never_flag(cli):
+    """--skip-never excludes never-touched contacts."""
+    cli.run("crm", "add", "Never Met")
+    cli.run("crm", "add", "Old Friend")
+    cli.run("crm", "touch", "Old Friend", "-d", "2025-01-01")
+    rows = cli.json("crm", "dormant", "--skip-never")
+    names = {r["name"] for r in rows}
+    assert "Old Friend" in names
+    assert "Never Met" not in names
+
+
+def test_dormant_custom_days(cli):
+    """--days 7 surfaces shorter-staleness contacts."""
+    cli.run("crm", "add", "Two Weeks Ago")
+    cli.run("crm", "touch", "Two Weeks Ago", "-d", "14 days ago")
+    rows = cli.json("crm", "dormant", "--days", "7")
+    assert any(r["name"] == "Two Weeks Ago" for r in rows)
+    rows_30 = cli.json("crm", "dormant", "--days", "30")
+    assert not any(r["name"] == "Two Weeks Ago" for r in rows_30)
+
+
+def test_dormant_skips_non_active_contacts(cli):
+    """Cold/inactive contacts shouldn't show up — they're already paused."""
+    cli.run("crm", "add", "Cold Person")
+    cli.run("crm", "edit", "Cold Person", "--status", "cold")
+    rows = cli.json("crm", "dormant")
+    assert not any(r["name"] == "Cold Person" for r in rows)
+
+
+def test_dormant_sorts_never_first(cli):
+    """Never-touched listed first, then oldest-touched."""
+    cli.run("crm", "add", "Stale One")
+    cli.run("crm", "touch", "Stale One", "-d", "2025-01-01")
+    cli.run("crm", "add", "Never Met")
+    rows = cli.json("crm", "dormant")
+    assert rows[0]["name"] == "Never Met"
+    assert rows[0]["last_contact_ago"] == "never"
+
+
+def test_dormant_negative_days_fails(cli):
+    result = cli.run("crm", "dormant", "--days", "-1")
+    assert result.exit_code != 0
