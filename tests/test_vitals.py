@@ -39,3 +39,98 @@ def test_stats_for_kind(cli):
 def test_stats_unknown_kind_fails(cli):
     result = cli.run("vitals", "stats", "height")
     assert result.exit_code != 0
+
+
+# ── generic `log` dispatcher (iter 100) ──
+
+
+def test_log_temp(cli):
+    """`clibo vitals log temp 39.2` — the canonical agent flow."""
+    data = cli.json("vitals", "log", "temp", "39.2")
+    assert data["kind"] == "temp"
+    assert data["value"] == 39.2
+    assert data["unit"] == "°C"
+    assert data["reading"] == "39.2 °C"
+
+
+def test_log_pulse(cli):
+    data = cli.json("vitals", "log", "pulse", "72")
+    assert data["kind"] == "pulse"
+    assert data["value"] == 72.0
+
+
+def test_log_bp_slash_shorthand(cli):
+    """115/75 is normal — diastolic ≥80 alone would bump to stage 1."""
+    data = cli.json("vitals", "log", "bp", "115/75")
+    assert data["kind"] == "bp"
+    assert data["value"] == 115.0
+    assert data["value2"] == 75.0
+    assert data["category"] == "normal"
+
+
+def test_log_bp_two_args(cli):
+    data = cli.json("vitals", "log", "bp", "140", "90")
+    assert data["value"] == 140.0
+    assert data["value2"] == 90.0
+    assert data["category"] == "stage 2 hypertension"
+
+
+def test_log_glucose_default_unit(cli):
+    data = cli.json("vitals", "log", "glucose", "95")
+    assert data["unit"] == "mg/dL"
+
+
+def test_log_glucose_unit_override(cli):
+    data = cli.json("vitals", "log", "glucose", "5.5", "-u", "mmol/L")
+    assert data["unit"] == "mmol/L"
+    assert data["value"] == 5.5
+
+
+def test_log_spo2(cli):
+    data = cli.json("vitals", "log", "spo2", "98")
+    assert data["kind"] == "spo2"
+    assert data["unit"] == "%"
+
+
+def test_log_writes_to_same_table_as_kind_subcommands(cli):
+    """`vitals log temp` and `vitals temp` produce indistinguishable rows."""
+    a = cli.json("vitals", "log", "temp", "37.5")
+    b = cli.json("vitals", "temp", "37.5")
+    # Both write the same kind + unit; ids differ.
+    assert a["kind"] == b["kind"] == "temp"
+    assert a["unit"] == b["unit"] == "°C"
+    assert a["value"] == b["value"] == 37.5
+
+
+def test_log_rejects_unknown_kind(cli):
+    result = cli.run("vitals", "log", "fever", "39.2")
+    assert result.exit_code != 0
+
+
+def test_log_rejects_non_numeric_value(cli):
+    result = cli.run("vitals", "log", "temp", "hot")
+    assert result.exit_code != 0
+
+
+def test_log_bp_missing_diastolic_fails(cli):
+    result = cli.run("vitals", "log", "bp", "120")
+    assert result.exit_code != 0
+
+
+def test_log_non_bp_with_value2_fails(cli):
+    """`temp 37.5 42` is nonsense — should fail rather than silently drop value2."""
+    result = cli.run("vitals", "log", "temp", "37.5", "42")
+    assert result.exit_code != 0
+
+
+def test_log_supports_date_flag(cli):
+    data = cli.json("vitals", "log", "temp", "38.0", "-d", "yesterday")
+    # Should backdate; just check entry_date isn't today.
+    from datetime import date
+    assert data["entry_date"] != str(date.today())
+
+
+def test_log_supports_note(cli):
+    """Note flag forwards through the dispatcher."""
+    data = cli.json("vitals", "log", "pulse", "72", "-n", "morning resting")
+    assert data["note"] == "morning resting"

@@ -4,6 +4,67 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### 🎉 Iteration 100 — `vitals log` dispatcher (verb-shape uniformity) · 2026-05-24
+
+The **100th** iteration. Fittingly, agent-mode self-test caught a
+real verb-shape inconsistency: every health tool uses `<tool> log
+<args>` (calorie, water, weight, sleep, mood, mileage, …) — but
+`vitals` doesn't have a `log` verb at all. Each kind is its own
+subcommand: `vitals bp`, `vitals pulse`, `vitals temp`, etc.
+
+So the natural agent guess for "I have a fever — 39.2°C" is
+`clibo vitals log temp 39.2`, which **fails** with
+`No such command 'log'`. The user has to know vitals is special.
+
+- 🆕 **`vitals log KIND VALUE [VALUE2]`** — a generic dispatcher
+  that accepts any of the five kinds and routes to the right
+  writer under the hood. Identical row shape to the kind-specific
+  commands; writes to the same `vitals_reading` table.
+- 🩸 **BP shorthand** — `vitals log bp 120/80` parses
+  `systolic/diastolic` from a single argument. Two-arg form
+  (`vitals log bp 120 80`) also works. Slash form matches the
+  natural way users write it.
+- 🩸 **Unit override** — `--unit` flag works on the dispatcher
+  too (`vitals log glucose 5.5 -u mmol/L`). Defaults to each
+  kind's standard unit.
+- 🛡 **Validation**:
+  • Unknown kind → "Kind must be one of: bp, pulse, glucose, temp, spo2"
+  • Non-numeric value → "Value must be a number (got 'hot')"
+  • BP missing diastolic → "BP needs both systolic and diastolic"
+  • Non-BP with two values → "<kind> takes a single value, not two"
+- 🎤 NL flow verified end-to-end across all five kinds:
+  • `vitals log temp 39.2` → 39.2°C ✓ (the original failing flow)
+  • `vitals log bp 115/75` → normal ✓
+  • `vitals log bp 140 90` → stage 2 hypertension ✓
+  • `vitals log pulse 72` → 72 bpm ✓
+  • `vitals log glucose 95` → mg/dL default ✓
+  • `vitals log glucose 5.5 -u mmol/L` → unit override ✓
+  • `vitals log spo2 98` → 98% ✓
+  • `vitals latest` → shows all five kinds aggregated correctly ✓
+- 🧪 **14 new tests**: every kind through the dispatcher, BP
+  shorthand + two-arg, unit override, `--date` backdate, `--note`
+  passthrough, equivalence with kind-specific commands, all four
+  validation paths.
+- 📚 **SKILL.md** updated with a 7-row "Natural language →
+  command" table including BP shorthand + glucose unit overrides
+  + temperature.
+- **Tests:** 962 passing (+14); ruff clean.
+
+The verb-shape uniformity question — *"should every tool have a
+`log` verb?"* — is now answered "yes" for the one tool that was
+the exception. Agents writing for clibo can rely on the pattern
+without remembering vitals' special shape.
+
+This caps a 49-iteration arc from v1.1.0 → v1.11.0:
+- 24 new tools (50 → 74)
+- v1.10.0 + v1.11.0 minor releases
+- 962 tests (from the v1.0.0 baseline of ~300)
+- Full cross-tool dashboard integration
+- Name-resolve / per-session-tracking / verb-uniformity polish
+  across every tool that needed it
+
+---
+
 ### 🏷️ Iteration 99 — v1.11.0 release · 2026-05-24
 
 Six substantial iters stacked since v1.10.0 (iters 93-98) including

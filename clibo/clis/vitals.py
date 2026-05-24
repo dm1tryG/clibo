@@ -157,6 +157,86 @@ def spo2(
     ok(f"Logged 🫁 SpO₂ {percent:g}%", json_out=json_out, data=data)
 
 
+@app.command()
+def log(
+    kind: str = typer.Argument(
+        ..., help=f"Which vital: {', '.join(KINDS)}"
+    ),
+    value: str = typer.Argument(
+        ..., help="The reading. For BP: 'systolic/diastolic' or just systolic"
+    ),
+    value2: float = typer.Argument(
+        None, help="(BP only, optional) diastolic if not given as VALUE/value2"
+    ),
+    unit: str = typer.Option(None, "--unit", "-u",
+                              help="Override default unit (mainly for glucose mmol/L)"),
+    on: str = typer.Option("today", "--date", "-d", help="Date"),
+    note: str = typer.Option(None, "--note", "-n", help="Optional note"),
+    json_out: JsonOpt = False,
+) -> None:
+    """❤️ Log a vital reading — generic dispatcher.
+
+    Lets you write ``clibo vitals log temp 39.2`` instead of
+    ``clibo vitals temp 39.2`` — useful for agents whose mental
+    model is *"every tool has a log verb"*. Routes to the right
+    kind-specific writer under the hood.
+
+    For blood pressure, supports both shapes:
+
+      clibo vitals log bp 120/80
+      clibo vitals log bp 120 80
+    """
+    kind = kind.lower()
+    if kind not in KINDS:
+        fail(f"Kind must be one of: {', '.join(KINDS)}", json_out=json_out)
+
+    if kind == "bp":
+        # Accept '120/80' as a single argument, or two separate ones.
+        sys_val: float
+        dia_val: float | None
+        if "/" in value:
+            try:
+                sys_str, dia_str = value.split("/", 1)
+                sys_val = float(sys_str)
+                dia_val = float(dia_str)
+            except ValueError:
+                fail("BP must be 'systolic/diastolic' (e.g. 120/80)",
+                     json_out=json_out)
+        else:
+            try:
+                sys_val = float(value)
+            except ValueError:
+                fail(f"Value must be a number (got {value!r})", json_out=json_out)
+            dia_val = value2
+            if dia_val is None:
+                fail("BP needs both systolic and diastolic — "
+                     "try: clibo vitals log bp 120/80",
+                     json_out=json_out)
+        data = _save(VitalReading(
+            kind="bp", value=sys_val, value2=dia_val,
+            unit=unit or "mmHg", entry_date=parse_date(on), note=note,
+        ))
+        ok(f"Logged 🩸 BP {sys_val:g}/{dia_val:g} mmHg — {data['category']}",
+           json_out=json_out, data=data)
+        return
+
+    if value2 is not None:
+        fail(f"{kind} takes a single value, not two", json_out=json_out)
+    try:
+        numeric = float(value)
+    except ValueError:
+        fail(f"Value must be a number (got {value!r})", json_out=json_out)
+    _, default_unit, emoji = KINDS[kind]
+    chosen_unit = unit or default_unit
+    data = _save(VitalReading(
+        kind=kind, value=numeric, unit=chosen_unit,
+        entry_date=parse_date(on), note=note,
+    ))
+    label = KINDS[kind][0].lower()
+    ok(f"Logged {emoji} {label} {numeric:g} {chosen_unit}",
+       json_out=json_out, data=data)
+
+
 @app.command(name="list")
 def list_entries(
     kind: str = typer.Option(None, "--kind", "-k", help=f"Filter: {', '.join(KINDS)}"),
