@@ -67,3 +67,60 @@ def test_tags_covers_beyond_50_tools(cli):
     assert marketing["by_source"] == {
         "ideas": 1, "quotes": 1, "lessons": 1, "cv": 1
     }
+
+
+# ── tagged: drill into one tag across every source ──
+
+
+def test_tagged_pulls_from_every_source(cli):
+    cli.run("notes", "add", "Note 1", "-b", "body", "-t", "urgent")
+    cli.run("todo", "add", "Task A", "-t", "urgent")
+    cli.run("ideas", "add", "Idea X", "-t", "urgent")
+    data = cli.json("tagged", "urgent")
+    sources = {it["source"] for it in data["items"]}
+    assert sources == {"notes", "todo", "ideas"}
+    assert data["count"] == 3
+    assert data["tag"] == "urgent"
+
+
+def test_tagged_excludes_other_tags(cli):
+    cli.run("todo", "add", "Urgent task", "-t", "urgent")
+    cli.run("todo", "add", "Work task", "-t", "work")
+    data = cli.json("tagged", "urgent")
+    titles = {it["label"] for it in data["items"]}
+    assert titles == {"Urgent task"}
+
+
+def test_tagged_case_insensitive(cli):
+    cli.run("todo", "add", "Item", "-t", "Urgent")
+    data = cli.json("tagged", "URGENT")
+    assert data["count"] == 1
+    assert data["tag"] == "urgent"
+
+
+def test_tagged_multitag_match(cli):
+    """An item with multiple tags appears under each one."""
+    cli.run("notes", "add", "N", "-b", "b", "-t", "urgent,work")
+    urgent = cli.json("tagged", "urgent")
+    work = cli.json("tagged", "work")
+    assert {it["label"] for it in urgent["items"]} == {"N"}
+    assert {it["label"] for it in work["items"]} == {"N"}
+
+
+def test_tagged_empty_state(cli):
+    data = cli.json("tagged", "nonexistent")
+    assert data == {"tag": "nonexistent", "count": 0, "items": []}
+
+
+def test_tagged_item_carries_all_its_tags(cli):
+    cli.run("notes", "add", "Multi", "-b", "b", "-t", "alpha,beta,gamma")
+    data = cli.json("tagged", "beta")
+    assert sorted(data["items"][0]["tags"]) == ["alpha", "beta", "gamma"]
+
+
+def test_tagged_human_view_runs(cli):
+    cli.run("todo", "add", "T1", "-t", "urgent")
+    result = cli.run("tagged", "urgent")
+    assert result.exit_code == 0
+    assert "T1" in result.output
+    assert "urgent" in result.output

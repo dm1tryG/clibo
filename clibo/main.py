@@ -26,7 +26,7 @@ from clibo.core.settings import get_setting, set_setting
 from clibo.dashboard import render_today
 from clibo.recent import _ago, collect_recent
 from clibo.search import search_all
-from clibo.tags import collect_tags
+from clibo.tags import collect_items_by_tag, collect_tags
 from clibo.weekly import render_week
 
 app = typer.Typer(
@@ -779,6 +779,44 @@ def tags(json_out: JsonOpt = False) -> None:
             f"{src} ({n})" for src, n in sorted(row["by_source"].items())
         )
         table.add_row(row["tag"], str(row["count"]), sources)
+    console.print(table)
+    console.print()
+
+
+@app.command()
+def tagged(
+    tag: str = typer.Argument(..., help="Tag to look up (case-insensitive)"),
+    json_out: JsonOpt = False,
+) -> None:
+    """🏷️  Show every item tagged ``TAG`` across every tool.
+
+    The natural drill-down from ``clibo tags`` — that command tells you
+    *which* tags exist; this one tells you *what* carries one. Answers
+    *"show me everything tagged #urgent"* in one shot, across notes,
+    todo, bookmark, crm, brag, recipes, journal, ideas, quotes,
+    lessons and cv.
+    """
+    rows = collect_items_by_tag(tag)
+    if json_out:
+        _emit_json({"tag": tag.strip().lower(), "count": len(rows), "items": rows})
+        return
+    if not rows:
+        console.print(
+            f"\n  [dim]Nothing tagged [cyan]{tag}[/cyan]. "
+            f"Run [cyan]clibo tags[/cyan] to see which tags exist.[/dim]\n"
+        )
+        return
+    table = Table(
+        box=ROUNDED, header_style="bold cyan",
+        title=f"🏷️  Tagged [cyan]#{tag.strip().lower()}[/cyan]  "
+              f"[dim]({len(rows)} items)[/dim]",
+        title_style="bold magenta", title_justify="left", pad_edge=False,
+    )
+    table.add_column("Source", style="cyan")
+    table.add_column("ID", justify="right")
+    table.add_column("Label")
+    for row in rows:
+        table.add_row(row["source"], str(row["id"]), row["label"])
     console.print(table)
     console.print()
 

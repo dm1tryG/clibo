@@ -4,6 +4,38 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `clibo tagged TAG` — drill into one tag across every source · 2026-05-24
+
+NL-probe friction: *"show me everything tagged #urgent"* had no
+answer. `clibo tags` listed *which* tags exist, but provided no
+way to see *what* carried one. The drill-down was missing.
+
+- 🏷️ **`clibo tagged TAG`** — every item across every tag-bearing
+  source (notes, todo, bookmark, crm, brag, recipes, journal,
+  ideas, quotes, lessons, cv) that carries the given tag, sorted
+  newest-first. Case-insensitive. Each row: `{source, id, label,
+  tags, created_at}`.
+- 🔧 **`TAG_SOURCES` now a 3-tuple** (source, table, label_col).
+  Each source's natural label column (title / name / takeaway /
+  body / text) is the one surfaced in listings — truncated to 80
+  chars for free-text fields.
+- 🪞 Empty state nudges to `clibo tags` so the user can see what
+  tags do exist — closes the discovery loop.
+- 🎤 NL flows verified: cross-source aggregation, multi-tag
+  matching (item with `urgent,work` appears under both),
+  case-insensitive query.
+- 🧪 **7 new tests** in `tests/test_tags.py`: cross-source pull,
+  excludes-other-tags, case-insensitive, multi-tag matching,
+  empty state, tag list on the item, human view.
+- 📚 README updated — `clibo tagged` row added next to `clibo tags`.
+- **Tests:** 1,273 passing (+7); ruff clean.
+
+**Why this matters:** the tag system was a half-loop — log a tag,
+see it exists, no way to retrieve. Now `clibo tags` → `clibo
+tagged X` is the natural two-step pattern: discover then drill.
+
+---
+
 ### `writing year` — annual rollup, mirroring books/expense/income · 2026-05-24
 
 Gap: every other daily-log money/hobby tool with a year view
