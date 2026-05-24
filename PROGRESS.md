@@ -4,6 +4,31 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `calorie today`: budget signals (over_budget / remaining_kcal / pct_of_goal) · 2026-05-24
+
+The other daily-goal tools (water/focus/steps/meditate) have a
+`reached` boolean. `calorie today` had none — because calories work
+the opposite way: the goal is a *cap*, not a target, so "reached"
+doesn't apply. Added the cap-aware equivalents.
+
+- 🍎 **`over_budget`** (bool / null) — True when `totals.kcal > goal`.
+- 🍎 **`remaining_kcal`** (signed int / null) — `goal - totals`,
+  negative when over. Lets an agent say *"500 over"* directly.
+- 🍎 **`pct_of_goal`** (float / null) — `totals / goal * 100`.
+- All three are `null` when `goal_kcal == 0` (no goal set) — so
+  agents can detect the "ungoaled" state and skip the warning.
+- 🧪 **4 new tests**: nulls when no goal, under-budget shape,
+  over-budget shape, exactly-at-budget edge case.
+- **Tests:** 1,384 passing (+4); ruff clean.
+
+**Why this matters:** the calorie tool's goal is a cap (under is
+good), unlike water/steps/focus where the goal is a target. The
+same idea of a derived signal works under different semantics. An
+agent asking *"am I over my calorie budget?"* gets a direct boolean
+instead of inferring it from `totals.kcal > goal_kcal`.
+
+---
+
 ### `habit list`: surface on_pace / target_remaining / days_left_this_week · 2026-05-24
 
 NL ask: *"am I going to hit my weekly target?"*. `habit list` showed

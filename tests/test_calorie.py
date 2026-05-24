@@ -127,3 +127,46 @@ def test_today_bare_still_works(cli):
     result = cli.run("calorie")
     assert result.exit_code == 0
     assert "320" in result.stdout or "oats" in result.stdout
+
+
+# ── calorie today: over_budget / remaining_kcal / pct_of_goal ──
+
+
+def test_calorie_today_budget_signals_none_when_no_goal(cli):
+    """Without a goal set, all three derived fields are null."""
+    cli.run("calorie", "add", "snack", "-k", "200")
+    data = cli.json("calorie", "today")
+    assert data["goal_kcal"] == 0
+    assert data["over_budget"] is None
+    assert data["remaining_kcal"] is None
+    assert data["pct_of_goal"] is None
+
+
+def test_calorie_today_under_budget(cli):
+    """Under the goal → over_budget=False, positive remaining, pct < 100."""
+    cli.run("calorie", "goal", "--set", "2000")
+    cli.run("calorie", "add", "snack", "-k", "200")
+    data = cli.json("calorie", "today")
+    assert data["over_budget"] is False
+    assert data["remaining_kcal"] == 1800
+    assert data["pct_of_goal"] == 10.0
+
+
+def test_calorie_today_over_budget(cli):
+    """Over the goal → over_budget=True, negative remaining, pct > 100."""
+    cli.run("calorie", "goal", "--set", "2000")
+    cli.run("calorie", "add", "feast", "-k", "2700")
+    data = cli.json("calorie", "today")
+    assert data["over_budget"] is True
+    assert data["remaining_kcal"] == -700
+    assert data["pct_of_goal"] == 135.0
+
+
+def test_calorie_today_exactly_at_budget(cli):
+    """Right at goal → over_budget=False (== isn't >), remaining=0, pct=100."""
+    cli.run("calorie", "goal", "--set", "2000")
+    cli.run("calorie", "add", "exact", "-k", "2000")
+    data = cli.json("calorie", "today")
+    assert data["over_budget"] is False
+    assert data["remaining_kcal"] == 0
+    assert data["pct_of_goal"] == 100.0

@@ -167,12 +167,29 @@ def today(
     totals = _totals(entries)
     goal = int(get_setting(NAME, "daily_kcal", "0") or "0")
 
+    # Derived budget signals — calorie goal is a *cap* (under = good),
+    # unlike water/focus/steps where the goal is a target to reach. So
+    # we surface `over_budget` (bool), `remaining_kcal` (signed; negative
+    # when over), and `pct_of_goal` (float). When no goal is set
+    # (goal_kcal == 0) all three are None so agents can detect that.
+    if goal > 0:
+        over_budget = totals["kcal"] > goal
+        remaining_kcal = goal - totals["kcal"]
+        pct_of_goal = round(totals["kcal"] / goal * 100, 1)
+    else:
+        over_budget = None
+        remaining_kcal = None
+        pct_of_goal = None
+
     if json_out:
         render_record(
             {"date": day, "entries": rows, "totals": totals,
              "by_meal": by_meal_subtotals,
              "filter_meal": meal.lower() if meal else None,
-             "goal_kcal": goal},
+             "goal_kcal": goal,
+             "over_budget": over_budget,
+             "remaining_kcal": remaining_kcal,
+             "pct_of_goal": pct_of_goal},
             json_out=True,
         )
         return
