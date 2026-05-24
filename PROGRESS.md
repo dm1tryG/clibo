@@ -4,6 +4,29 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `savings stats`: biggest_deposit + avg_deposit + deposits_count · 2026-05-24
+
+NL ask: *"what was my biggest savings deposit ever?"* — totals were
+fine, the per-deposit max wasn't surfaced. Same PR-pattern as
+expense/income/mileage/etc.
+
+- 🐷 **`biggest_deposit`** — `{id, goal_id, amount, entry_date}` for
+  the single largest deposit ever, or null if none. Withdrawals
+  (negative amounts) are excluded; they can't be "biggest deposits".
+- 🐷 **`avg_deposit`** — mean of positive deposits, null if none.
+- 🐷 **`deposits_count`** — how many positive deposits in total
+  (excludes withdrawals).
+- 🧪 **4 new tests**: biggest picks max, withdrawals excluded from
+  biggest, avg excludes withdrawals, empty state nulls.
+- **Tests:** **1,400 passing** (+4); ruff clean.
+
+**Why this matters:** the PR-session convention is now also on the
+money side — savings joins expense/income/donations/books in
+surfacing the actual record entry alongside the scalar. Withdrawal
+exclusion keeps the semantic clean.
+
+---
+
 ### `writing today` + `caffeine today`: remaining + pct fields · 2026-05-24
 
 Two more daily-goal tools picked up the same derived-signal shape.

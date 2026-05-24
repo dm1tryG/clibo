@@ -230,10 +230,29 @@ def stats(json_out: JsonOpt = False) -> None:
     with session() as db:
         goals = list(db.exec(select(SavingsGoal)).all())
         rows = [_row(db, g) for g in goals]
+        # Pull every deposit once for the suite-level aggregates —
+        # biggest single deposit, deposit count, average size.
+        deposits = list(db.exec(select(SavingsDeposit)).all())
     if not goals:
         fail("No savings goals yet", json_out=json_out)
     total_target = round(sum(r["target"] for r in rows), 2)
     total_saved = round(sum(r["saved"] for r in rows), 2)
+    # Biggest single deposit — positive amounts only (withdrawals
+    # are negative and shouldn't compete for the "biggest" title).
+    positive = [d for d in deposits if d.amount > 0]
+    biggest = max(positive, key=lambda d: d.amount) if positive else None
+    biggest_deposit = (
+        {
+            "id": biggest.id,
+            "goal_id": biggest.goal_id,
+            "amount": round(biggest.amount, 2),
+            "entry_date": biggest.entry_date,
+        } if biggest else None
+    )
+    avg_deposit = (
+        round(sum(d.amount for d in positive) / len(positive), 2)
+        if positive else None
+    )
     data = {
         "goals": len(rows),
         "achieved": sum(1 for r in rows if r["achieved"]),
@@ -241,6 +260,9 @@ def stats(json_out: JsonOpt = False) -> None:
         "total_saved": total_saved,
         "total_remaining": round(max(0.0, total_target - total_saved), 2),
         "progress_pct": round(total_saved / total_target * 100, 1) if total_target else 0.0,
+        "deposits_count": len(positive),
+        "avg_deposit": avg_deposit,
+        "biggest_deposit": biggest_deposit,
         "currency": get_currency(),
     }
     render_record(data, json_out=json_out, title="📊 Savings stats")

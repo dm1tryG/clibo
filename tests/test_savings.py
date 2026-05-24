@@ -44,3 +44,44 @@ def test_stats_totals(cli):
 def test_deposit_unknown_goal_fails(cli):
     result = cli.run("savings", "deposit", "Ghost", "100")
     assert result.exit_code != 0
+
+
+# ── savings stats: biggest_deposit / avg_deposit / deposits_count ──
+
+
+def test_savings_stats_biggest_deposit_picks_max(cli):
+    cli.run("savings", "add", "Emergency", "-t", "5000")
+    cli.run("savings", "deposit", "Emergency", "200")
+    cli.run("savings", "deposit", "Emergency", "1500")
+    cli.run("savings", "deposit", "Emergency", "50")
+    data = cli.json("savings", "stats")
+    assert data["biggest_deposit"]["amount"] == 1500.0
+
+
+def test_savings_stats_excludes_withdrawals_from_biggest(cli):
+    """Withdrawals (negative amounts) shouldn't compete for 'biggest'."""
+    cli.run("savings", "add", "G", "-t", "5000")
+    cli.run("savings", "deposit", "G", "200")
+    cli.run("savings", "withdraw", "G", "9999")
+    data = cli.json("savings", "stats")
+    assert data["biggest_deposit"]["amount"] == 200.0
+
+
+def test_savings_stats_avg_deposit_excludes_withdrawals(cli):
+    cli.run("savings", "add", "G", "-t", "5000")
+    cli.run("savings", "deposit", "G", "100")
+    cli.run("savings", "deposit", "G", "200")
+    cli.run("savings", "withdraw", "G", "50")
+    data = cli.json("savings", "stats")
+    # Average over positive deposits only: (100+200)/2 = 150
+    assert data["avg_deposit"] == 150.0
+    assert data["deposits_count"] == 2
+
+
+def test_savings_stats_no_deposits_yet(cli):
+    """Goal with no deposits → null biggest, null avg, count 0."""
+    cli.run("savings", "add", "Empty", "-t", "1000")
+    data = cli.json("savings", "stats")
+    assert data["biggest_deposit"] is None
+    assert data["avg_deposit"] is None
+    assert data["deposits_count"] == 0
