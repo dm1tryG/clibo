@@ -30,7 +30,14 @@ class Budget(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context) -> None:
+    """Default: ``clibo budget`` (bare) shows every budget with this month's spending."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(list_budgets, json_out=False)
 
 
 def _month_start() -> date:
@@ -84,6 +91,10 @@ def set_budget(
     ok(f"Budget for {cat} set to {money(amount)}/month", json_out=json_out, data=data)
 
 
+# `add` is the friendlier verb in agent flows — matches every other tool.
+app.command(name="add", help="Alias for `set` — create or update a budget")(set_budget)
+
+
 @app.command(name="list")
 def list_budgets(json_out: JsonOpt = False) -> None:
     """📊 Show every budget with this month's spending against it."""
@@ -111,7 +122,7 @@ def list_budgets(json_out: JsonOpt = False) -> None:
                                        else f"[green]{money(v)}[/green]"),
             "used_pct": lambda v, r: bar(v, 100),
         },
-        empty="No budgets set — try: clibo budget set food 400",
+        empty="No budgets set — try: clibo budget add food 400",
     )
     if rows:
         total_limit = round(sum(r["limit"] for r in rows), 2)
@@ -134,7 +145,7 @@ def check(
     with session() as db:
         budget = db.exec(select(Budget).where(Budget.category == cat)).first()
     if not budget:
-        fail(f"No budget set for {cat!r} — set one with: clibo budget set {cat} 300",
+        fail(f"No budget set for {cat!r} — set one with: clibo budget add {cat} 300",
              json_out=json_out)
     row = _status_row(budget, _spent_this_month().get(cat, 0.0))
     render_record(row, json_out=json_out, title=f"📊 Budget · {cat}")
@@ -147,7 +158,7 @@ def status(json_out: JsonOpt = False) -> None:
     with session() as db:
         budgets = list(db.exec(select(Budget)).all())
     if not budgets:
-        fail("No budgets set — try: clibo budget set food 400", json_out=json_out)
+        fail("No budgets set — try: clibo budget add food 400", json_out=json_out)
     rows = [_status_row(b, spent.get(b.category, 0.0)) for b in budgets]
     total_limit = round(sum(r["limit"] for r in rows), 2)
     total_spent = round(sum(r["spent"] for r in rows), 2)

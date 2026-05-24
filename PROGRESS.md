@@ -4,6 +4,46 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 119 — `budget add` alias + bare-command default · 2026-05-24
+
+Agent-mode probe on *"Where am I going over budget?"* seeded a
+test budget with `clibo budget add food 200` — and **failed**
+with `No such command 'add'`. Every other tool in clibo uses
+`add` for creation; budget uses `set`. Same verb-shape inconsistency
+the iter-100/101 fixes addressed for `vitals` and `meds`.
+
+Bonus finding: bare `clibo budget` returned help; the dominant
+"what budgets do I have?" view (`list`) was hidden behind the
+subcommand wall.
+
+- 💰 **`clibo budget add CATEGORY AMOUNT`** — alias of `set`. Same
+  underlying function, same behaviour (creates or updates). Help
+  text lists both with a clear "Alias for `set`" annotation.
+- 💰 **Bare `clibo budget` runs `list`** — the dominant summary
+  view. Empty state still surfaces the create hint
+  ("No budgets set — try: clibo budget add food 400").
+- 📝 **Friendly-hint refresh** — three places in `budget.py` told
+  users to "try: clibo budget set food 400". Updated all to
+  `add` so the suggested command matches the verb agents would
+  reach for. `set` still works.
+- 🎤 NL flow verified end-to-end:
+  • `budget add food 200` → row created (no "No such command") ✓
+  • `budget set food 250` → updates the same row (no duplicate) ✓
+  • `clibo budget` (bare, empty) → "No budgets set — try: clibo budget add food 400" ✓
+  • `clibo budget` (bare, populated) → full budget table ✓
+  • `--help` shows both `set` and `add` ✓
+- 🧪 **7 new tests**: add-alias works, add-alias updates existing,
+  set+add equivalent (no duplicates), add validation, bare-runs-list,
+  bare empty-state, help still works.
+- **Tests:** 1,152 passing (+7); ruff clean.
+
+**Tally**: **41 of 74 tools** now follow *"bare command = the
+answer"*. The verb-shape uniformity (`add` works everywhere)
+inches further toward full consistency — `vitals log`, `meds take`
+auto-create, and `budget add` were all the same iter-100-era fix.
+
+---
+
 ### 🏷️ Iteration 118 — v1.13.0 release · 2026-05-24
 
 Nine substantive iters stacked since v1.12.0 (iters 109-117). Three
