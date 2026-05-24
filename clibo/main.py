@@ -215,6 +215,25 @@ app.command(name="month")(month_command)
 
 
 @app.command()
+def year(
+    yr: int = typer.Option(
+        None, "--year", "-y",
+        help="Calendar year (default: current)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """📅 A calendar-year rollup across every tracker: money, productivity,
+    hobbies, health, in one screen.
+
+    Sister to ``today`` (now), ``week`` (last 7 days), ``month`` (calendar
+    month). Answers *"how was 2026?"* in a single command — per-tool
+    annual breakdowns live on each ``<tool> year`` command.
+    """
+    from clibo.yearly import render_year
+    render_year(year=yr, json_out=json_out)
+
+
+@app.command()
 def compare(
     month_mode: bool = typer.Option(
         False, "--month",

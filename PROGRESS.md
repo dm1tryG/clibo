@@ -4,6 +4,46 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `clibo year` — calendar-year rollup, sister to today/week/month · 2026-05-24
+
+Real gap: the temporal trio `today` (now) / `week` (last 7d) /
+`month` (calendar month) lacked a year-scope sister. Per-tool
+`<tool> year` commands existed for the major aggregates, but there
+was no single "how was 20XX?" answer.
+
+- 📅 **`clibo year [-y Y]`** — one-screen calendar-year rollup
+  pulling from money, productivity, hobbies and health trackers.
+  Sections (each shown only if any data exists):
+  - 💰 **Money** — total income, expenses, donations, net cash
+    flow, biggest-spend month.
+  - ✅ **Productivity** — tasks done, focus minutes, journal
+    entries, days journaled.
+  - 📚 **Hobbies** — books finished + pages read, films watched,
+    writing words + sessions.
+  - 🏋️ **Health** — workouts + minutes, days meditated +
+    minutes, sleep nights + average, mileage covered, weight
+    first/last/change.
+  - 🙏 Gratitude entry count.
+- 📦 New module `clibo/yearly.py` with `YearSnapshot` dataclass
+  and `collect_year`/`render_year`. Compact relative to monthly.py
+  (~280 lines vs ~800) — defers per-tool deep breakdowns to each
+  `<tool> year` command.
+- 🎤 NL flows verified: *"how was 2026?"*, *"what was my biggest
+  spending month?"*, *"how much did I write this year?"*.
+- 🧪 **10 new tests** in `tests/test_year.py`: empty state, money/
+  productivity/hobbies/health aggregates, weight change, specific-
+  year filter, biggest-expense-month, human view, nothing-logged
+  empty render.
+- 📚 README updated — `clibo year` row added under `clibo month`.
+- **Tests:** 1,283 passing (+10); ruff clean.
+
+**Why this matters:** the temporal four-way is now complete —
+`today` / `week` / `month` / `year`. The "how was…?" question
+can be answered at any time-scale with the same one-screen
+convention. Per-tool `<tool> year` lives on for drill-down.
+
+---
+
 ### Bare-default sweep finishes — 16 more tools, convention now universal · 2026-05-24
 
 The remaining holdouts: car, clients, cv, films, gifts, groceries,
