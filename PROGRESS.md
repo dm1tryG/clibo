@@ -4,6 +4,43 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### 🏷️ Iteration 108 — v1.12.0 release · 2026-05-24
+
+Eight substantive iters stacked since v1.11.0 (iters 100-107)
+including the **36-tool bare-command rollout** — the kind of
+across-the-board UX shift that's release-worthy.
+
+- 🆙 **`pyproject.toml`** `1.11.0 → 1.12.0`. Description updated to
+  feature the headline tagline: *"type the tool's name to get the
+  answer."*
+- 🆙 **`clibo/__init__.py`** `__version__ = "1.12.0"`.
+- 📦 **Build** — `uv build` produced `dist/clibo-1.12.0.tar.gz`
+  + `dist/clibo-1.12.0-py3-none-any.whl`. Both PASSED `twine check`.
+- 🚀 **`twine upload`** — https://pypi.org/project/clibo/1.12.0/
+- 🧪 **End-to-end verified from PyPI**:
+  • `clibo --version` → `clibo 1.12.0` ✓
+  • `clibo caffeine` (bare) → today's intake panel ✓
+  • `clibo bills` (bare) → "Nothing due soon — you're all caught up! ✨" ✓
+  • `vitals log temp 39.2` → 39.2°C ✓
+  • `meds take "Vitamin D"` → auto_created=True ✓
+  • `car drive "client meeting" --mi 47 -c business` → 75.64 km ✓
+- 🏷️ **Git tag `v1.12.0`** pushed.
+- 🚀 **GitHub release** with a category-grouped changelog:
+  https://github.com/dm1tryG/clibo/releases/tag/v1.12.0
+- 📊 Release scoreboard:
+  • 1,061 tests passing (+113 vs v1.11.0's 948)
+  • 74 tools (unchanged — pattern not new surface)
+  • 36 tools follow the "bare command = the answer" rule
+
+This is the **bare-command default + verb-shape polish** release.
+No new tools, but a foundational UX shift: agents typing the tool's
+name get the actual answer instead of help text, across every
+clibo tool where a single dominant summary verb makes sense. Plus
+three more focused iters on `vitals` (verb dispatcher), `meds`
+(auto-create), and `car` (business mileage).
+
+---
+
 ### Iteration 107 — bare-command default rolled out to 11 money + home/life tools · 2026-05-24
 
 Closing out the bare-command pattern rollout. Iter 105/106 covered
