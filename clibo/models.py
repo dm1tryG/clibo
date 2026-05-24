@@ -47,6 +47,10 @@ class TasksBlock(_BaseSnapshot):
 class HabitItem(_BaseSnapshot):
     name: str
     done: bool
+    # The current streak as of yesterday — useful for "you'll break a
+    # 5-day streak if you don't check in today" surfacing. Zero means
+    # no active streak (so no urgency).
+    current_streak: int = 0
 
 
 class HabitsBlock(_BaseSnapshot):

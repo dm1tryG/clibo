@@ -128,6 +128,12 @@ def collect_today(on: date | None = None) -> TodaySnapshot:
             c.habit_id
             for c in db.exec(select(HabitCheck).where(HabitCheck.check_date == today)).all()
         }
+        # All checks by habit — used to compute per-habit current streak
+        # so `clibo today` can surface "5-day streak at risk if you skip
+        # today". Pulled once; per-habit grouping happens below.
+        checks_by_habit: dict[int, set[date]] = {}
+        for chk in db.exec(select(HabitCheck)).all():
+            checks_by_habit.setdefault(chk.habit_id, set()).add(chk.check_date)
         # 💧 Water
         water_total = sum(
             w.amount_ml
@@ -350,7 +356,16 @@ def collect_today(on: date | None = None) -> TodaySnapshot:
         habits=HabitsBlock(
             total=len(habits),
             done_today=sum(1 for h in habits if h.id in checked),
-            items=[HabitItem(name=h.name, done=h.id in checked) for h in habits],
+            items=[
+                HabitItem(
+                    name=h.name,
+                    done=h.id in checked,
+                    current_streak=_streak_from_days(
+                        checks_by_habit.get(h.id, set()), today,
+                    ),
+                )
+                for h in habits
+            ],
         ),
         water=GoalProgress(total_ml=water_total, goal_ml=water_goal),
         calories=GoalProgress(total_kcal=kcal_total, goal_kcal=kcal_goal),
@@ -492,7 +507,19 @@ def render_today(json_out: bool, on: date | None = None) -> None:
         )
         for item in data.habits.items:
             mark = "[green]✓[/green]" if item.done else "[dim]○[/dim]"
-            console.print(f"  {mark} {item.name}")
+            # Streak risk: pending habit + ≥2-day active streak → at-risk.
+            # Done-today shows the streak as a celebration; pending shows
+            # it as a warning so the user knows what's on the line.
+            tail = ""
+            if item.current_streak >= 2:
+                if item.done:
+                    tail = f"  [dim]🔥 {item.current_streak}d[/dim]"
+                else:
+                    tail = (
+                        f"  [yellow]⚠ {item.current_streak}d streak "
+                        f"will break[/yellow]"
+                    )
+            console.print(f"  {mark} {item.name}{tail}")
         console.print()
 
     # 💧🍎🍅👟 Daily metrics

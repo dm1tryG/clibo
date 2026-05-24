@@ -4,6 +4,35 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `clibo today` surfaces per-habit streak risk · 2026-05-24
+
+NL ask: *"don't let me break my 5-day streak today"*. The dashboard
+showed each habit as ✓/○ but didn't flag *what's on the line*.
+A habit with a 4-day streak through yesterday should look louder
+than a brand-new habit.
+
+- 🔥 **`habits.items[i].current_streak`** — every habit row in the
+  today snapshot now carries its current consecutive-day streak.
+  Re-uses the existing `_streak_from_days` helper.
+- ⚠ **Streak-risk surfacing in the human view**:
+  - Pending habit + ≥2-day streak → `⚠ 4d streak will break` in yellow
+  - Done habit + ≥2-day streak → `🔥 4d` celebration in dim
+  - Single-day or no streak → no decoration (no false urgency)
+- 🎤 NL flow verified:
+  • Habit checked today completing a 3-day streak → `current_streak: 3`
+  • Habit unchecked but streaked through yesterday → at-risk surfacing
+  • Habit with a gap → `current_streak: 0` (no risk)
+- 🧪 **5 new tests**: streak when done-today, at-risk when
+  unchecked, zero when gap, independent per habit, human view
+  shows the "will break" warning.
+- **Tests:** 1,324 passing (+5); ruff clean.
+
+**Why this matters:** `clibo today` already tells you *what's
+pending*. Adding streak context tells you *what's urgent* — the
+difference between "I'll get to it" and "I lose my run if I skip".
+
+---
+
 ### `stretches` + `meditate` stats gain longest-session reference · 2026-05-24
 
 Continuing the PR-session pattern. Two more time-based trackers

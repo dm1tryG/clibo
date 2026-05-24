@@ -330,3 +330,61 @@ def test_done_today_preserves_priority(cli):
     item = cli.json("today")["tasks"]["done_today"][0]
     assert item["priority"] == "high"
     assert item["title"] == "Critical"
+
+
+# ── habits.items[i].current_streak: surface streak risk on today ──
+
+
+def test_habit_item_current_streak_when_done_today(cli):
+    """A 3-day streak including today shows current_streak=3."""
+    cli.run("habit", "add", "Read")
+    cli.run("habit", "check", "Read", "-d", "2 days ago")
+    cli.run("habit", "check", "Read", "-d", "yesterday")
+    cli.run("habit", "check", "Read")
+    item = cli.json("today")["habits"]["items"][0]
+    assert item["done"] is True
+    assert item["current_streak"] == 3
+
+
+def test_habit_item_current_streak_at_risk(cli):
+    """Habit not done today but streaked through yesterday → at-risk."""
+    cli.run("habit", "add", "Read")
+    cli.run("habit", "check", "Read", "-d", "3 days ago")
+    cli.run("habit", "check", "Read", "-d", "2 days ago")
+    cli.run("habit", "check", "Read", "-d", "yesterday")
+    item = cli.json("today")["habits"]["items"][0]
+    assert item["done"] is False
+    # The streak is 3 days (through yesterday). If today goes unchecked,
+    # it breaks; the warning UI surfaces this.
+    assert item["current_streak"] == 3
+
+
+def test_habit_item_current_streak_zero_when_gap(cli):
+    """A gap before today/yesterday → no active streak."""
+    cli.run("habit", "add", "Read")
+    cli.run("habit", "check", "Read", "-d", "5 days ago")
+    cli.run("habit", "check", "Read", "-d", "4 days ago")
+    # Nothing in the last 3 days → streak broken.
+    item = cli.json("today")["habits"]["items"][0]
+    assert item["current_streak"] == 0
+
+
+def test_habit_item_streak_independent_per_habit(cli):
+    """Two habits compute their streaks independently."""
+    cli.run("habit", "add", "Read")
+    cli.run("habit", "add", "Exercise")
+    cli.run("habit", "check", "Read", "-d", "yesterday")
+    cli.run("habit", "check", "Read")
+    # Exercise has zero history.
+    items = {i["name"]: i for i in cli.json("today")["habits"]["items"]}
+    assert items["Read"]["current_streak"] == 2
+    assert items["Exercise"]["current_streak"] == 0
+
+
+def test_today_human_view_surfaces_streak_warning(cli):
+    """The human-rendered output should warn about the at-risk streak."""
+    cli.run("habit", "add", "Read")
+    cli.run("habit", "check", "Read", "-d", "2 days ago")
+    cli.run("habit", "check", "Read", "-d", "yesterday")
+    result = cli.run("today")
+    assert "will break" in result.output
