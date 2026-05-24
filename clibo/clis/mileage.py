@@ -275,7 +275,12 @@ def stats(
     total_km = round(sum(e.distance_km for e in entries), 2)
     total_min = sum(e.duration_min for e in entries)
     longest = max(entries, key=lambda e: e.distance_km)
-    paces = [p for e in entries if (p := _pace(e)) is not None]
+    # ``paced`` keeps the entry alongside its pace so we can surface
+    # the actual session that produced the best pace, not just the value.
+    paced: list[tuple[MileageEntry, float]] = [
+        (e, p) for e in entries if (p := _pace(e)) is not None
+    ]
+    fastest = min(paced, key=lambda pair: pair[1]) if paced else None
     by_activity: dict[str, float] = {}
     for entry in entries:
         by_activity[entry.activity] = round(
@@ -287,7 +292,22 @@ def stats(
         "total_km": total_km,
         "total_minutes": total_min,
         "longest_km": longest.distance_km,
-        "avg_pace_min_per_km": round(sum(paces) / len(paces), 2) if paces else None,
+        "avg_pace_min_per_km": (
+            round(sum(p for _, p in paced) / len(paced), 2) if paced else None
+        ),
+        # *"What's my fastest pace?"* — the single-session PR. Includes
+        # which entry produced it so the user can dig in.
+        "best_pace_min_per_km": fastest[1] if fastest else None,
+        "best_pace_session": (
+            {
+                "id": fastest[0].id,
+                "entry_date": fastest[0].entry_date,
+                "activity": fastest[0].activity,
+                "distance_km": fastest[0].distance_km,
+                "duration_min": fastest[0].duration_min,
+                "pace_min_per_km": fastest[1],
+            } if fastest else None
+        ),
         "by_activity": by_activity,
     }
     render_record(data, json_out=json_out, title=f"📊 Mileage stats · last {days}d")

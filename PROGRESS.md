@@ -4,6 +4,37 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `mileage stats` surfaces best_pace + best_pace_session · 2026-05-24
+
+NL-probe friction: *"what's my fastest running pace?"* —
+`mileage stats` had `avg_pace_min_per_km` and `longest_km`, but
+no "fastest single session" PR. The data was in the table; the
+aggregate wasn't.
+
+- 🏃 **`mileage stats` new fields**:
+  - `best_pace_min_per_km` — lowest min/km across all paced sessions
+    in the window.
+  - `best_pace_session` — `{id, entry_date, activity, distance_km,
+    duration_min, pace_min_per_km}` for the actual record session,
+    so the user can dig into the entry.
+- 🧠 Implementation keeps the entry alongside its pace as a tuple,
+  then `min`s the list. Sessions without `duration_min` (e.g. walks
+  logged distance-only) are excluded — no pace to compare against.
+- 🎤 NL flow verified: with a 5km/30min, 10km/50min and 3km/21min
+  session, `best_pace_min_per_km` returns 5.0 (from the 10km/50min
+  run), distinct from `avg_pace_min_per_km` (5.5). Walk sessions
+  ignored. Empty data → both new fields null.
+- 🧪 **4 new tests** in `tests/test_mileage.py`: best vs longest
+  distinction, ignore-no-duration, null-when-no-pace-data,
+  best-can-differ-from-avg.
+- **Tests:** 1,312 passing (+4); ruff clean.
+
+**Why this matters:** averages tell trend, records tell potential.
+A runner asking *"what's my PR?"* gets it in one query now, without
+scanning `mileage list` for the row with the shortest pace.
+
+---
+
 ### `todo stats` gains backlog-age, oldest-pending, most-overdue · 2026-05-24
 
 NL-probe friction: *"what's been sitting on my todo list the

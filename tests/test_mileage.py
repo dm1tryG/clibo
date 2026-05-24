@@ -90,3 +90,47 @@ def test_mileage_streak_breaks_with_gap(cli):
     data = cli.json("mileage", "streak")
     assert data["current_streak"] == 1
     assert data["longest_streak"] == 2
+
+
+# ── mileage stats: best_pace ──
+
+
+def test_mileage_stats_best_pace_picks_fastest_session(cli):
+    """The session with the lowest min/km wins, not the longest."""
+    cli.run("mileage", "log", "5", "-a", "run", "-t", "30")    # 6.0 min/km
+    cli.run("mileage", "log", "10", "-a", "run", "-t", "50")   # 5.0 min/km (faster)
+    cli.run("mileage", "log", "3", "-a", "run", "-t", "21")    # 7.0 min/km
+    data = cli.json("mileage", "stats")
+    assert data["best_pace_min_per_km"] == 5.0
+    # And the surfacing session points at the right entry.
+    best = data["best_pace_session"]
+    assert best["distance_km"] == 10.0
+    assert best["duration_min"] == 50
+    assert best["pace_min_per_km"] == 5.0
+
+
+def test_mileage_stats_best_pace_ignores_sessions_without_duration(cli):
+    """Walks/sessions missing duration_min don't have a pace — skip them."""
+    cli.run("mileage", "log", "5", "-a", "walk")                # no duration
+    cli.run("mileage", "log", "10", "-a", "run", "-t", "60")    # 6.0 min/km
+    data = cli.json("mileage", "stats")
+    assert data["best_pace_min_per_km"] == 6.0
+    assert data["best_pace_session"]["activity"] == "run"
+
+
+def test_mileage_stats_best_pace_null_when_no_pace_data(cli):
+    """All sessions lack duration → best_pace fields are null."""
+    cli.run("mileage", "log", "5")
+    cli.run("mileage", "log", "3")
+    data = cli.json("mileage", "stats")
+    assert data["best_pace_min_per_km"] is None
+    assert data["best_pace_session"] is None
+
+
+def test_mileage_stats_best_and_avg_can_differ(cli):
+    """Avg pace is the average; best_pace is the fastest single session."""
+    cli.run("mileage", "log", "5", "-a", "run", "-t", "30")   # 6.0
+    cli.run("mileage", "log", "5", "-a", "run", "-t", "40")   # 8.0
+    data = cli.json("mileage", "stats")
+    assert data["best_pace_min_per_km"] == 6.0
+    assert data["avg_pace_min_per_km"] == 7.0
