@@ -14,7 +14,7 @@ from datetime import date, datetime, timedelta
 import typer
 from sqlmodel import Field, SQLModel, select
 
-from clibo.core.base import parse_date
+from clibo.core.base import parse_date, parse_minutes
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, console, fail, ok, render_record, render_rows
 
@@ -70,7 +70,10 @@ def _row(entry: StretchSession) -> dict:
 @app.command()
 def log(
     area: str = typer.Argument("full-body", help=f"Body area, e.g. {', '.join(AREAS[:4])}, …"),
-    minutes: int = typer.Option(10, "--minutes", "-m", help="Duration in minutes"),
+    minutes: str = typer.Option(
+        "10", "--minutes", "-m",
+        help="Duration — minutes ('10') or H:MM ('0:15')",
+    ),
     poses: str = typer.Option(None, "--poses", "-p",
                               help="Comma-separated poses (e.g. 'pigeon, downward-dog')"),
     difficulty: int = typer.Option(None, "--difficulty", "-D",
@@ -80,13 +83,14 @@ def log(
     json_out: JsonOpt = False,
 ) -> None:
     """🧎 Log a stretching / mobility session."""
-    if minutes <= 0:
+    parsed_min = parse_minutes(minutes)
+    if parsed_min <= 0:
         fail("Minutes must be positive", json_out=json_out)
     if difficulty is not None and difficulty not in range(1, 6):
         fail("Difficulty must be 1-5", json_out=json_out)
     entry = StretchSession(
         area=area.lower().strip(),
-        duration_min=minutes,
+        duration_min=parsed_min,
         poses=poses.strip() if poses else None,
         difficulty=difficulty,
         entry_date=parse_date(on),
@@ -98,7 +102,7 @@ def log(
         db.refresh(entry)
         data = _row(entry)
     diff_str = f" · D{difficulty}" if difficulty else ""
-    ok(f"Logged {EMOJI} {minutes} min — {entry.area}{diff_str}",
+    ok(f"Logged {EMOJI} {parsed_min} min — {entry.area}{diff_str}",
        json_out=json_out, data=data)
 
 

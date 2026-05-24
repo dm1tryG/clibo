@@ -4,6 +4,37 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### H:MM notation across 3 more tools + shared `parse_minutes`/`parse_hours` helpers · 2026-05-25
+
+After H:MM landed on `sleep log` and `focus log` last iter, the same
+notation belonged on every duration-taking command. Extracted a
+shared helper to avoid copy-pasting the parse logic.
+
+- 🧰 **New helpers in `clibo/core/base.py`**:
+  - `parse_minutes(value)` — accepts int, plain numeric string, or
+    H:MM. Returns minutes as int. Used by focus/meditate/stretches/
+    workout.
+  - `parse_hours(value)` — accepts float, plain decimal string, or
+    H:MM. Returns hours as float. Used by sleep.
+- 🧘 **`meditate log "0:25"`** — H:MM → 25 minutes
+- 🧎 **`stretches log hips -m "0:15"`** — H:MM → 15 minutes
+- 🏋️ **`workout log running --duration "1:30"`** — H:MM → 90 minutes
+- Sleep and focus refactored to use the shared helpers — same
+  external behaviour, less duplication.
+- 🧪 **16 new helper tests** (`tests/test_duration_parsing.py`) +
+  12 per-tool integration tests (4 each on meditate / stretches /
+  workout). Pinning behaviour at the helper level so future tools
+  can adopt the pattern by importing.
+- **Tests:** 1,449 passing; ruff clean.
+
+**Why this matters:** duration notation is now uniform across **5
+tools** — sleep, focus, meditate, stretches, workout. *"7:30 of
+sleep"*, *"a 1:25 focus block"*, *"a 0:25 meditation"*, *"a 1:30
+run"*, *"a 0:15 stretch"* — every one parses without translating
+to a single unit first.
+
+---
+
 ### `sleep`/`focus log` accept H:MM notation + 2 date-flaky tests fixed · 2026-05-25
 
 NL friction: *"I slept 7h30m"* → `sleep log 7:30` failed (needed

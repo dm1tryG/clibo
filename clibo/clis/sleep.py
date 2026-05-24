@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import typer
 from sqlmodel import Field, SQLModel, select
 
-from clibo.core.base import parse_date
+from clibo.core.base import parse_date, parse_hours
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, bar, console, fail, ok, render_record, render_rows
 from clibo.core.settings import get_setting, set_setting
@@ -79,25 +79,7 @@ def log(
     Accepts either the decimal form (``clibo sleep log 7.5``) or
     the canonical ``H:MM`` notation (``clibo sleep log 7:30``).
     """
-    # Parse either H:MM or a plain decimal.
-    if ":" in hours:
-        try:
-            h_part, m_part = hours.split(":", 1)
-            parsed_hours = int(h_part) + int(m_part) / 60
-        except ValueError:
-            fail(
-                f"Bad H:MM format: {hours!r}. Expected '7:30' or a "
-                "decimal like 7.5.",
-                json_out=json_out,
-            )
-    else:
-        try:
-            parsed_hours = float(hours)
-        except ValueError:
-            fail(
-                f"Hours must be a number or H:MM (got {hours!r})",
-                json_out=json_out,
-            )
+    parsed_hours = parse_hours(hours)
     if parsed_hours <= 0 or parsed_hours > 24:
         fail("Hours must be between 0 and 24", json_out=json_out)
     if quality not in QUALITY_LABELS:

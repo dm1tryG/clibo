@@ -94,3 +94,26 @@ def test_meditate_today_remaining_floors_at_zero_when_reached(cli):
     assert data["remaining_minutes"] == 0
     assert data["reached"] is True
     assert data["pct_of_goal"] == 200.0
+
+
+# ── meditate log accepts H:MM notation ──
+
+
+def test_meditate_log_accepts_hh_mm(cli):
+    data = cli.json("meditate", "log", "0:25")
+    assert data["minutes"] == 25
+
+
+def test_meditate_log_plain_int_still_works(cli):
+    data = cli.json("meditate", "log", "10")
+    assert data["minutes"] == 10
+
+
+def test_meditate_log_one_hour(cli):
+    data = cli.json("meditate", "log", "1:00")
+    assert data["minutes"] == 60
+
+
+def test_meditate_log_bad_input_fails(cli):
+    result = cli.run("meditate", "log", "lots")
+    assert result.exit_code != 0

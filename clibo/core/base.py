@@ -235,3 +235,61 @@ def resolve_id(target: str, model_class, db, order_by=None):
             f"Expected an integer ID or 'last' (got {target!r})"
         ) from None
     return db.get(model_class, entry_id)
+
+
+def parse_minutes(value: str | int) -> int:
+    """Parse a duration into total minutes.
+
+    Accepts:
+      * plain int like ``45`` (or its string ``"45"``)
+      * clock-style ``"H:MM"`` (``"1:25"`` → 85)
+
+    Used wherever a tool logs a session length — focus / meditate /
+    stretches / workout. Raises ``typer.BadParameter`` on bad input.
+    """
+    if isinstance(value, int):
+        return value
+    text = str(value).strip()
+    if ":" in text:
+        try:
+            h_part, m_part = text.split(":", 1)
+            return int(h_part) * 60 + int(m_part)
+        except ValueError as exc:
+            raise typer.BadParameter(
+                f"Bad H:MM format: {value!r}. Expected '1:25' or a plain integer."
+            ) from exc
+    try:
+        return int(text)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"Minutes must be an integer or H:MM (got {value!r})"
+        ) from exc
+
+
+def parse_hours(value: str | float) -> float:
+    """Parse a duration into a float number of hours.
+
+    Accepts:
+      * decimal like ``7.5`` (or its string ``"7.5"``)
+      * clock-style ``"H:MM"`` (``"7:30"`` → 7.5)
+
+    Used for sleep where the stored value is hours-as-float. Raises
+    ``typer.BadParameter`` on bad input.
+    """
+    if isinstance(value, int | float):
+        return float(value)
+    text = str(value).strip()
+    if ":" in text:
+        try:
+            h_part, m_part = text.split(":", 1)
+            return int(h_part) + int(m_part) / 60
+        except ValueError as exc:
+            raise typer.BadParameter(
+                f"Bad H:MM format: {value!r}. Expected '7:30' or a decimal like 7.5."
+            ) from exc
+    try:
+        return float(text)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"Hours must be a number or H:MM (got {value!r})"
+        ) from exc

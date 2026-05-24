@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import typer
 from sqlmodel import Field, SQLModel, select
 
-from clibo.core.base import humanize_delta, parse_date
+from clibo.core.base import humanize_delta, parse_date, parse_minutes
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, console, fail, ok, render_record, render_rows
 
@@ -87,7 +87,10 @@ def log(
     sets: int = typer.Option(0, "--sets", "-s", help="Number of sets"),
     reps: int = typer.Option(0, "--reps", "-r", help="Reps per set"),
     weight_kg: float = typer.Option(0, "--weight", "-w", help="Weight per rep, kg"),
-    duration_min: int = typer.Option(0, "--duration", "-t", help="Duration in minutes (cardio)"),
+    duration_min: str = typer.Option(
+        "0", "--duration", "-t",
+        help="Duration — minutes ('30') or H:MM ('1:30') for cardio",
+    ),
     calories: int = typer.Option(None, "--calories", "-c",
                                   help="Calories burned (kcal) — typical for cardio"),
     on: str = typer.Option("today", "--date", "-d", help="Date performed"),
@@ -97,12 +100,13 @@ def log(
     """🏋️ Log an exercise — strength sets, cardio session, or both."""
     if calories is not None and calories < 0:
         fail("Calories must be non-negative", json_out=json_out)
+    parsed_duration = parse_minutes(duration_min)
     entry = Workout(
         exercise=exercise,
         sets=sets,
         reps=reps,
         weight_kg=weight_kg,
-        duration_min=duration_min,
+        duration_min=parsed_duration,
         kcal_burned=calories,
         entry_date=parse_date(on),
         note=note,
@@ -112,8 +116,8 @@ def log(
         db.flush()
         db.refresh(entry)
         data = _row(entry)
-    if duration_min:
-        detail = f"{duration_min} min"
+    if parsed_duration:
+        detail = f"{parsed_duration} min"
     elif sets or reps or weight_kg:
         detail = f"{sets}×{reps} @ {weight_kg:g}kg"
     else:

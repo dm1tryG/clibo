@@ -228,3 +228,27 @@ def test_streak_yesterday_only_still_current(cli):
     cli.run("workout", "log", "x", "-d", "yesterday")
     data = cli.json("workout", "streak")
     assert data["current_streak"] == 1
+
+
+# ── workout log --duration accepts H:MM ──
+
+
+def test_workout_log_duration_hh_mm(cli):
+    data = cli.json("workout", "log", "running", "--duration", "1:30")
+    assert data["duration_min"] == 90
+
+
+def test_workout_log_duration_plain_int(cli):
+    data = cli.json("workout", "log", "bench", "--duration", "45")
+    assert data["duration_min"] == 45
+
+
+def test_workout_log_default_duration_zero(cli):
+    """No --duration → 0 (strength-only entry)."""
+    data = cli.json("workout", "log", "deadlift", "-s", "3", "-r", "5")
+    assert data["duration_min"] == 0
+
+
+def test_workout_log_duration_bad_input_fails(cli):
+    result = cli.run("workout", "log", "x", "--duration", "lots")
+    assert result.exit_code != 0

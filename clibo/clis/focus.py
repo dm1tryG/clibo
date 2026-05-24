@@ -9,7 +9,7 @@ import typer
 from rich.progress import BarColumn, Progress, TextColumn, TimeRemainingColumn
 from sqlmodel import Field, SQLModel, select
 
-from clibo.core.base import parse_date
+from clibo.core.base import parse_date, parse_minutes
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, bar, console, fail, ok, render_record, render_rows
 from clibo.core.settings import get_setting, set_setting
@@ -92,24 +92,7 @@ def log(
     Accepts plain minutes (``focus log 45``) or H:MM notation
     (``focus log 1:25`` → 85 minutes).
     """
-    if ":" in minutes:
-        try:
-            h_part, m_part = minutes.split(":", 1)
-            parsed_min = int(h_part) * 60 + int(m_part)
-        except ValueError:
-            fail(
-                f"Bad H:MM format: {minutes!r}. Expected '1:25' or a "
-                "plain integer.",
-                json_out=json_out,
-            )
-    else:
-        try:
-            parsed_min = int(minutes)
-        except ValueError:
-            fail(
-                f"Minutes must be an integer or H:MM (got {minutes!r})",
-                json_out=json_out,
-            )
+    parsed_min = parse_minutes(minutes)
     if parsed_min <= 0:
         fail("Minutes must be positive", json_out=json_out)
     data = _record(task, parsed_min, parse_date(on), note)

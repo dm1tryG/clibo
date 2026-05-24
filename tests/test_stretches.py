@@ -157,3 +157,27 @@ def test_stretches_stats_longest_session_carries_id_and_date(cli):
     ls = data["longest_session"]
     assert ls["id"] == 1
     assert ls["entry_date"] is not None
+
+
+# ── stretches log -m accepts H:MM ──
+
+
+def test_stretches_log_minutes_hh_mm(cli):
+    data = cli.json("stretches", "log", "hips", "-m", "0:15")
+    assert data["duration_min"] == 15
+
+
+def test_stretches_log_minutes_plain_int(cli):
+    data = cli.json("stretches", "log", "neck", "-m", "10")
+    assert data["duration_min"] == 10
+
+
+def test_stretches_log_minutes_default(cli):
+    """No -m → uses the default (10 minutes)."""
+    data = cli.json("stretches", "log", "hips")
+    assert data["duration_min"] == 10
+
+
+def test_stretches_log_minutes_bad_input_fails(cli):
+    result = cli.run("stretches", "log", "hips", "-m", "lots")
+    assert result.exit_code != 0

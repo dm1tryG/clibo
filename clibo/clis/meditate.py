@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import typer
 from sqlmodel import Field, SQLModel, select
 
-from clibo.core.base import parse_date
+from clibo.core.base import parse_date, parse_minutes
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, bar, console, fail, ok, render_record, render_rows
 from clibo.core.settings import get_setting, set_setting
@@ -73,24 +73,28 @@ def _row(entry: MeditationSession) -> dict:
 
 @app.command()
 def log(
-    minutes: int = typer.Argument(..., help="Session length in minutes"),
+    minutes: str = typer.Argument(
+        ...,
+        help="Session length — minutes ('25') or H:MM ('1:25')",
+    ),
     kind: str = typer.Option("mindfulness", "--kind", "-k", help="e.g. breathing, guided, body-scan"),
     on: str = typer.Option("today", "--date", "-d", help="Date"),
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
 ) -> None:
     """🧘 Log a meditation session."""
-    if minutes <= 0:
+    parsed_min = parse_minutes(minutes)
+    if parsed_min <= 0:
         fail("Minutes must be positive", json_out=json_out)
     entry = MeditationSession(
-        minutes=minutes, kind=kind.lower(), entry_date=parse_date(on), note=note
+        minutes=parsed_min, kind=kind.lower(), entry_date=parse_date(on), note=note
     )
     with session() as db:
         db.add(entry)
         db.flush()
         db.refresh(entry)
         data = _row(entry)
-    ok(f"Logged {EMOJI} {minutes} min of {kind}", json_out=json_out, data=data)
+    ok(f"Logged {EMOJI} {parsed_min} min of {kind}", json_out=json_out, data=data)
 
 
 # `add` is a friendlier alias for `log` (predictable verbs across tools).
