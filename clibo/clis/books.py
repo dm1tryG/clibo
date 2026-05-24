@@ -620,6 +620,29 @@ def stats(json_out: JsonOpt = False) -> None:
         {"year": y, "books_finished": c}
         for y, c in sorted(by_year.items(), reverse=True)
     ]
+    # PR-session signals: single largest reading session by pages,
+    # and the day with the most pages across all sessions.
+    title_by_id = {b.id: b.title for b in books}
+    biggest_session_entry = (
+        max(sessions, key=lambda s: s.pages) if sessions else None
+    )
+    biggest_session = (
+        {
+            "id": biggest_session_entry.id,
+            "book_id": biggest_session_entry.book_id,
+            "book_title": title_by_id.get(biggest_session_entry.book_id),
+            "entry_date": biggest_session_entry.entry_date,
+            "pages": biggest_session_entry.pages,
+            "duration_min": biggest_session_entry.duration_min,
+        } if biggest_session_entry else None
+    )
+    pages_per_day: dict[date, int] = {}
+    for s in sessions:
+        pages_per_day[s.entry_date] = pages_per_day.get(s.entry_date, 0) + s.pages
+    biggest_day = (
+        max(pages_per_day.items(), key=lambda kv: kv[1])
+        if pages_per_day else None
+    )
     data = {
         "total": len(books),
         "reading": sum(1 for b in books if b.status == "reading"),
@@ -635,6 +658,11 @@ def stats(json_out: JsonOpt = False) -> None:
             if session_minutes else None
         ),
         "days_read": len(days_read),
+        "biggest_session": biggest_session,
+        "biggest_day": (
+            {"date": biggest_day[0], "pages": biggest_day[1]}
+            if biggest_day else None
+        ),
         "by_year": by_year_rows,
     }
     render_record(data, json_out=json_out, title="📊 Reading stats")

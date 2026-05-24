@@ -4,6 +4,31 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `books stats`: biggest_session + biggest_day · 2026-05-24
+
+The PR-session pattern keeps generalising. `books stats` had
+session totals but no per-session max, no per-day max. NL asks
+*"what's the most I've read in a session?"* and *"what was my best
+reading day?"* now have direct answers.
+
+- 📚 **`biggest_session`** — `{id, book_id, book_title, entry_date,
+  pages, duration_min}` for the single largest BookSession by pages.
+  Includes the book title so an agent can phrase *"80 pages of
+  Book A on May 23"*.
+- 📚 **`biggest_day`** — `{date, pages}` for the calendar date with
+  the most pages summed across all sessions. Can differ from
+  biggest_session (e.g. multiple smaller sessions on one day).
+- 🧪 **4 new tests**: biggest_session picks max-pages, biggest_day
+  sums same-date, the two can differ, both null when no sessions.
+- **Tests:** 1,404 passing (+4); ruff clean.
+
+**Why this matters:** the PR-session convention now covers books
+the same way mileage / writing / focus / stretches / meditate /
+sleep / mood / savings already do. Wherever there's session data,
+both the single max *and* the day aggregate are surfaced.
+
+---
+
 ### `savings stats`: biggest_deposit + avg_deposit + deposits_count · 2026-05-24
 
 NL ask: *"what was my biggest savings deposit ever?"* — totals were

@@ -400,3 +400,46 @@ def test_books_stale_empty_when_all_fresh(cli):
     result = cli.run("books", "stale")
     assert result.exit_code == 0
     assert "All in-progress" in result.output
+
+
+# ── books stats: biggest_session + biggest_day ──
+
+
+def test_books_stats_biggest_session_picks_max_pages(cli):
+    cli.run("books", "add", "Book A", "-p", "500", "-s", "reading")
+    cli.run("books", "read", "Book A", "30")
+    cli.run("books", "read", "Book A", "80")
+    data = cli.json("books", "stats")
+    bs = data["biggest_session"]
+    assert bs["pages"] == 80
+    assert bs["book_title"] == "Book A"
+
+
+def test_books_stats_biggest_day_sums_same_date(cli):
+    """biggest_day sums multiple sessions on the same date."""
+    cli.run("books", "add", "Book A", "-p", "500", "-s", "reading")
+    cli.run("books", "add", "Book B", "-p", "400", "-s", "reading")
+    cli.run("books", "read", "Book A", "80")
+    cli.run("books", "read", "Book B", "25")  # same day → combined 105
+    data = cli.json("books", "stats")
+    bd = data["biggest_day"]
+    assert bd["pages"] == 105
+
+
+def test_books_stats_biggest_session_and_day_can_differ(cli):
+    """Same-day total can beat any single session."""
+    cli.run("books", "add", "A", "-p", "500", "-s", "reading")
+    cli.run("books", "read", "A", "80", "-d", "yesterday")  # single max
+    cli.run("books", "read", "A", "50")
+    cli.run("books", "read", "A", "60")  # today total = 110 > 80
+    data = cli.json("books", "stats")
+    assert data["biggest_session"]["pages"] == 80
+    assert data["biggest_day"]["pages"] == 110
+
+
+def test_books_stats_no_sessions_returns_null(cli):
+    """Empty session table → both fields null."""
+    cli.run("books", "add", "A", "-p", "300", "-s", "wishlist")
+    data = cli.json("books", "stats")
+    assert data["biggest_session"] is None
+    assert data["biggest_day"] is None
