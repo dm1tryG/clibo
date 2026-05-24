@@ -4,6 +4,35 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `sleep` + `mood` stats gain best/worst entry references · 2026-05-24
+
+Same pattern as the meditate / writing / focus / stretches / mileage
+sweep: scalar min/max are great for at-a-glance numbers, but agents
+(and humans) often want the actual entry behind the record.
+
+- 😴 **`sleep stats`** gains:
+  - `longest_night` — full dict `{id, entry_date, hours, quality}`
+  - `shortest_night` — same shape, for the worst-sleep entry
+- 🙂 **`mood stats`** gains:
+  - `best_score_entry` — full dict `{id, entry_date, score, emotion, note}`
+  - `worst_score_entry` — same shape, for the lowest score
+- Both keep the existing scalars (`min_hours` / `max_hours` /
+  `best_score` / `worst_score`) for back-compat — the entry dicts
+  are purely additive.
+- 🎤 NL flows verified:
+  • *"When was my best night of sleep?"* → date + quality surface
+  • *"When was I in the worst mood last month?"* → date + emotion surface
+- 🧪 **4 new tests**: sleep longest/shortest contain the right
+  hours+quality, mood best/worst point at the matching score+emotion,
+  edge case (single entry → longest == shortest), id+date carried.
+- **Tests:** 1,334 passing (+4); ruff clean.
+
+**Why this matters:** the entry-reference convention is now uniform
+across all the stats-emitting time-series tools. *"What's my best/
+worst X?"* always returns the actual log, not just the number.
+
+---
+
 ### `clibo streaks --at-risk` + `done_today` per streak · 2026-05-24
 
 Extends the streak-risk concept beyond habits to every aggregated

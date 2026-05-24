@@ -234,12 +234,28 @@ def stats(
     quality = [e.quality for e in entries]
     goal = _goal()
     by_date = {e.entry_date: e.hours for e in entries}
+    # Best / worst night — full entry refs so the user can find the
+    # actual log behind the scalar min/max.
+    longest = max(entries, key=lambda e: e.hours)
+    shortest = min(entries, key=lambda e: e.hours)
     data = {
         "window_days": days,
         "nights_logged": len(entries),
         "avg_hours": round(sum(hours) / len(hours), 1),
         "min_hours": min(hours),
         "max_hours": max(hours),
+        "longest_night": {
+            "id": longest.id,
+            "entry_date": longest.entry_date,
+            "hours": longest.hours,
+            "quality": longest.quality,
+        },
+        "shortest_night": {
+            "id": shortest.id,
+            "entry_date": shortest.entry_date,
+            "hours": shortest.hours,
+            "quality": shortest.quality,
+        },
         "avg_quality": round(sum(quality) / len(quality), 1),
         "nights_goal_reached": sum(1 for h in hours if h >= goal),
         "goal_hours": goal,

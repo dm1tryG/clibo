@@ -56,3 +56,28 @@ def test_sleep_help_still_works(cli):
     result = cli.run("sleep", "--help")
     assert result.exit_code == 0
     assert "last" in result.stdout
+
+
+# ── sleep stats: longest_night / shortest_night entries ──
+
+
+def test_sleep_stats_longest_and_shortest_night_entries(cli):
+    cli.run("sleep", "log", "6.5", "-q", "3")
+    cli.run("sleep", "log", "8.5", "-q", "5", "-d", "yesterday")
+    cli.run("sleep", "log", "5.0", "-q", "2", "-d", "2 days ago")
+    data = cli.json("sleep", "stats")
+    assert data["max_hours"] == 8.5
+    assert data["min_hours"] == 5.0
+    # Full entries point at the actual rows.
+    assert data["longest_night"]["hours"] == 8.5
+    assert data["longest_night"]["quality"] == 5
+    assert data["shortest_night"]["hours"] == 5.0
+    assert data["shortest_night"]["quality"] == 2
+
+
+def test_sleep_stats_single_entry_longest_equals_shortest(cli):
+    """With one log, longest and shortest both point at the same entry."""
+    cli.run("sleep", "log", "7.5", "-q", "4")
+    data = cli.json("sleep", "stats")
+    assert data["longest_night"]["id"] == data["shortest_night"]["id"]
+    assert data["longest_night"]["hours"] == 7.5

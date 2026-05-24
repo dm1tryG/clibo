@@ -79,3 +79,28 @@ def test_mood_help_still_works(cli):
     result = cli.run("mood", "--help")
     assert result.exit_code == 0
     assert "today" in result.stdout
+
+
+# ── mood stats: best/worst_score_entry ──
+
+
+def test_mood_stats_best_and_worst_entry(cli):
+    cli.run("mood", "log", "4", "-e", "happy")
+    cli.run("mood", "log", "5", "-e", "elated", "-d", "yesterday")
+    cli.run("mood", "log", "2", "-e", "tired", "-d", "2 days ago")
+    data = cli.json("mood", "stats")
+    assert data["best_score"] == 5
+    assert data["worst_score"] == 2
+    # Entry refs include emotion so user can find the actual log.
+    assert data["best_score_entry"]["score"] == 5
+    assert data["best_score_entry"]["emotion"] == "elated"
+    assert data["worst_score_entry"]["score"] == 2
+    assert data["worst_score_entry"]["emotion"] == "tired"
+
+
+def test_mood_stats_entry_has_id_and_date(cli):
+    cli.run("mood", "log", "3", "-e", "ok")
+    data = cli.json("mood", "stats")
+    e = data["best_score_entry"]
+    assert e["id"] == 1
+    assert e["entry_date"] is not None

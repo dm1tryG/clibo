@@ -225,6 +225,10 @@ def stats(
     for entry in entries:
         daily_sum.setdefault(entry.entry_date, []).append(entry.score)
     daily_avg = {d: sum(v) / len(v) for d, v in daily_sum.items()}
+    # Peak / low check-ins — full entry refs so the user can find the
+    # actual log behind the scalar best/worst score.
+    best_entry = max(entries, key=lambda e: e.score)
+    worst_entry = min(entries, key=lambda e: e.score)
     data = {
         "window_days": days,
         "checkins": len(entries),
@@ -232,6 +236,20 @@ def stats(
         "avg_score": round(sum(scores) / len(scores), 1),
         "best_score": max(scores),
         "worst_score": min(scores),
+        "best_score_entry": {
+            "id": best_entry.id,
+            "entry_date": best_entry.entry_date,
+            "score": best_entry.score,
+            "emotion": best_entry.emotion,
+            "note": best_entry.note,
+        },
+        "worst_score_entry": {
+            "id": worst_entry.id,
+            "entry_date": worst_entry.entry_date,
+            "score": worst_entry.score,
+            "emotion": worst_entry.emotion,
+            "note": worst_entry.note,
+        },
         "distribution": distribution,
         "top_emotions": [{"emotion": name, "count": count} for name, count in top],
         "chart": sparkline_days(daily_avg, since, date.today()),
