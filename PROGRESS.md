@@ -4,6 +4,41 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `goals list --at-risk` — surface slipping goals · 2026-05-24
+
+NL ask: *"which goals am I behind on?"*. `goals list` showed progress
+and deadline_in but never flagged *"running out of time"*. The
+"at risk" concept landed on streaks; goals get the same lens.
+
+- 🎯 **`is_behind_schedule` boolean** on every `_row(goal)`:
+  - True when goal isn't done AND has a deadline AND one of:
+    - The deadline is already in the past (overdue), or
+    - Milestones exist AND task progress is >5 points behind
+      where the calendar says it should be
+  - The 5-point slack avoids pinging goals that are trivially behind.
+- 📅 **`days_remaining` field** — convenient negative integer for
+  overdue, useful for sorting.
+- 🔧 **`clibo goals list --at-risk` (`-r`)** — filters to behind-
+  schedule goals. Empty state surfaces *"No goals at risk —
+  everything is on pace."*.
+- 🎤 NL flows verified:
+  • Goal without deadline → never behind
+  • Goal past deadline + unfinished → behind
+  • Goal with milestones but lagging pace → behind
+  • Goal slightly ahead of pace → not behind (slack)
+- 🧪 **7 new tests**: no-deadline never-behind, overdue is behind,
+  pacing-slower behind, done never behind, filter excludes on-track,
+  empty at-risk view, slack tolerance.
+- **Tests:** 1,341 passing (+7); ruff clean.
+
+**Why this matters:** pairs with `streaks --at-risk` (last iter) to
+form a complete morning-attention view: *"what would I lose if I
+sat on the couch today?"* (streaks) + *"what's slipping under my
+own deadlines?"* (goals). Both filterable with the same `--at-risk`
+verb.
+
+---
+
 ### `sleep` + `mood` stats gain best/worst entry references · 2026-05-24
 
 Same pattern as the meditate / writing / focus / stretches / mileage

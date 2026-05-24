@@ -54,7 +54,9 @@ def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
     Mirrors the iter-110 bare-command convention.
     """
     if ctx.invoked_subcommand is None:
-        ctx.invoke(list_goals, show_all=False, json_out=json_out)
+        ctx.invoke(
+            list_goals, show_all=False, at_risk=False, json_out=json_out,
+        )
 
 
 def _resolve(db, ident: str) -> Goal | None:
@@ -74,16 +76,36 @@ def _row(db, goal: Goal) -> dict:
         progress = round(done / total * 100, 1)
     else:
         progress = 100.0 if goal.done else 0.0
+    today = date.today()
+    days_remaining = (goal.deadline - today).days if goal.deadline else None
+    # Behind-schedule signal: not done, has a deadline, and either
+    # already past it OR pacing slower than calendar would predict.
+    # Pacing only applies when there are milestones to anchor `progress`.
+    is_behind = False
+    if not goal.done and goal.deadline is not None:
+        if days_remaining is not None and days_remaining < 0:
+            is_behind = True
+        elif total > 0:
+            created_day = goal.created_at.date()
+            span = (goal.deadline - created_day).days
+            if span > 0:
+                elapsed = (today - created_day).days
+                calendar_pct = min(100.0, max(0.0, elapsed / span * 100))
+                # 5-point slack so trivially-behind doesn't ping every goal.
+                if progress + 5 < calendar_pct:
+                    is_behind = True
     return {
         "id": goal.id,
         "name": goal.name,
         "description": goal.description,
         "deadline": goal.deadline,
         "deadline_in": humanize_delta(goal.deadline) if goal.deadline else None,
+        "days_remaining": days_remaining,
         "done": goal.done,
         "milestones_total": total,
         "milestones_done": done,
         "progress_pct": progress,
+        "is_behind_schedule": is_behind,
         "note": goal.note,
     }
 
@@ -131,26 +153,43 @@ def milestone(
 @app.command(name="list")
 def list_goals(
     show_all: bool = typer.Option(False, "--all", help="Include completed goals"),
+    at_risk: bool = typer.Option(
+        False, "--at-risk", "-r",
+        help="Only show goals running behind schedule — overdue, or "
+             "pacing slower than the deadline calls for.",
+    ),
     json_out: JsonOpt = False,
 ) -> None:
-    """🎯 List goals with milestone progress."""
+    """🎯 List goals with milestone progress.
+
+    Pass ``--at-risk`` to filter to goals that need attention —
+    deadline already passed or pacing slower than the calendar.
+    """
     with session() as db:
         query = select(Goal)
         if not show_all:
             query = query.where(Goal.done == False)  # noqa: E712
         goals = list(db.exec(query.order_by(Goal.name)).all())
         rows = [_row(db, g) for g in goals]
+    if at_risk:
+        rows = [r for r in rows if r["is_behind_schedule"]]
+    title = "🎯 Goals at risk" if at_risk else "🎯 Goals"
+    empty = (
+        "🎯 [green]No goals at risk — everything is on pace.[/green]"
+        if at_risk
+        else "No goals yet — try: clibo goals add 'Learn Spanish'"
+    )
     render_rows(
         rows,
         [("id", "ID"), ("name", "Goal"), ("milestones_done", "Milestones"),
          ("progress_pct", "Progress"), ("deadline", "Deadline"), ("deadline_in", "When")],
         json_out=json_out,
-        title="🎯 Goals",
+        title=title,
         formatters={
             "milestones_done": lambda v, r: f"{v}/{r['milestones_total']}",
             "progress_pct": lambda v, r: bar(v, 100),
         },
-        empty="No goals yet — try: clibo goals add 'Learn Spanish'",
+        empty=empty,
     )
 
 
