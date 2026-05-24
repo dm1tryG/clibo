@@ -4,6 +4,45 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### 🏷️ Iteration 99 — v1.11.0 release · 2026-05-24
+
+Six substantial iters stacked since v1.10.0 (iters 93-98) including
+a new tool (`symptom`), full cross-tool dashboard integration for
+all media-log tools, and the `travel` status polish.
+
+- 🆙 **`pyproject.toml`** `1.10.0 → 1.11.0`. Description updated
+  to mention the new pain/symptom log.
+- 🆙 **`clibo/__init__.py`** `__version__ = "1.11.0"`.
+- 📦 **Build** — `uv build` produced `dist/clibo-1.11.0.tar.gz`
+  + `dist/clibo-1.11.0-py3-none-any.whl`. Both PASSED `twine check`.
+- 🚀 **`twine upload`** — pushed to PyPI:
+  https://pypi.org/project/clibo/1.11.0/
+- 🧪 **End-to-end verified from PyPI** after index sync:
+  • `clibo --version` → `clibo 1.11.0` ✓
+  • `symptom log "back pain" -i 7 -l lumbar -r ibuprofen` →
+    intensity_label="severe" ✓
+  • `travel add Berlin --start "3 days ago" --end "today"` →
+    `status="ongoing", when="ongoing · day 4 of 4"` ✓
+  • `today --json` exposes writing + books + symptoms blocks ✓
+  • `search lumbar` → symptom source ✓
+  • `checkin --json` → both Writing + Symptom registered ✓
+- 🏷️ **Git tag `v1.11.0`** pushed to GitHub.
+- 🚀 **GitHub release** created with a detailed changelog:
+  https://github.com/dm1tryG/clibo/releases/tag/v1.11.0
+- 📊 Release scoreboard:
+  • 948 tests passing (+61 vs v1.10.0's 887)
+  • 74 tools (+1 — `symptom`)
+  • 89 SQLite tables (+1 — `symptom_entry`)
+
+This is the **structured-pain-tracking + everywhere-visibility**
+release. The new `symptom` tool fills the long-standing
+subjective-experience gap in the health suite, and the dashboard
+integration arc (iter 93/94/96/97) means no tool built in the last
+14 iterations sits invisibly in the DB anymore. Cross-tool views
+now cover all 74 tools.
+
+---
+
 ### Iteration 98 — `travel` gains a proper `status` + `when` · 2026-05-24
 
 Agent-mode self-test on a past trip ("just got back from a 3-day
