@@ -54,3 +54,99 @@ def test_stats_counts(cli):
 def test_invalid_priority_fails(cli):
     result = cli.run("todo", "add", "Bad", "-p", "urgent")
     assert result.exit_code != 0
+
+
+# ── date filters on `todo list` (iter 117) ──
+
+
+def test_list_due_today(cli):
+    cli.run("todo", "add", "Call mom", "-d", "today")
+    cli.run("todo", "add", "Buy milk", "-d", "tomorrow")
+    cli.run("todo", "add", "No date")
+    data = cli.json("todo", "list", "--due", "today")
+    titles = [t["title"] for t in data]
+    assert "Call mom" in titles
+    assert "Buy milk" not in titles
+    assert "No date" not in titles
+
+
+def test_list_due_tomorrow(cli):
+    cli.run("todo", "add", "Call mom", "-d", "today")
+    cli.run("todo", "add", "Buy milk", "-d", "tomorrow")
+    data = cli.json("todo", "list", "--due", "tomorrow")
+    titles = [t["title"] for t in data]
+    assert titles == ["Buy milk"]
+
+
+def test_list_due_iso_date(cli):
+    """`--due 2026-06-01` exact-matches by date."""
+    cli.run("todo", "add", "Specific", "-d", "2026-06-01")
+    cli.run("todo", "add", "Other", "-d", "2026-06-02")
+    data = cli.json("todo", "list", "--due", "2026-06-01")
+    assert [t["title"] for t in data] == ["Specific"]
+
+
+def test_list_overdue(cli):
+    cli.run("todo", "add", "Late", "-d", "5 days ago")
+    cli.run("todo", "add", "Today", "-d", "today")
+    cli.run("todo", "add", "Future", "-d", "tomorrow")
+    data = cli.json("todo", "list", "--overdue")
+    titles = [t["title"] for t in data]
+    assert "Late" in titles
+    assert "Today" not in titles
+    assert "Future" not in titles
+
+
+def test_list_overdue_skips_done(cli):
+    """Overdue but completed tasks shouldn't appear in --overdue."""
+    cli.run("todo", "add", "Done late", "-d", "5 days ago")
+    cli.run("todo", "done", "1")
+    cli.run("todo", "add", "Still late", "-d", "3 days ago")
+    data = cli.json("todo", "list", "--overdue")
+    assert [t["title"] for t in data] == ["Still late"]
+
+
+def test_list_due_within_7(cli):
+    """--due-within N captures overdue + today + next-N-days."""
+    cli.run("todo", "add", "Past", "-d", "3 days ago")
+    cli.run("todo", "add", "Today", "-d", "today")
+    cli.run("todo", "add", "Soon", "-d", "in 5 days")
+    cli.run("todo", "add", "Later", "-d", "in 15 days")
+    cli.run("todo", "add", "No date")
+    data = cli.json("todo", "list", "--due-within", "7")
+    titles = {t["title"] for t in data}
+    assert titles == {"Past", "Today", "Soon"}
+
+
+def test_list_due_within_excludes_no_date(cli):
+    """Date filters only apply to tasks that have a due date."""
+    cli.run("todo", "add", "Dated", "-d", "tomorrow")
+    cli.run("todo", "add", "Undated")
+    data = cli.json("todo", "list", "--due-within", "30")
+    assert [t["title"] for t in data] == ["Dated"]
+
+
+def test_list_due_wins_over_due_within(cli):
+    """When both --due and --due-within are passed, --due takes precedence."""
+    cli.run("todo", "add", "Today", "-d", "today")
+    cli.run("todo", "add", "Tomorrow", "-d", "tomorrow")
+    data = cli.json("todo", "list", "--due", "today", "--due-within", "30")
+    assert [t["title"] for t in data] == ["Today"]
+
+
+def test_list_due_invalid_date_fails(cli):
+    result = cli.run("todo", "list", "--due", "not a date")
+    assert result.exit_code != 0
+
+
+def test_list_due_within_negative_fails(cli):
+    result = cli.run("todo", "list", "--due-within", "-5")
+    assert result.exit_code != 0
+
+
+def test_list_date_filters_combine_with_project(cli):
+    """`--due today --project Acme` filters intersect."""
+    cli.run("todo", "add", "Acme task", "-d", "today", "-P", "Acme")
+    cli.run("todo", "add", "Other task", "-d", "today", "-P", "Other")
+    data = cli.json("todo", "list", "--due", "today", "-P", "Acme")
+    assert [t["title"] for t in data] == ["Acme task"]

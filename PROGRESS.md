@@ -4,6 +4,50 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 117 — `todo list` gains date filters · 2026-05-24
+
+Agent-mode probe on *"What do I have to do tomorrow?"* surfaced
+that `todo list` supports `--project` / `--tag` / `--all` but
+**no date filter at all**. The natural "what's due X?" ask
+forced client-side filtering of the JSON dump.
+
+- ✅ **Three new filter flags** on `clibo todo list`:
+
+  | Flag | Selects |
+  |---|---|
+  | `--due DATE` | Exact match on due date (accepts `today` / `tomorrow` / `yesterday` / `next monday` / `2026-06-01` via `parse_date`) |
+  | `--overdue` | Pending tasks with `due < today` — strict past-due only |
+  | `--due-within N` | Pending tasks due in the next N days (includes overdue + today) |
+
+- 🎯 **Precedence**: when both `--due` and `--due-within` are
+  passed, `--due` wins (exact wins over window). `--overdue` is
+  in the same `elif` chain — gets superseded by `--due`. All three
+  compose freely with `--project` and `--tag`.
+- 🛡 **Date filters only apply to tasks with a due date set** —
+  undated tasks naturally drop out of every date-filter (no
+  noise from `IS NULL` rows).
+- 🛡 **Validation**: unparseable `--due` value → friendly error.
+  Negative `--due-within` → friendly error.
+- 🎤 NL flow verified end-to-end across 5 seeded tasks
+  (today/tomorrow/next-week/5-days-ago/undated):
+  • `--due today` → just "Call mom" ✓
+  • `--due tomorrow` → just "Buy milk" ✓
+  • `--overdue` → just "Overdue task" ✓
+  • `--due-within 7` → overdue + today + tomorrow + next-week (4) ✓
+  • Filter combo: `--due today -P Acme` → 1 row ✓
+  • `--overdue` skips done tasks correctly ✓
+- 🧪 **11 new tests**: 4 base filters, ISO-date support, overdue-
+  skips-done, due-within excludes undated, --due-wins-over-due-
+  within, invalid date, negative due-within, combine with project.
+- 📚 **SKILL.md** rewritten with an 8-row natural-language →
+  command table covering all the realistic date-filtering asks.
+- **Tests:** 1,145 passing (+11); ruff clean.
+
+The most-used productivity tool now answers the most-common
+ask — *"what do I have to do?"* — in one flag, every form.
+
+---
+
 ### Iteration 116 — `books year` + lifetime by_year breakdown · 2026-05-24
 
 Agent-mode probe on *"What was my best year of reading?"* surfaced

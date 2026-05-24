@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import typer
 from sqlmodel import Field, SQLModel, select
@@ -95,9 +95,38 @@ def list_tasks(
     show_all: bool = typer.Option(False, "--all", help="Include completed tasks"),
     project: str = typer.Option(None, "--project", "-P", help="Filter by project"),
     tag: str = typer.Option(None, "--tag", "-t", help="Filter by tag"),
+    due: str = typer.Option(
+        None, "--due", "-d",
+        help="Only tasks due on this date "
+             "(accepts 'today' / 'tomorrow' / 'yesterday' / YYYY-MM-DD)",
+    ),
+    overdue: bool = typer.Option(
+        False, "--overdue",
+        help="Only show pending tasks whose due date is in the past",
+    ),
+    due_within: int = typer.Option(
+        None, "--due-within",
+        help="Only pending tasks due in the next N days "
+             "(includes overdue and today)",
+    ),
     json_out: JsonOpt = False,
 ) -> None:
-    """✅ List tasks (pending first, by priority then due date)."""
+    """✅ List tasks (pending first, by priority then due date).
+
+    Date filters answer common asks: ``--due today``,
+    ``--due tomorrow``, ``--overdue``, ``--due-within 7``. These
+    combine with ``--project`` / ``--tag``; ``--due`` takes
+    precedence over ``--due-within`` when both are passed.
+    """
+    if due_within is not None and due_within < 0:
+        fail("--due-within must be ≥ 0", json_out=json_out)
+    target_due: date | None = None
+    if due:
+        try:
+            target_due = parse_date(due)
+        except Exception:
+            fail(f"Could not parse date {due!r}", json_out=json_out)
+    today = date.today()
     with session() as db:
         query = select(Task)
         if not show_all:
@@ -106,6 +135,16 @@ def list_tasks(
             query = query.where(Task.project == project)
         if tag:
             query = query.where(Task.tags.ilike(f"%{tag}%"))
+        # Date filters — `--due` is exact-match and wins over `--due-within`.
+        if target_due is not None:
+            query = query.where(Task.due == target_due)
+        elif overdue:
+            query = query.where(Task.due != None)  # noqa: E711
+            query = query.where(Task.due < today)
+        elif due_within is not None:
+            horizon = today + timedelta(days=due_within)
+            query = query.where(Task.due != None)  # noqa: E711
+            query = query.where(Task.due <= horizon)
         tasks = list(db.exec(query).all())
     tasks.sort(key=lambda t: (
         t.done,
