@@ -135,3 +135,25 @@ def test_stretches_streak_consecutive(cli):
     assert data["current_streak"] == 2
     assert data["longest_streak"] == 2
     assert data["days_logged"] == 2
+
+
+# ── stretches stats: longest_session ──
+
+
+def test_stretches_stats_longest_session_picks_max_duration(cli):
+    cli.run("stretches", "log", "neck", "-m", "5")
+    cli.run("stretches", "log", "full-body", "-m", "20", "-D", "3")
+    cli.run("stretches", "log", "hips", "-m", "10")
+    data = cli.json("stretches", "stats")
+    ls = data["longest_session"]
+    assert ls["minutes"] == 20
+    assert ls["area"] == "full-body"
+    assert ls["difficulty"] == 3
+
+
+def test_stretches_stats_longest_session_carries_id_and_date(cli):
+    cli.run("stretches", "log", "hips", "-m", "30")
+    data = cli.json("stretches", "stats")
+    ls = data["longest_session"]
+    assert ls["id"] == 1
+    assert ls["entry_date"] is not None

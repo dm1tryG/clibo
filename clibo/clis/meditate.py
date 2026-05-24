@@ -233,13 +233,22 @@ def stats(
         fail("No sessions in this window", json_out=json_out)
     total = sum(e.minutes for e in entries)
     practised = {e.entry_date for e in entries}
+    longest_entry = max(entries, key=lambda e: e.minutes)
     data = {
         "window_days": days,
         "sessions": len(entries),
         "days_practised": len(practised),
         "total_minutes": total,
         "avg_minutes_per_session": round(total / len(entries), 1),
-        "longest_session": max(e.minutes for e in entries),
+        "longest_session": longest_entry.minutes,
+        # Full reference for the longest session — points at the actual
+        # entry so a user can dig in (`clibo meditate show <id>`).
+        "longest_session_entry": {
+            "id": longest_entry.id,
+            "entry_date": longest_entry.entry_date,
+            "minutes": longest_entry.minutes,
+            "kind": longest_entry.kind,
+        },
         "current_streak": _streak(all_days),
     }
     render_record(data, json_out=json_out, title=f"📊 Meditation stats · last {days}d")

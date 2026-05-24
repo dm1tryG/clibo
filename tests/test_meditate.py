@@ -56,3 +56,20 @@ def test_meditate_streak_includes_longest(cli):
     # days_practiced kept for back-compat; days_logged is the new uniform name.
     assert data["days_practiced"] == 2
     assert data["days_logged"] == 2
+
+
+# ── meditate stats: longest_session_entry (full reference) ──
+
+
+def test_meditate_stats_longest_session_entry(cli):
+    """longest_session_entry surfaces the actual entry behind the scalar."""
+    cli.run("meditate", "log", "10", "-k", "mindfulness")
+    cli.run("meditate", "log", "25", "-k", "guided")
+    stats = cli.json("meditate", "stats")
+    # Back-compat scalar still works.
+    assert stats["longest_session"] == 25
+    # New dict points at the actual entry.
+    entry = stats["longest_session_entry"]
+    assert entry["id"] == 2
+    assert entry["minutes"] == 25
+    assert entry["kind"] == "guided"

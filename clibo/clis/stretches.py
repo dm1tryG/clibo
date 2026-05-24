@@ -279,6 +279,9 @@ def stats(
     difficulties = [e.difficulty for e in entries if e.difficulty is not None]
     days_logged = len({e.entry_date for e in entries})
     top_area = max(minutes_by_area.items(), key=lambda kv: kv[1])[0]
+    # Longest single session — *"what's my longest stretch ever?"*. Same
+    # shape as best_session in writing/focus/mileage.
+    longest = max(entries, key=lambda e: e.duration_min)
     data = {
         "window_days": days,
         "sessions": len(entries),
@@ -292,6 +295,13 @@ def stats(
         ),
         "top_area": top_area,
         "by_area_minutes": minutes_by_area,
+        "longest_session": {
+            "id": longest.id,
+            "entry_date": longest.entry_date,
+            "area": longest.area,
+            "minutes": longest.duration_min,
+            "difficulty": longest.difficulty,
+        },
     }
     render_record(data, json_out=json_out, title=f"📊 Stretching · last {days}d")
 

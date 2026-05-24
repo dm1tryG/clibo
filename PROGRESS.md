@@ -4,6 +4,36 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `stretches` + `meditate` stats gain longest-session reference · 2026-05-24
+
+Continuing the PR-session pattern. Two more time-based trackers
+now surface the actual record entry, not just the scalar.
+
+- 🧎 **`stretches stats.longest_session`** — full reference dict
+  `{id, entry_date, area, minutes, difficulty}` for the longest
+  single stretch. New field; previously stretches stats had no
+  PR concept at all.
+- 🧘 **`meditate stats.longest_session_entry`** — full reference dict
+  `{id, entry_date, minutes, kind}` for the longest meditation.
+  Kept the existing `longest_session` scalar for back-compat;
+  the new `_entry` field is purely additive.
+- 🎤 NL flow verified: longest single stretch surfaces with its
+  area + difficulty; longest meditation surfaces with its kind
+  (mindfulness / guided / breathing / etc.) so the user can find
+  the actual session.
+- 🧪 **3 new tests**: stretches longest picks max-duration with
+  area+difficulty, stretches carries id+date, meditate entry
+  scalar still works *and* new dict points at the right entry.
+- **Tests:** 1,319 passing (+3); ruff clean.
+
+**Why this matters:** scalar PRs ("you did 45 minutes once") are
+fine for at-a-glance reading, but the dict lets agents jump to
+the actual entry (`clibo <tool> show <id>`) without re-querying.
+The pattern is now consistent across mileage / focus / writing /
+stretches / meditate.
+
+---
+
 ### `writing stats` + `focus stats` gain best_session · 2026-05-24
 
 Same shape as the mileage best_pace fix: each tool now distinguishes
