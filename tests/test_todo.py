@@ -262,17 +262,24 @@ def test_stats_most_overdue_picks_largest_days_past(cli):
 
 
 def test_stats_avg_backlog_age_days(cli, tmp_path):
-    """Average of pending tasks' ages."""
+    """Average of pending tasks' ages.
+
+    Backdate created_at relative to *today* — hard-coding ISO dates
+    would break overnight when the calendar rolls forward.
+    """
     cli.run("todo", "add", "T1")
     cli.run("todo", "add", "T2")
     import sqlite3
+    from datetime import datetime, timedelta
+    twenty_d = (datetime.now() - timedelta(days=20)).isoformat(" ", "seconds")
+    ten_d = (datetime.now() - timedelta(days=10)).isoformat(" ", "seconds")
     con = sqlite3.connect(f"{tmp_path}/clibo.db")
-    con.execute("UPDATE todo_task SET created_at='2026-05-04 12:00:00' WHERE id=1")  # 20d
-    con.execute("UPDATE todo_task SET created_at='2026-05-14 12:00:00' WHERE id=2")  # 10d
+    con.execute("UPDATE todo_task SET created_at=? WHERE id=1", (twenty_d,))
+    con.execute("UPDATE todo_task SET created_at=? WHERE id=2", (ten_d,))
     con.commit()
     con.close()
     data = cli.json("todo", "stats")
-    # 20 + 10 = 30, avg 15
+    # 20 + 10 = 30 → avg 15
     assert data["avg_backlog_age_days"] == 15.0
 
 

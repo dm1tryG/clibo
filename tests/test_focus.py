@@ -104,3 +104,38 @@ def test_focus_today_remaining_floors_at_zero_when_reached(cli):
     assert data["remaining_minutes"] == 0
     assert data["reached"] is True
     assert data["pct_of_goal"] == 120.0
+
+
+# ── focus log accepts H:MM notation ──
+
+
+def test_focus_log_accepts_hh_mm(cli):
+    """`focus log 1:25` → 85 minutes."""
+    data = cli.json("focus", "log", "1:25")
+    assert data["minutes"] == 85
+
+
+def test_focus_log_plain_int_still_works(cli):
+    data = cli.json("focus", "log", "45")
+    assert data["minutes"] == 45
+
+
+def test_focus_log_default_pomodoro_with_no_arg(cli):
+    """Omitting the arg uses the default pomodoro length (25)."""
+    data = cli.json("focus", "log")
+    assert data["minutes"] == 25
+
+
+def test_focus_log_bad_hh_mm_fails(cli):
+    result = cli.run("focus", "log", "1:bad")
+    assert result.exit_code != 0
+
+
+def test_focus_log_bad_input_fails(cli):
+    result = cli.run("focus", "log", "lots")
+    assert result.exit_code != 0
+
+
+def test_focus_log_hh_mm_two_hours(cli):
+    data = cli.json("focus", "log", "2:00")
+    assert data["minutes"] == 120

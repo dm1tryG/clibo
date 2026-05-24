@@ -4,6 +4,34 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `sleep`/`focus log` accept H:MM notation + 2 date-flaky tests fixed · 2026-05-25
+
+NL friction: *"I slept 7h30m"* → `sleep log 7:30` failed (needed
+decimal `7.5`). Same for *"I focused for 1h25m"* → `focus log 1:25`
+(needed `85`).
+
+- 😴 **`sleep log "7:30"`** — parses H:MM → 7.5 hours. Decimal
+  `7.5` still works.
+- 🍅 **`focus log "1:25"`** — H:MM → 85 minutes. Plain int still
+  works; default pomodoro (25 min) preserved when no arg given.
+- Both reject bad input with friendly messages (`'7:bad'`, `'lots'`).
+- 🐛 **Date-sensitive test fixes** caught by today's calendar roll:
+  - `test_stats_avg_backlog_age_days` had hard-coded ISO timestamps;
+    now computes from `datetime.now()` so it survives midnight.
+  - `test_habit_on_pace_true_when_hitting_target` assumed in-the-past
+    checks would always fall in the current week — breaks on Monday
+    (yesterday is last week). Now adapts to today's weekday, adds
+    `min(target, weekday+1)` in-week checks, asserts `on_pace`.
+- 🧪 **11 new tests** (5 sleep, 6 focus) covering H:MM, decimal/int
+  back-compat, default pomodoro, bad input.
+- **Tests:** 1,421 passing (+11); ruff clean.
+
+**Why this matters:** clock-style notation is how humans say
+durations. *"7:30 of sleep"* and *"a 1:25 focus block"* are the
+canonical phrasings; forcing `7.5` and `85` was unnecessary friction.
+
+---
+
 ### `vitals bp` accepts canonical `SYS/DIA` notation · 2026-05-24
 
 NL friction: `clibo vitals bp 120/80` failed — required two separate

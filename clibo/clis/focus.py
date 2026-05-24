@@ -78,18 +78,43 @@ def _countdown(minutes: int, label: str) -> None:
 
 @app.command()
 def log(
-    minutes: int = typer.Argument(DEFAULT_POMODORO, help="Length of the session in minutes"),
+    minutes: str = typer.Argument(
+        str(DEFAULT_POMODORO),
+        help="Length of the session — minutes ('45') or H:MM ('1:25')",
+    ),
     task: str = typer.Option(None, "--task", "-t", help="What you focused on"),
     on: str = typer.Option("today", "--date", "-d", help="Date"),
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
 ) -> None:
-    """🍅 Log a completed focus session."""
-    if minutes <= 0:
+    """🍅 Log a completed focus session.
+
+    Accepts plain minutes (``focus log 45``) or H:MM notation
+    (``focus log 1:25`` → 85 minutes).
+    """
+    if ":" in minutes:
+        try:
+            h_part, m_part = minutes.split(":", 1)
+            parsed_min = int(h_part) * 60 + int(m_part)
+        except ValueError:
+            fail(
+                f"Bad H:MM format: {minutes!r}. Expected '1:25' or a "
+                "plain integer.",
+                json_out=json_out,
+            )
+    else:
+        try:
+            parsed_min = int(minutes)
+        except ValueError:
+            fail(
+                f"Minutes must be an integer or H:MM (got {minutes!r})",
+                json_out=json_out,
+            )
+    if parsed_min <= 0:
         fail("Minutes must be positive", json_out=json_out)
-    data = _record(task, minutes, parse_date(on), note)
+    data = _record(task, parsed_min, parse_date(on), note)
     label = f" on {task}" if task else ""
-    ok(f"Logged {EMOJI} {minutes} min focus{label}", json_out=json_out, data=data)
+    ok(f"Logged {EMOJI} {parsed_min} min focus{label}", json_out=json_out, data=data)
 
 
 # `add` is a friendlier alias for `log` (predictable verbs across tools).

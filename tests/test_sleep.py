@@ -81,3 +81,33 @@ def test_sleep_stats_single_entry_longest_equals_shortest(cli):
     data = cli.json("sleep", "stats")
     assert data["longest_night"]["id"] == data["shortest_night"]["id"]
     assert data["longest_night"]["hours"] == 7.5
+
+
+# ── sleep log accepts H:MM notation ──
+
+
+def test_sleep_log_accepts_hh_mm(cli):
+    """`sleep log 7:30` → 7.5 hours, canonical clock-style notation."""
+    data = cli.json("sleep", "log", "7:30")
+    assert data["hours"] == 7.5
+
+
+def test_sleep_log_decimal_still_works(cli):
+    """`sleep log 7.5` (decimal) is back-compat."""
+    data = cli.json("sleep", "log", "7.5")
+    assert data["hours"] == 7.5
+
+
+def test_sleep_log_bad_hh_mm_fails(cli):
+    result = cli.run("sleep", "log", "7:bad")
+    assert result.exit_code != 0
+
+
+def test_sleep_log_bad_input_fails(cli):
+    result = cli.run("sleep", "log", "lots")
+    assert result.exit_code != 0
+
+
+def test_sleep_log_hh_mm_with_zero_minutes(cli):
+    data = cli.json("sleep", "log", "8:00")
+    assert data["hours"] == 8.0

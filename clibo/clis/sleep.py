@@ -63,7 +63,10 @@ def _row(entry: SleepLog) -> dict:
 
 @app.command()
 def log(
-    hours: float = typer.Argument(..., help="Hours slept, e.g. 7.5"),
+    hours: str = typer.Argument(
+        ...,
+        help="Hours slept — accepts decimal ('7.5') or H:MM ('7:30')",
+    ),
     quality: int = typer.Option(3, "--quality", "-q", help="Sleep quality, 1 (terrible) – 5 (great)"),
     on: str = typer.Option("today", "--date", "-d", help="Date you woke up"),
     bedtime: str = typer.Option(None, "--bedtime", "-b", help="Bedtime, e.g. 23:30"),
@@ -71,13 +74,36 @@ def log(
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
 ) -> None:
-    """😴 Log a night of sleep."""
-    if hours <= 0 or hours > 24:
+    """😴 Log a night of sleep.
+
+    Accepts either the decimal form (``clibo sleep log 7.5``) or
+    the canonical ``H:MM`` notation (``clibo sleep log 7:30``).
+    """
+    # Parse either H:MM or a plain decimal.
+    if ":" in hours:
+        try:
+            h_part, m_part = hours.split(":", 1)
+            parsed_hours = int(h_part) + int(m_part) / 60
+        except ValueError:
+            fail(
+                f"Bad H:MM format: {hours!r}. Expected '7:30' or a "
+                "decimal like 7.5.",
+                json_out=json_out,
+            )
+    else:
+        try:
+            parsed_hours = float(hours)
+        except ValueError:
+            fail(
+                f"Hours must be a number or H:MM (got {hours!r})",
+                json_out=json_out,
+            )
+    if parsed_hours <= 0 or parsed_hours > 24:
         fail("Hours must be between 0 and 24", json_out=json_out)
     if quality not in QUALITY_LABELS:
         fail("Quality must be 1–5", json_out=json_out)
     entry = SleepLog(
-        hours=hours,
+        hours=round(parsed_hours, 2),
         quality=quality,
         entry_date=parse_date(on),
         bedtime=bedtime,
@@ -90,7 +116,7 @@ def log(
         db.refresh(entry)
         data = _row(entry)
     ok(
-        f"Logged {EMOJI} {hours:g}h sleep — {QUALITY_LABELS[quality]} quality",
+        f"Logged {EMOJI} {parsed_hours:g}h sleep — {QUALITY_LABELS[quality]} quality",
         json_out=json_out,
         data=data,
     )
