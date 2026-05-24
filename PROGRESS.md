@@ -4,6 +4,59 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 107 — bare-command default rolled out to 11 money + home/life tools · 2026-05-24
+
+Closing out the bare-command pattern rollout. Iter 105/106 covered
+22 tools (health + productivity + hobbies). This iter finishes
+**every money and home/life tool with a dominant single-verb
+summary**.
+
+- 🎯 **11 more tools updated**:
+
+  | Tool | Bare runs |
+  |---|---|
+  | `bills` | `due` — overdue + due soon |
+  | `split` | `balances` — net per-person ledger |
+  | `expense` | `month` — current month by category |
+  | `income` | `month` — current month by category |
+  | `donations` | `year` — annual giving (tax-relevant) |
+  | `subs` | `total` — monthly + yearly subscription cost |
+  | `chores` | `due` — chores overdue or due now |
+  | `plants` | `thirsty` — plants needing water |
+  | `documents` | `expiring` — passports/IDs in next 90d |
+  | `packages` | `pending` — packages not yet delivered |
+  | `meals` | `today` — today's planned meals |
+
+- 🛡 **Sentinel-bug avoidance**: 6 of these summaries have optional
+  args with non-None defaults — those defaults are now passed
+  explicitly in each callback (`ctx.invoke(due, days=7, json_out=False)`,
+  `ctx.invoke(month, month_spec=None, json_out=False)`, etc.) so the
+  Typer `ArgumentInfo`/`OptionInfo` sentinel never reaches the DB.
+  Same fix style as iter 106; applied prophylactically across all 11.
+- ⚙️ **Mechanical rollout** via the same Python script style as
+  iter 106 — single pass, one diff per file. Tuple-based mapping
+  with per-tool kwarg strings.
+- 🎤 NL flow verified across all 11 on both empty and seeded DBs:
+  • Empty: each renders the friendly empty-state message
+    ("Nothing due — you're all caught up!", "No packages on the
+    way.", etc.) ✓
+  • Seeded: each shows the relevant summary table or panel ✓
+  • `--help` still works on every tool ✓
+- 🧪 **22 new tests** (2 per tool).
+- **Tests:** 1,061 passing (+22); ruff clean.
+
+**Tally**: **36 of 74 tools** now follow *"bare command = the
+answer"* — health (12), productivity & hobbies (13), money &
+home/life (11). The remaining ⅔ that don't get the treatment are
+entity-tools (crm/leads/followup/meetings/jobs/clients/birthdays/
+network/gifts/brag/cv/pets/books/films/ideas/quotes/lessons/
+flashcards/dreams... wait those last 5 already got it) where the
+dominant action is `list` or `add` rather than a single named
+summary. For those tools, bare-help remains the right default —
+the agent wouldn't know which entity to ask about.
+
+---
+
 ### Iteration 106 — bare-command default rolled out to 13 more tools · 2026-05-24
 
 Iter 105 covered 9 health tools. This iter finishes the pattern

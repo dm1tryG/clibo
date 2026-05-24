@@ -44,3 +44,20 @@ def test_edit_and_remove(cli):
 def test_negative_amount_fails(cli):
     result = cli.run("expense", "add", "bad", "-a", "-5")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 107) ──
+
+
+def test_bare_expense_runs_month(cli):
+    """`clibo expense` (no subcommand) runs `month`."""
+    result = cli.run("expense")
+    assert result.exit_code == 0
+
+
+def test_expense_help_still_works(cli):
+    """`clibo expense --help` still shows the menu after the bare change."""
+    result = cli.run("expense", "--help")
+    assert result.exit_code == 0
+    assert "month" in result.stdout

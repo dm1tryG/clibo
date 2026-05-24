@@ -65,3 +65,20 @@ def test_plants_edit_rejects_zero_frequency(cli):
     cli.run("plants", "add", "Basil", "-w", "2")
     result = cli.run("plants", "edit", "Basil", "-w", "0")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 107) ──
+
+
+def test_bare_plants_runs_thirsty(cli):
+    """`clibo plants` (no subcommand) runs `thirsty`."""
+    result = cli.run("plants")
+    assert result.exit_code == 0
+
+
+def test_plants_help_still_works(cli):
+    """`clibo plants --help` still shows the menu after the bare change."""
+    result = cli.run("plants", "--help")
+    assert result.exit_code == 0
+    assert "thirsty" in result.stdout

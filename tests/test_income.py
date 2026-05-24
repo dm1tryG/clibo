@@ -76,3 +76,20 @@ def test_income_resolves_most_recent_when_multiple(cli):
 def test_income_unknown_source_fails(cli):
     result = cli.run("income", "show", "ghost")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 107) ──
+
+
+def test_bare_income_runs_month(cli):
+    """`clibo income` (no subcommand) runs `month`."""
+    result = cli.run("income")
+    assert result.exit_code == 0
+
+
+def test_income_help_still_works(cli):
+    """`clibo income --help` still shows the menu after the bare change."""
+    result = cli.run("income", "--help")
+    assert result.exit_code == 0
+    assert "month" in result.stdout

@@ -88,3 +88,20 @@ def test_subs_edit_rejects_bad_cycle(cli):
 def test_subs_unknown_name_fails(cli):
     result = cli.run("subs", "show", "ghost")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 107) ──
+
+
+def test_bare_subs_runs_total(cli):
+    """`clibo subs` (no subcommand) runs `total`."""
+    result = cli.run("subs")
+    assert result.exit_code == 0
+
+
+def test_subs_help_still_works(cli):
+    """`clibo subs --help` still shows the menu after the bare change."""
+    result = cli.run("subs", "--help")
+    assert result.exit_code == 0
+    assert "total" in result.stdout

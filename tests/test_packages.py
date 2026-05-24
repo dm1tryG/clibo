@@ -190,3 +190,20 @@ def test_searchable_and_in_recent(cli):
     assert any(h["source"] == "packages" for h in by_desc["results"])
     recent = cli.json("recent")
     assert any(e["source"] == "packages" for e in recent["events"])
+
+
+
+# ── bare-command default (iter 107) ──
+
+
+def test_bare_packages_runs_pending(cli):
+    """`clibo packages` (no subcommand) runs `pending`."""
+    result = cli.run("packages")
+    assert result.exit_code == 0
+
+
+def test_packages_help_still_works(cli):
+    """`clibo packages --help` still shows the menu after the bare change."""
+    result = cli.run("packages", "--help")
+    assert result.exit_code == 0
+    assert "pending" in result.stdout

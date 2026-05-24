@@ -41,3 +41,20 @@ def test_stats(cli):
 def test_invalid_frequency_fails(cli):
     result = cli.run("chores", "add", "Bad", "-e", "0")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 107) ──
+
+
+def test_bare_chores_runs_due(cli):
+    """`clibo chores` (no subcommand) runs `due`."""
+    result = cli.run("chores")
+    assert result.exit_code == 0
+
+
+def test_chores_help_still_works(cli):
+    """`clibo chores --help` still shows the menu after the bare change."""
+    result = cli.run("chores", "--help")
+    assert result.exit_code == 0
+    assert "due" in result.stdout

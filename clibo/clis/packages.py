@@ -52,7 +52,14 @@ class Package(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context) -> None:
+    """Default: ``clibo packages`` (bare) runs the ``pending`` summary."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(pending, show_late_only=False, json_out=False)
 
 
 def _row(pkg: Package) -> dict:

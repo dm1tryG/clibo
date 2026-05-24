@@ -187,3 +187,20 @@ def test_searchable_and_in_recent(cli):
     assert any(h["source"] == "documents" for h in by_number["results"])
     recent = cli.json("recent")
     assert any(e["source"] == "documents" for e in recent["events"])
+
+
+
+# ── bare-command default (iter 107) ──
+
+
+def test_bare_documents_runs_expiring(cli):
+    """`clibo documents` (no subcommand) runs `expiring`."""
+    result = cli.run("documents")
+    assert result.exit_code == 0
+
+
+def test_documents_help_still_works(cli):
+    """`clibo documents --help` still shows the menu after the bare change."""
+    result = cli.run("documents", "--help")
+    assert result.exit_code == 0
+    assert "expiring" in result.stdout

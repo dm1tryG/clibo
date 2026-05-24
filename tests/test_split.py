@@ -115,3 +115,20 @@ def test_owe_default_description(cli):
     data = cli.json("split", "owe", "Anna", "50")
     assert "owes" in data["description"]
     assert "Anna" in data["description"]
+
+
+
+# ── bare-command default (iter 107) ──
+
+
+def test_bare_split_runs_balances(cli):
+    """`clibo split` (no subcommand) runs `balances`."""
+    result = cli.run("split")
+    assert result.exit_code == 0
+
+
+def test_split_help_still_works(cli):
+    """`clibo split --help` still shows the menu after the bare change."""
+    result = cli.run("split", "--help")
+    assert result.exit_code == 0
+    assert "balances" in result.stdout

@@ -95,3 +95,20 @@ def test_bills_rm_by_name(cli):
 def test_bills_unknown_name_fails(cli):
     result = cli.run("bills", "show", "ghost")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 107) ──
+
+
+def test_bare_bills_runs_due(cli):
+    """`clibo bills` (no subcommand) runs `due`."""
+    result = cli.run("bills")
+    assert result.exit_code == 0
+
+
+def test_bills_help_still_works(cli):
+    """`clibo bills --help` still shows the menu after the bare change."""
+    result = cli.run("bills", "--help")
+    assert result.exit_code == 0
+    assert "due" in result.stdout

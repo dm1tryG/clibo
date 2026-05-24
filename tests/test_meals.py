@@ -42,3 +42,20 @@ def test_stats(cli):
 def test_invalid_meal_type_fails(cli):
     result = cli.run("meals", "plan", "today", "brunch", "Pancakes")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 107) ──
+
+
+def test_bare_meals_runs_today(cli):
+    """`clibo meals` (no subcommand) runs `today`."""
+    result = cli.run("meals")
+    assert result.exit_code == 0
+
+
+def test_meals_help_still_works(cli):
+    """`clibo meals --help` still shows the menu after the bare change."""
+    result = cli.run("meals", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

@@ -185,3 +185,20 @@ def test_donations_resolves_most_recent_when_multiple(cli):
 def test_donations_unknown_recipient_fails(cli):
     result = cli.run("donations", "show", "ghost")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 107) ──
+
+
+def test_bare_donations_runs_year(cli):
+    """`clibo donations` (no subcommand) runs `year`."""
+    result = cli.run("donations")
+    assert result.exit_code == 0
+
+
+def test_donations_help_still_works(cli):
+    """`clibo donations --help` still shows the menu after the bare change."""
+    result = cli.run("donations", "--help")
+    assert result.exit_code == 0
+    assert "year" in result.stdout
