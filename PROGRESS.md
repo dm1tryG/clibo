@@ -4,6 +4,36 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `clibo ideas stale` — surface ideas you've been sitting on · 2026-05-24
+
+NL ask: *"what have I been sitting on?"* — `ideas list` shows
+everything; `ideas list -s raw` shows captured-but-not-explored
+ideas; neither surfaces *how long they've been sitting*.
+
+- 💡 **`clibo ideas stale [-d N]`** — open-status ideas (raw /
+  exploring / validated) whose `updated_at` is older than N days
+  (default 30). Sorted oldest-touch first. Includes `days_since_update`
+  for each row.
+- 🪞 Mirrors `crm dormant` — same lens applied to a different
+  domain. Both expose data the DB already had but didn't query.
+- 🪞 Empty state: *"All open ideas updated within the last N days ✨"*.
+- 🎤 NL flow verified:
+  • `ideas stale` → only open + >30d old appear; shipped/abandoned excluded
+  • `ideas stale --days 90` → tighter threshold
+  • Triage order: oldest first
+- 🧪 **6 new tests**: picks old-open, excludes shipped/abandoned,
+  threshold filter, validation, empty-when-fresh, sort order.
+- 📚 SKILL.md updated with the new subcommand + NL→command row.
+- **Tests:** 1,347 passing (+6); ruff clean.
+
+**Why this matters:** the *"data collected but not queried"* fix
+keeps generalising. `crm touch` → `crm dormant`; `ideas` updated_at
+→ `ideas stale`. Wherever a tool stores activity timestamps, there's
+a "what have I neglected?" question worth answering with one
+command.
+
+---
+
 ### `goals list --at-risk` — surface slipping goals · 2026-05-24
 
 NL ask: *"which goals am I behind on?"*. `goals list` showed progress

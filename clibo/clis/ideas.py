@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import typer
 from sqlalchemy import or_
@@ -206,6 +206,55 @@ def search(
         title=f"🔍 Ideas matching '{query}'",
         formatters={"status": lambda v, r: _status_cell(v)},
         empty=f"No ideas match '{query}'.",
+    )
+
+
+@app.command()
+def stale(
+    days: int = typer.Option(
+        30, "--days", "-d",
+        help="Threshold in days since last update (default 30)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """🌫️  List open ideas that haven't been touched in a while.
+
+    Mirrors ``crm dormant``: open-status ideas (raw / exploring /
+    validated) whose ``updated_at`` is older than ``--days`` ago.
+    Sorted oldest-touch first. Answers *"what have I been sitting on?"*.
+    """
+    if days < 0:
+        fail("--days must be non-negative", json_out=json_out)
+    cutoff = datetime.now() - timedelta(days=days)
+    with session() as db:
+        ideas = list(
+            db.exec(
+                select(Idea)
+                .where(Idea.status.in_(OPEN_STATUSES))
+                .where(Idea.updated_at <= cutoff)
+                .order_by(Idea.updated_at)
+            ).all()
+        )
+    now = datetime.now()
+    rows = [
+        _row(idea) | {
+            "days_since_update": (now - idea.updated_at).days,
+        }
+        for idea in ideas
+    ]
+    render_rows(
+        rows,
+        [("id", "ID"), ("title", "Idea"), ("status", "Status"),
+         ("days_since_update", "Stale")],
+        json_out=json_out,
+        title=f"🌫️  Stale ideas · >{days}d since touch",
+        formatters={
+            "status": lambda v, r: _status_cell(v),
+            "days_since_update": lambda v, r: f"{v}d",
+        },
+        empty=(
+            f"All open ideas updated within the last {days} days. ✨"
+        ),
     )
 
 

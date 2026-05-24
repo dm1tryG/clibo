@@ -25,6 +25,7 @@ confirmed worth pursuing · `shipped` → built/done · `abandoned` → dropped.
 | `clibo ideas edit ID` | Edit title/desc/tags |
 | `clibo ideas search QUERY` | Search title/desc/tags |
 | `clibo ideas rm ID` | Delete |
+| `clibo ideas stale [-d N]` | Open ideas not touched in N days (default 30) |
 | `clibo ideas pipeline` | Counts by status |
 | `clibo ideas stats` | Open / shipped / abandoned summary |
 
@@ -37,6 +38,7 @@ confirmed worth pursuing · `shipped` → built/done · `abandoned` → dropped.
 | "I shipped the new pomodoro mode" | `clibo ideas move <id> shipped` |
 | "Decided not to pursue the side project" | `clibo ideas move <id> abandoned` |
 | "What ideas am I exploring?" | `clibo ideas list -s exploring` |
+| "What have I been sitting on?" | `clibo ideas stale` |
 
 ```bash
 clibo ideas pipeline --json
