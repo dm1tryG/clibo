@@ -4,6 +4,44 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `clibo stale` — cross-tool neglect aggregator · 2026-05-24
+
+Three iterations built per-tool stale views (`crm dormant`,
+`ideas stale`, `books stale`). This iter unifies them into one
+top-level command, mirroring how `clibo overdue` aggregates past-
+due items across many tools.
+
+- 🌫️ **`clibo stale [-d N]`** — single-screen view of everything
+  you've been neglecting. Pulls from:
+  - CRM: active contacts not touched in N days
+  - Ideas: open-status ideas (raw/exploring/validated) not updated
+  - Books: `reading`-status books with no session in N days
+- 📊 JSON shape: `{asof, days, total, by_source, items[]}`. `items`
+  is the flat list sorted most-stale-first; `by_source` groups
+  the same items for human-scanning.
+- 📦 New module `clibo/stale.py` (~150 lines) with `StaleItem` and
+  `StaleSnapshot` dataclasses. Each tool keeps its individual
+  command intact — this is purely additive.
+- 🎚️ Unified `--days` threshold (default 30) — each per-tool
+  command keeps its own default (CRM=90d, ideas=30d, books=14d)
+  for its own context, but the aggregator picks one number across
+  all three. Trades per-tool tuning for one mental model.
+- 🎤 NL flow verified across all three sources; empty state →
+  "Nothing's gone stale ✨".
+- 🧪 **13 new tests** in `tests/test_stale.py`: empty, each source
+  individually, exclusion of recent activity, sort order, threshold
+  filtering, non-active/non-open exclusions, validation, human view.
+- 📚 README updated — `clibo stale` row added next to `clibo overdue`.
+- **Tests:** 1,367 passing (+13); ruff clean.
+
+**Why this matters:** `overdue` and `stale` are now the two axes of
+neglect — "things past their deadline" and "things you stopped
+touching". Combined with the per-tool drill-downs (`crm dormant`,
+`ideas stale`, `books stale`), the user can move between
+suite-wide and tool-specific lenses without re-learning.
+
+---
+
 ### `clibo books stale` — books you're "reading" but aren't · 2026-05-24
 
 Continues the stale-data convention from the previous iter. The

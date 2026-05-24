@@ -209,6 +209,30 @@ def overdue(
     render_overdue(max_days=days, json_out=json_out)
 
 
+@app.command()
+def stale(
+    days: int = typer.Option(
+        30, "--days", "-d",
+        help="Threshold in days since last touch (default 30)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """🌫️  Everything you've been neglecting, across every tracker.
+
+    Sister to ``clibo overdue`` (past-due items) on the orthogonal
+    "haven't touched it recently" axis. Aggregates from CRM (active
+    contacts not touched), ideas (open-status not updated) and books
+    (reading-status without a recent session) — three domains that
+    previously had their own ``stale`` / ``dormant`` commands; this
+    is the unified cross-tool view.
+    """
+    from clibo.stale import render_stale
+    if days < 0:
+        from clibo.core.output import fail
+        fail("--days must be >= 0", json_out=json_out)
+    render_stale(days=days, json_out=json_out)
+
+
 from clibo.monthly import month_command  # noqa: E402
 
 app.command(name="month")(month_command)
