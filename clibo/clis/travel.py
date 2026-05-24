@@ -74,6 +74,46 @@ def _trip_spent(db, trip_id: int) -> float:
     return round(sum(r.cost for r in rows), 2)
 
 
+def _trip_status(start: date | None, end: date | None) -> str:
+    """Classify a trip's temporal status: ``upcoming`` / ``ongoing`` / ``ended`` / ``undated``."""
+    if start is None:
+        return "undated"
+    today = date.today()
+    if today < start:
+        return "upcoming"
+    if end is None:
+        # No end set — call it ongoing on the start day, ended after.
+        return "ongoing" if today == start else "ended"
+    if today <= end:
+        return "ongoing"
+    return "ended"
+
+
+def _trip_when(start: date | None, end: date | None) -> str | None:
+    """Human-readable temporal label that matches the trip's status.
+
+    Picks the right preposition / tense based on whether the trip is
+    upcoming, ongoing, or already ended. ``starts_in`` (kept for back-
+    compat) was always just ``humanize_delta(start_date)``, which read
+    wrong for past trips — "starts_in: 3d ago" is contradictory.
+    """
+    if start is None:
+        return None
+    today = date.today()
+    if today < start:
+        # humanize_delta already returns "in 3d" / "tomorrow" / "next week".
+        return humanize_delta(start)
+    if end is None:
+        if today == start:
+            return "today"
+        return f"ended {humanize_delta(start)}"
+    if today <= end:
+        day = (today - start).days + 1
+        total = (end - start).days + 1
+        return f"ongoing · day {day} of {total}"
+    return f"ended {humanize_delta(end)}"
+
+
 def _row(db, trip: Trip) -> dict:
     spent = _trip_spent(db, trip.id)
     return {
@@ -82,6 +122,9 @@ def _row(db, trip: Trip) -> dict:
         "destination": trip.destination,
         "start_date": trip.start_date,
         "end_date": trip.end_date,
+        "status": _trip_status(trip.start_date, trip.end_date),
+        "when": _trip_when(trip.start_date, trip.end_date),
+        # Kept for backward-compat with consumers reading v1.10.0 JSON shape.
         "starts_in": humanize_delta(trip.start_date) if trip.start_date else None,
         "budget": trip.budget,
         "spent": spent,
@@ -135,7 +178,7 @@ def list_trips(
     render_rows(
         rows,
         [("id", "ID"), ("name", "Trip"), ("destination", "Destination"),
-         ("start_date", "Start"), ("end_date", "End"), ("starts_in", "When"),
+         ("start_date", "Start"), ("end_date", "End"), ("when", "When"),
          ("budget", "Budget"), ("spent", "Spent")],
         json_out=json_out,
         title="✈️ Trips",
@@ -240,7 +283,7 @@ def upcoming(json_out: JsonOpt = False) -> None:
     render_rows(
         rows,
         [("name", "Trip"), ("destination", "Destination"),
-         ("start_date", "Starts"), ("starts_in", "When")],
+         ("start_date", "Starts"), ("when", "When")],
         json_out=json_out,
         title="🔔 Upcoming trips",
         empty="No upcoming trips planned.",

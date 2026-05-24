@@ -51,3 +51,57 @@ def test_stats_counts_days(cli):
     stats = cli.json("travel", "stats")
     assert stats["trips"] == 1
     assert stats["days_traveled"] == 3
+
+
+# ── status + when fields (iter 98) ──
+
+
+def test_upcoming_trip_status(cli):
+    data = cli.json("travel", "add", "NYC", "--start", "in 5 days",
+                    "--end", "in 10 days")
+    assert data["status"] == "upcoming"
+    assert "5d" in data["when"]
+    # starts_in kept for back-compat
+    assert "5d" in data["starts_in"]
+
+
+def test_ongoing_trip_status(cli):
+    data = cli.json("travel", "add", "Tokyo", "--start", "2 days ago",
+                    "--end", "in 2 days")
+    assert data["status"] == "ongoing"
+    # day-of-trip annotation
+    assert data["when"].startswith("ongoing · day")
+    assert "of 5" in data["when"]
+
+
+def test_ended_trip_status(cli):
+    data = cli.json("travel", "add", "Paris", "--start", "4 days ago",
+                    "--end", "yesterday")
+    assert data["status"] == "ended"
+    assert "ended" in data["when"]
+
+
+def test_undated_trip_status(cli):
+    data = cli.json("travel", "add", "Someday Mongolia")
+    assert data["status"] == "undated"
+    assert data["when"] is None
+    assert data["starts_in"] is None
+
+
+def test_trip_with_only_start_today_is_ongoing(cli):
+    """A trip with start=today and no end is ongoing on the first day."""
+    data = cli.json("travel", "add", "Day Trip", "--start", "today")
+    assert data["status"] == "ongoing"
+    assert data["when"] == "today"
+
+
+def test_trip_with_only_past_start_no_end_is_ended(cli):
+    data = cli.json("travel", "add", "Old Trip", "--start", "5 days ago")
+    assert data["status"] == "ended"
+    assert "ended" in data["when"]
+
+
+def test_starts_in_back_compat_preserved(cli):
+    """The old `starts_in` field still exists with its original semantics."""
+    data = cli.json("travel", "add", "Future", "--start", "in 3 days")
+    assert data["starts_in"] == "in 3d"

@@ -4,6 +4,55 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 98 — `travel` gains a proper `status` + `when` · 2026-05-24
+
+Agent-mode self-test on a past trip ("just got back from a 3-day
+Berlin trip") surfaced a small but real UX bug: the JSON output
+returned `"starts_in": "3d ago"` — `starts_in` implies future but
+the value is past. Contradictory.
+
+- 🆕 **`status` field** on every trip row: one of `upcoming`,
+  `ongoing`, `ended`, `undated`. Computed from `start_date` /
+  `end_date` vs today, so agents can branch on temporal state
+  without parsing prose.
+- 🆕 **`when` field** — tense-aware prose that matches the status:
+  • upcoming → `"in 5d"` / `"tomorrow"` (delegates to
+    `humanize_delta`)
+  • ongoing → `"ongoing · day 3 of 5"` (with explicit day-of-trip
+    counter — surprisingly useful for "how much of my vacation is
+    left?")
+  • ended → `"ended yesterday"` / `"ended 5d ago"`
+  • undated → `None`
+- 🛡 **`starts_in` kept for back-compat** — same value (raw
+  `humanize_delta`) it had in v1.10.0. Agents reading the old
+  shape continue to work; the new `status` + `when` are strict
+  additions. Field is documented in the source comments as
+  back-compat.
+- 📊 **Table rendering switched** from `starts_in` → `when` so the
+  human view reads correctly for past trips too. The column header
+  was always "When" — the change is invisible to humans, just
+  makes the displayed value match the column name.
+- 🎤 Verified end-to-end across all four cases:
+  • upcoming "NYC" in 5 days → `status=upcoming, when="in 5d"` ✓
+  • ongoing "Tokyo" 2d ago → in 2d → `status=ongoing,
+    when="ongoing · day 3 of 5"` ✓
+  • ended "Paris" 4d ago → yesterday → `status=ended,
+    when="ended yesterday"` ✓
+  • undated "Someday Mongolia" → both `None` ✓
+  • Edge: trip with `start=today` and no end → `status=ongoing`,
+    `when="today"` ✓
+  • Edge: past start with no end → `status=ended`, `when="ended N d ago"` ✓
+- 🧪 **7 new tests** pin every case: upcoming, ongoing (with
+  day-of-trip), ended, undated, today-only-start ongoing, past-
+  start-no-end ended, `starts_in` back-compat unchanged.
+- **Tests:** 948 passing (+7); ruff clean.
+
+Small polish, but it kills the contradictory `starts_in: 3d ago`
+output an agent could've been confused by — and the `status`
+enum lets future code switch on it without parsing English.
+
+---
+
 ### Iteration 97 — wire `writing` / `books-session` / `symptom` into search + checkin · 2026-05-24
 
 Iter 93/94/96 closed the today/week/month/recent gaps. This iter
