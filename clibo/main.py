@@ -234,6 +234,18 @@ def year(
 
 
 @app.command()
+def lifetime(json_out: JsonOpt = False) -> None:
+    """♾️  All-time totals across every tracker: how much have I done?
+
+    Same shape as ``clibo year`` but unbounded — total income/expenses,
+    total tasks done, total books finished, total mileage, total words
+    written, all-time weight range, lifetime gratitude count, etc.
+    """
+    from clibo.lifetime import render_lifetime
+    render_lifetime(json_out=json_out)
+
+
+@app.command()
 def compare(
     month_mode: bool = typer.Option(
         False, "--month",

@@ -159,6 +159,7 @@ A handful of root commands tie all 74 tools together:
 | `clibo week` | 7-day rollup: sleep, focus, mood, habits, expenses, journal — plus steps, workouts, caffeine, fasting, meditate, stretches, mileage, gratitude, donations. |
 | `clibo month [-y Y] [-m M]` | Calendar-month rollup: money-first (income vs expenses vs donations + net cash flow), then health & wellness, productivity, hobbies (books finished, films watched). |
 | `clibo year [-y Y]` | Calendar-year rollup: total income/expenses/donations + net cash flow, biggest spending month, tasks done, focus hours, books finished, writing words, workouts, sleep average, weight change. Sister to `today`/`week`/`month`. |
+| `clibo lifetime` | All-time totals across every tracker — total income/expenses earned/spent, all books finished, all words written, all mileage, weight range, years-since-first-log. The unbounded sister to `clibo year`. |
 | `clibo recent` | A chronological activity feed across every tool — newest first, with relative timestamps ("just now", "yesterday"). |
 | `clibo backup [PATH]` | Copy the local SQLite database to a timestamped `.db` backup (default: `~/.clibo/backups/`). |
 | `clibo restore PATH` | Replace the live database with a backup. |

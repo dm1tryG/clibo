@@ -4,6 +4,44 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `clibo lifetime` — the all-time companion to `clibo year` · 2026-05-24
+
+Natural next question after `clibo year` lands: *"and across all
+years?"* — total income earned, all books finished, all words
+written, all mileage covered, all-time weight range.
+
+- ♾️ **`clibo lifetime`** — same one-screen layout as `clibo year`,
+  unbounded. Four sections: money / productivity / hobbies / health.
+  Plus a `years_tracking` derived from the earliest log across
+  every dated table.
+- 📦 New module `clibo/lifetime.py` with `LifetimeSnapshot` dataclass
+  and `collect_lifetime`/`render_lifetime`. Mirrors yearly.py
+  structure (~280 lines) but with no date bounds on the queries.
+- 🎯 **Differences from `clibo year`**:
+  - `years_tracking` integer (years since the very first log)
+  - `weight_min` / `weight_max` (range, not change) — change is
+    a per-year concept, lifetime tracks the full envelope
+  - `weight_first` / `weight_last` still shown as a secondary line
+  - No `biggest_expense_month` (that's year-bounded by nature)
+- 🎤 NL flows verified:
+  • `clibo lifetime` → all-time totals + first-log anchor
+  • `clibo lifetime --json` → same shape for agents
+  • Empty install → graceful "nothing logged yet"
+- 🧪 **11 new tests** in `tests/test_lifetime.py`: empty-state,
+  money/productivity/hobbies/health aggregates, weight range,
+  earliest-log calculation, years_tracking, human view (empty
+  and populated), same-day-only edge case.
+- 📚 README updated — `clibo lifetime` row added under `clibo year`.
+- **Tests:** 1,302 passing (+11); ruff clean.
+
+**Why this matters:** the temporal vocabulary is now complete —
+*now* (today) → *near* (week / upcoming / overdue) → *month* →
+*year* → *lifetime*. Each scale uses the same one-screen layout
+and JSON shape conventions, so an agent (or human) can move
+between scopes without re-learning the output.
+
+---
+
 ### `compare --year-mode` — year-over-year comparison · 2026-05-24
 
 NL-probe gap: *"how does this year compare to last year?"* had no
