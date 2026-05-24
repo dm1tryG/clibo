@@ -46,7 +46,19 @@ class NetWorthSnapshot(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context) -> None:
+    """Default: ``clibo networth`` (bare) shows your net worth.
+
+    The natural agent / human flow for *"what's my net worth?"* is to
+    type ``clibo networth`` and get the answer, not a menu. Subcommands
+    are still available — ``add``, ``list``, ``snapshot``, etc.
+    """
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(worth, json_out=False)
 
 
 def _totals(db) -> tuple[float, float, float]:
@@ -154,7 +166,7 @@ def rm(item_id: int = typer.Argument(..., help="Item ID"), json_out: JsonOpt = F
 
 @app.command()
 def worth(json_out: JsonOpt = False) -> None:
-    """💰 Show your current net worth."""
+    """💰 Show your current net worth (also the default for bare ``clibo networth``)."""
     with session() as db:
         assets, liabilities, net = _totals(db)
         items = db.exec(select(NetWorthItem)).all()
@@ -171,6 +183,11 @@ def worth(json_out: JsonOpt = False) -> None:
     console.print("  " + "─" * 30)
     colour = "green" if net >= 0 else "red"
     console.print(f"  [bold]Net worth[/bold]     [bold {colour}]{money(net):>16}[/bold {colour}]\n")
+
+
+# Friendlier alias: agents naturally reach for `show` across the codebase
+# (films show, books show, crm show, …), so accept it here too.
+app.command(name="show", help="Alias for `worth` — show your current net worth")(worth)
 
 
 @app.command()

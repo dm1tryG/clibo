@@ -4,6 +4,47 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 103 — `clibo networth` (bare) shows the answer · 2026-05-24
+
+Agent-mode self-test on "What's my net worth?" caught a small but
+real friction: typing `clibo networth` returned **help text**, not
+the actual net worth. The right answer lived behind `clibo
+networth worth` — a verb name an agent (or human) wouldn't
+naturally reach for.
+
+- 🎯 **Bare `clibo networth` now runs `worth`.** Flipped
+  `no_args_is_help=False` and added an `@app.callback(
+  invoke_without_command=True)` that routes to `worth` when no
+  subcommand is given. The natural flow *"what's my net worth?"*
+  → `clibo networth` → instant answer.
+- 🎯 **New `show` alias** for `worth`. Agents who reach for the
+  `show` verb across the codebase (films show, books show, crm
+  show, …) now find it where they'd expect.
+- 🛡 **`--help` still works** — Typer's standard `--help` flag
+  is unaffected by the callback change, so the menu is one
+  flag away.
+- 🛡 **Other subcommands unchanged**: `add`, `list`, `update`,
+  `rm`, `snapshot`, `history` all work exactly as before. The
+  change is purely additive on the no-subcommand path.
+- 🎤 NL flow verified end-to-end with a seeded ledger ($10k
+  assets, $1.5k liabilities, $8.5k net):
+  • `clibo networth` (bare) → renders the summary ✓
+  • `clibo networth show --json` → `{net_worth: 8500, ...}` ✓
+  • `clibo networth worth` → identical to `show` ✓
+  • `clibo networth list` → table of assets+liabilities ✓
+  • `clibo networth --help` → menu ✓
+- 🧪 **4 new tests**: bare-command runs worth, show-alias equals
+  worth, show-alias with `--json`, help-still-works.
+- **Tests:** 991 passing (+4); ruff clean.
+
+Small surgical polish. The Typer `invoke_without_command` pattern
+is general — could apply to a couple of other tools where a single
+"summary" verb dominates, but `networth` is the clearest case
+because its summary is the **whole point** of having a net-worth
+tool.
+
+---
+
 ### Iteration 102 — `car drive` (business / personal / commute mileage) · 2026-05-24
 
 Agent-mode self-test on *"Drove 47 miles for the client meeting"*
