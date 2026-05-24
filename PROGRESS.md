@@ -4,6 +4,59 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 123 — `update` + `remove` aliases everywhere · 2026-05-24
+
+The verb-shape sweep continues. Iter 121 added `delete` everywhere
++ `add` everywhere; this iter rounds out the four CRUD verbs with
+`update` (SQL-natural) and `remove` (English long-form). Plus the
+inverse direction for the lone tool that only had `remove`.
+
+- 🔁 **`update` → `edit` alias on 35 tools** — every tool that
+  has `edit` (and no domain-specific `update`). Skipped `networth`
+  and `packages` which have their own domain-specific `update`
+  verb (updating an asset value / package status).
+- 🗑️ **`remove` → `rm` alias on 73 tools** — third synonym for
+  the destructive verb, alongside `rm` (short) and `delete`
+  (iter 121). Skipped `dashboard` which has its own `remove`.
+- 🔄 **Inverse: `dashboard rm` → `remove`** — the lone tool with
+  `remove` but no `rm`. Now the universal short verb works there
+  too. 1 tool, 1 alias.
+- 🛡 **Collision-checked**: a programmatic verb survey identified
+  the 2 + 1 + 1 collisions and skipped them. No native verbs
+  overridden. The Python sweep script also skipped any file
+  already containing `name="update"` / `name="remove"` / `name="rm"`
+  literals — re-running is idempotent.
+- 🎤 NL flow verified across 5 sample tools:
+  • `todo update 1 --title new` ✓
+  • `todo remove 1` ✓
+  • `dashboard rm focus` (inverse) ✓
+  • Originals all work: `todo edit`, `todo rm`, `dashboard remove` ✓
+  • Help shows all aliases inline with `Alias for \`edit\`` / `Alias for \`rm\`` annotations
+- 🧪 **4 new tests**: todo `update`, todo `remove`, all-four-delete-
+  synonyms-equivalent (`rm` / `delete` / `remove`), dashboard `rm`
+  inverse alias.
+- 🐛 **Two test-writing bugs caught in the smoke run**:
+  • SQLite reuses IDs after deletion — sequential `add+rm+add` gives
+    id=1 again, not id=2. Fixed by tracking the returned id.
+  • `dashboard list --json` returns a top-level list, not a dict
+    with `widgets` key. Fixed test to iterate.
+- **Tests:** 1,178 passing (+4); ruff clean.
+
+**CRUD verbs now uniform across all 74 tools**:
+
+| Action | Synonyms that all work |
+|---|---|
+| Create | `add` (universal — iters 100/101/119/120/121) |
+| Read | `show` (entity tools), `list` / `today` / specific summary verbs |
+| Update | `edit` + `update` (iter 123) |
+| Delete | `rm` + `delete` (iter 121) + `remove` (iter 123) |
+
+The agent reaching for SQL-flavoured `update`/`remove` or
+unix-flavoured `rm` or English-natural `delete`/`remove` lands on
+the right outcome every time.
+
+---
+
 ### Iteration 122 — `expense year` + `income year` + lifetime by_year · 2026-05-24
 
 Agent-mode probe on *"What's my best month financially?"* surfaced

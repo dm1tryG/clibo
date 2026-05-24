@@ -54,3 +54,18 @@ def test_list_marks_active(cli):
     by = {r["name"]: r for r in rows}
     assert by["tasks"]["active"] is True
     assert by["sleep"]["active"] is False
+
+
+# ── dashboard rm alias for remove (iter 123) ──
+
+
+def test_dashboard_rm_alias_works(cli):
+    """`dashboard rm` is the universal short verb across clibo."""
+    cli.run("dashboard", "add", "focus")
+    result = cli.run("dashboard", "rm", "focus")
+    assert result.exit_code == 0
+    # `dashboard list --json` returns a list of widget dicts with name+active
+    widgets = cli.json("dashboard", "list")
+    focus_row = next((w for w in widgets if w["name"] == "focus"), None)
+    # Either removed entirely or marked inactive — both are valid removal.
+    assert focus_row is None or focus_row["active"] is False

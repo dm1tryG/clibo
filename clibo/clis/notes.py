@@ -215,3 +215,10 @@ def stats(json_out: JsonOpt = False) -> None:
 
 # `delete` is an English-natural synonym for `rm`; both work.
 app.command(name="delete", help="Alias for `rm`")(rm)
+
+
+# `update` is the SQL-natural synonym for `edit`; both work.
+app.command(name="update", help="Alias for `edit`")(edit)
+
+# `remove` is the English-long-form synonym for `rm`/`delete`; all three work.
+app.command(name="remove", help="Alias for `rm`")(rm)

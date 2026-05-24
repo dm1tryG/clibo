@@ -179,3 +179,7 @@ def stats(
 
 # `delete` is an English-natural synonym for `rm`; both work.
 app.command(name="delete", help="Alias for `rm`")(rm)
+
+
+# `remove` is the English-long-form synonym for `rm`/`delete`; all three work.
+app.command(name="remove", help="Alias for `rm`")(rm)

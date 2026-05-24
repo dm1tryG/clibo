@@ -159,3 +159,7 @@ def clear(json_out: JsonOpt = False) -> None:
     """🎛️ Remove every widget — dashboard becomes blank."""
     _save([])
     ok("Dashboard cleared — no widgets enabled.", json_out=json_out, data={"widgets": []})
+
+
+# `rm` is the universal short verb across clibo; aliased to local `remove`.
+app.command(name="rm", help="Alias for `remove`")(remove)

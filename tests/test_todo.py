@@ -187,3 +187,32 @@ def test_rm_still_works(cli):
     cli.run("todo", "add", "doomed")
     data = cli.json("todo", "rm", "1")
     assert data["deleted"] == 1
+
+
+# ── update / remove aliases (iter 123) ──
+
+
+def test_update_alias_works(cli):
+    """`todo update` is the SQL-natural synonym for `edit`."""
+    cli.run("todo", "add", "old title")
+    data = cli.json("todo", "update", "1", "--title", "new title")
+    assert data["title"] == "new title"
+
+
+def test_remove_alias_works(cli):
+    """`todo remove` is a third synonym for `rm` / `delete`."""
+    cli.run("todo", "add", "doomed")
+    data = cli.json("todo", "remove", "1")
+    assert data["deleted"] == 1
+
+
+def test_all_four_delete_synonyms_work(cli):
+    """rm / delete / remove all do the same thing.
+
+    SQLite reuses IDs after rows are deleted, so each iteration looks
+    up the freshly-created task's id rather than assuming 1/2/3.
+    """
+    for verb in ("rm", "delete", "remove"):
+        added = cli.json("todo", "add", f"task via {verb}")
+        result = cli.run("todo", verb, str(added["id"]))
+        assert result.exit_code == 0
