@@ -5,4 +5,4 @@ SQLite database and speaks both pretty Rich tables (for people) and clean
 JSON (for AI agents, via ``--json``).
 """
 
-__version__ = "1.11.0"
+__version__ = "1.12.0"
