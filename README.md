@@ -155,6 +155,7 @@ A handful of root commands tie all 74 tools together:
 | `clibo init` | Set common defaults in one call — currency, height (for BMI), calorie/water/focus/sleep/meditation goals. |
 | `clibo today` | One-screen dashboard pulling from every tool — tasks, habits, meals, events, bills, plus mood, steps, workouts, caffeine, fasting clock, pending challenge check-ins, late packages, and documents expiring soon. |
 | `clibo upcoming [-d N]` (alias `agenda`) | What's on your plate over the next N days (default 7) — tasks, bills, events, follow-ups, birthdays, chores, packages, document expiry. Grouped by date. |
+| `clibo overdue [-d N]` | Everything that's already slipped — past-due tasks, unpaid bills past due, missed follow-ups, late chores, expired documents, undelivered packages. Most-overdue first. |
 | `clibo week` | 7-day rollup: sleep, focus, mood, habits, expenses, journal — plus steps, workouts, caffeine, fasting, meditate, stretches, mileage, gratitude, donations. |
 | `clibo month [-y Y] [-m M]` | Calendar-month rollup: money-first (income vs expenses vs donations + net cash flow), then health & wellness, productivity, hobbies (books finished, films watched). |
 | `clibo recent` | A chronological activity feed across every tool — newest first, with relative timestamps ("just now", "yesterday"). |

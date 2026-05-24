@@ -187,6 +187,28 @@ def upcoming(
 app.command(name="agenda", help="Alias for `upcoming`")(upcoming)
 
 
+@app.command()
+def overdue(
+    days: int = typer.Option(
+        None, "--days", "-d",
+        help="Only show items overdue by no more than N days "
+             "(default: all overdue, regardless of age)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """⚠ Everything that's already slipped, grouped by kind.
+
+    The retrospective companion to ``clibo upcoming``: pulls every
+    past-due item across tasks, bills, follow-ups, chores, document
+    expiry and undelivered packages. Most-overdue first.
+    """
+    from clibo.overdue import render_overdue
+    if days is not None and days < 0:
+        from clibo.core.output import fail
+        fail("--days must be >= 0", json_out=json_out)
+    render_overdue(max_days=days, json_out=json_out)
+
+
 from clibo.monthly import month_command  # noqa: E402
 
 app.command(name="month")(month_command)

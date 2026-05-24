@@ -4,6 +4,41 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 128 — `clibo overdue`: everything that already slipped · 2026-05-24
+
+The retrospective companion to iter 127's `upcoming`. NL-probe
+*"show me everything overdue across all tools"* had no single
+answer — overdue data lived as a flag inside `today`'s tasks,
+bills and follow-ups, but never surfaced as one view.
+
+- ⚠ **`clibo overdue [-d N]`** — past-due items pulled from
+  tasks (not done), bills (unpaid), follow-ups (not done),
+  chores (next-due in the past), documents (already expired)
+  and packages (expected, not received, late). Sorted
+  most-overdue first. `--days N` narrows to "what slipped in
+  the last N days?".
+- 📦 New module `clibo/overdue.py` mirroring `upcoming.py`:
+  `OverdueItem` and `OverdueSnapshot` dataclasses. JSON shape:
+  `asof`, `max_days`, `total`, `by_kind` (dict), `items[]` (sorted).
+- 🎤 NL flow verified:
+  • `clibo overdue` → all-time backlog grouped by kind
+  • `clibo overdue --days 3` → just last-3-day slips
+  • Empty state → "Nothing's overdue. Solid. ✨"
+- 🧪 **14 new tests** in `tests/test_overdue.py`: empty state,
+  task/bill/followup/chore collection, exclude-done/paid,
+  exclude-future/today, sort order, `--days` filter, by_kind
+  grouping, validation, human-view smoke.
+- 📚 README updated — `clibo overdue` row added under `upcoming`.
+- **Tests:** 1,228 passing (+14); ruff clean.
+
+**Why this matters:** the temporal trio is now four-way symmetric —
+*past performance* (`week`), *now* (`today`), *near future*
+(`upcoming`), *missed past* (`overdue`). The same data the
+dashboard already collects, with each lens as a first-class
+top-level command.
+
+---
+
 ### Iteration 127 — `clibo upcoming` / `agenda`: the next-N-days view · 2026-05-24
 
 NL-probe friction: *"What's coming up this week?"* had no answer.
