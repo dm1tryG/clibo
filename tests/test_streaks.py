@@ -76,3 +76,18 @@ def test_streaks_steps_no_streak_when_below_goal(cli):
     data = cli.json("streaks")
     steps = [r for r in data["streaks"] if r["source"] == "steps"]
     assert steps == []  # no streak surfaced
+
+
+# ── workout added to the streaks aggregator (iter 112) ──
+
+
+def test_streaks_includes_workout(cli):
+    """`clibo streaks` now surfaces workout streak alongside habits/gratitude."""
+    cli.run("workout", "log", "squat", "-s", "5", "-r", "5", "-w", "100")
+    cli.run("workout", "log", "bench", "-d", "yesterday")
+    data = cli.json("streaks")
+    sources = [s["source"] for s in data["streaks"]]
+    assert "workout" in sources
+    workout_row = next(s for s in data["streaks"] if s["source"] == "workout")
+    assert workout_row["current"] == 2
+    assert workout_row["name"] == "Workout days"

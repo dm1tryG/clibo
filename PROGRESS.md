@@ -4,6 +4,50 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 112 — `workout streak` + aggregator inclusion · 2026-05-24
+
+Agent-mode probe on *"How many days in a row have I logged
+workouts?"* surfaced two related gaps:
+
+1. **`workout` had no `streak` subcommand.** Gratitude, writing,
+   habit, fasting all do — but a daily exerciser asking the same
+   question got no direct answer.
+2. **The top-level `clibo streaks` view didn't include workout.**
+   It covers habits/gratitude/steps/fasting/challenges; workout
+   (along with mileage/writing/meditate/stretches) was invisible
+   there too.
+
+- 🔥 **New `workout streak`** subcommand. Returns
+  `{current_streak, longest_streak, days_logged}` via `--json`;
+  rendered as `🏋️ Workout streak: 3 days 🔥🔥🔥 (longest ever: 3)`.
+  Same shape as gratitude / writing streak. Today counts if
+  logged; otherwise anchors at yesterday so the streak doesn't
+  reset just because today isn't done yet.
+- 📊 **Top-level `clibo streaks`** now includes a 🏋️ Workout days
+  row alongside the existing 🔥 habits, 🙏 gratitude, 👟 steps,
+  🕒 fasting, 🚀 challenges. Same `StreakRow` shape; sorted with
+  the rest by current-desc then longest-desc.
+- 🛡 **De-dup'd same-day sessions** — two workouts logged on the
+  same day count as one streak day (not two). Pinned by a test.
+- 🎤 NL flow verified:
+  • Empty DB → `current_streak=0, longest_streak=0, days_logged=0` ✓
+  • Three consecutive days → `current=3, longest=3, days_logged=3` ✓
+  • Gap case (today + 3-5 days ago) → `current=1, longest=3` ✓
+  • Same-day double-session → `days_logged=2 (not 3)` for 2 days ✓
+  • Yesterday-only → `current=1` (doesn't reset until end of today) ✓
+  • Top-level `streaks` → includes a workout row ✓
+- 🧪 **6 new tests**: 5 on `workout streak` (empty, consecutive,
+  gap, same-day dedup, yesterday-only-still-current), 1 on the
+  aggregator picking up workout.
+- **Tests:** 1,094 passing (+6); ruff clean.
+
+The streak family of tools — gratitude, writing, habit, fasting,
+challenge, steps, and now workout — all answer the *"how many
+days in a row?"* question in a uniform shape. Mileage, meditate,
+and stretches are the remaining candidates if the demand surfaces.
+
+---
+
 ### Iteration 111 — `calorie today` gains per-meal subtotals + `--meal` filter · 2026-05-24
 
 Agent-mode probe on *"How many calories did I have for breakfast

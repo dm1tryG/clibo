@@ -177,3 +177,54 @@ def test_workout_help_still_works(cli):
     result = cli.run("workout", "--help")
     assert result.exit_code == 0
     assert "today" in result.stdout
+
+
+# ── streak subcommand (iter 112) ──
+
+
+def test_streak_empty(cli):
+    data = cli.json("workout", "streak")
+    assert data["current_streak"] == 0
+    assert data["longest_streak"] == 0
+    assert data["days_logged"] == 0
+
+
+def test_streak_counts_consecutive_days(cli):
+    cli.run("workout", "log", "squat", "-s", "5", "-r", "5", "-w", "100")
+    cli.run("workout", "log", "bench", "-s", "5", "-r", "5", "-w", "70",
+            "-d", "yesterday")
+    cli.run("workout", "log", "deadlift", "-s", "5", "-r", "5", "-w", "100",
+            "-d", "2 days ago")
+    data = cli.json("workout", "streak")
+    assert data["current_streak"] == 3
+    assert data["longest_streak"] == 3
+    assert data["days_logged"] == 3
+
+
+def test_streak_breaks_with_gap(cli):
+    """Today logged, but 3 days ago — only today counts as the current streak."""
+    cli.run("workout", "log", "x")
+    cli.run("workout", "log", "y", "-d", "3 days ago")
+    cli.run("workout", "log", "z", "-d", "4 days ago")
+    cli.run("workout", "log", "w", "-d", "5 days ago")
+    data = cli.json("workout", "streak")
+    assert data["current_streak"] == 1
+    assert data["longest_streak"] == 3
+    assert data["days_logged"] == 4
+
+
+def test_streak_multiple_sessions_same_day_count_as_one(cli):
+    """Two workouts on the same day don't inflate the streak."""
+    cli.run("workout", "log", "squat", "-s", "5", "-r", "5", "-w", "100")
+    cli.run("workout", "log", "bench", "-s", "5", "-r", "5", "-w", "70")
+    cli.run("workout", "log", "row", "-d", "yesterday")
+    data = cli.json("workout", "streak")
+    assert data["current_streak"] == 2
+    assert data["days_logged"] == 2  # 2 days, not 3 sessions
+
+
+def test_streak_yesterday_only_still_current(cli):
+    """Yesterday logged but not today → still counts as a current 1-day streak."""
+    cli.run("workout", "log", "x", "-d", "yesterday")
+    data = cli.json("workout", "streak")
+    assert data["current_streak"] == 1

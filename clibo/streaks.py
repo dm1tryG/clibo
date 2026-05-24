@@ -19,6 +19,7 @@ from clibo.clis.gratitude import GratitudeEntry
 from clibo.clis.habit import Habit, HabitCheck, _longest_streak, _streak
 from clibo.clis.steps import StepEntry
 from clibo.clis.steps import _streak as _steps_streak
+from clibo.clis.workout import Workout
 from clibo.core.db import session
 from clibo.core.output import _emit_json, console
 from clibo.core.settings import get_setting
@@ -105,6 +106,20 @@ def collect_streaks() -> list[StreakRow]:
                     name="Step goal",
                     current=current, longest=longest,
                     note=f"goal {steps_goal:,}/day",
+                ))
+
+        # 🏋️ Workout — consecutive days with any workout logged.
+        workout_dates = {
+            w.entry_date for w in db.exec(select(Workout)).all()
+        }
+        if workout_dates:
+            w_current = _streak(workout_dates)
+            w_longest = _longest_consecutive(workout_dates)
+            if w_current or w_longest:
+                rows.append(StreakRow(
+                    source="workout", emoji="🏋️",
+                    name="Workout days",
+                    current=w_current, longest=w_longest,
                 ))
 
         # 🕒 Fasting — consecutive completed fasts (each ≥ target) by start date.
