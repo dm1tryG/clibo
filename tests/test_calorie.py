@@ -58,3 +58,72 @@ def test_calorie_help_still_works(cli):
     result = cli.run("calorie", "--help")
     assert result.exit_code == 0
     assert "today" in result.stdout
+
+
+# ── per-meal filter + by_meal subtotals (iter 111) ──
+
+
+def test_today_includes_by_meal_subtotals(cli):
+    """JSON exposes per-meal subtotals + counts."""
+    cli.run("calorie", "log", "oats", "-k", "320", "-m", "breakfast")
+    cli.run("calorie", "log", "coffee", "-k", "5", "-m", "breakfast")
+    cli.run("calorie", "log", "salad", "-k", "520", "-m", "lunch")
+    data = cli.json("calorie", "today")
+    by_meal = data["by_meal"]
+    assert by_meal["breakfast"]["kcal"] == 325
+    assert by_meal["breakfast"]["count"] == 2
+    assert by_meal["lunch"]["kcal"] == 520
+    assert by_meal["lunch"]["count"] == 1
+
+
+def test_today_by_meal_omits_meals_with_no_entries(cli):
+    """Empty meals don't pollute the by_meal dict."""
+    cli.run("calorie", "log", "salad", "-k", "300", "-m", "lunch")
+    data = cli.json("calorie", "today")
+    assert "lunch" in data["by_meal"]
+    assert "breakfast" not in data["by_meal"]
+    assert "dinner" not in data["by_meal"]
+
+
+def test_today_filter_by_meal(cli):
+    """--meal scopes entries + totals to one meal."""
+    cli.run("calorie", "log", "oats", "-k", "320", "-m", "breakfast")
+    cli.run("calorie", "log", "salad", "-k", "520", "-m", "lunch")
+    data = cli.json("calorie", "today", "-m", "breakfast")
+    assert data["filter_meal"] == "breakfast"
+    assert data["totals"]["kcal"] == 320
+    assert len(data["entries"]) == 1
+    assert data["entries"][0]["meal"] == "breakfast"
+
+
+def test_today_filter_preserves_by_meal_subtotals(cli):
+    """`by_meal` is the full per-meal view even when filtering."""
+    cli.run("calorie", "log", "oats", "-k", "320", "-m", "breakfast")
+    cli.run("calorie", "log", "salad", "-k", "520", "-m", "lunch")
+    data = cli.json("calorie", "today", "-m", "breakfast")
+    # filter_meal scopes entries/totals; by_meal stays complete.
+    assert set(data["by_meal"].keys()) == {"breakfast", "lunch"}
+    assert data["by_meal"]["lunch"]["kcal"] == 520
+
+
+def test_today_bad_meal_filter_fails(cli):
+    result = cli.run("calorie", "today", "-m", "supper")
+    assert result.exit_code != 0
+
+
+def test_today_filter_with_no_match_returns_empty(cli):
+    """Filtering for a meal that has no entries today gives an empty result."""
+    cli.run("calorie", "log", "oats", "-k", "320", "-m", "breakfast")
+    data = cli.json("calorie", "today", "-m", "dinner")
+    assert data["entries"] == []
+    assert data["totals"]["kcal"] == 0
+    # by_meal still has breakfast since that's logged
+    assert "breakfast" in data["by_meal"]
+
+
+def test_today_bare_still_works(cli):
+    """The bare-command pattern from iter 105 still works."""
+    cli.run("calorie", "log", "oats", "-k", "320", "-m", "breakfast")
+    result = cli.run("calorie")
+    assert result.exit_code == 0
+    assert "320" in result.stdout or "oats" in result.stdout

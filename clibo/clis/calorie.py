@@ -55,7 +55,9 @@ app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
 def _default(ctx: typer.Context) -> None:
     """Default: ``clibo calorie`` (bare) shows today's food log + macros."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(today, json_out=False)
+        # Explicit `meal=None` so ctx.invoke doesn't forward Typer's
+        # OptionInfo sentinel for the new --meal flag (iter 111).
+        ctx.invoke(today, meal=None, json_out=False)
 
 
 def _row(entry: CalorieEntry) -> dict:
@@ -122,8 +124,22 @@ app.command(name="add", help="Alias for `log`")(log)
 
 
 @app.command()
-def today(json_out: JsonOpt = False) -> None:
-    """🍎 Show today's food log with calorie & macro totals."""
+def today(
+    meal: str = typer.Option(
+        None, "--meal", "-m",
+        help=f"Filter to one meal: {' / '.join(MEALS)}",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """🍎 Show today's food log with calorie & macro totals.
+
+    Pass ``--meal breakfast`` (or ``-m breakfast``) to scope the view to
+    a single meal — answers questions like "how many calories for
+    breakfast today?" without post-processing. The ``by_meal`` block in
+    JSON output gives per-meal subtotals regardless of the filter.
+    """
+    if meal and meal.lower() not in MEALS:
+        fail(f"Meal must be one of: {', '.join(MEALS)}", json_out=json_out)
     day = date.today()
     with session() as db:
         entries = list(
@@ -133,6 +149,19 @@ def today(json_out: JsonOpt = False) -> None:
                 .order_by(CalorieEntry.created_at)
             ).all()
         )
+    # Compute per-meal subtotals on the unfiltered set, so the JSON
+    # `by_meal` is always complete (agents can read across meals even
+    # when --meal is set).
+    by_meal_subtotals = {
+        m: _totals([e for e in entries if e.meal == m])
+        | {"count": sum(1 for e in entries if e.meal == m)}
+        for m in MEALS
+        if any(e.meal == m for e in entries)
+    }
+    # Apply the filter for the rendered/returned entries + totals.
+    if meal:
+        meal_lower = meal.lower()
+        entries = [e for e in entries if e.meal == meal_lower]
     entries.sort(key=lambda e: MEALS.index(e.meal) if e.meal in MEALS else 99)
     rows = [_row(e) for e in entries]
     totals = _totals(entries)
@@ -140,29 +169,41 @@ def today(json_out: JsonOpt = False) -> None:
 
     if json_out:
         render_record(
-            {"date": day, "entries": rows, "totals": totals, "goal_kcal": goal},
+            {"date": day, "entries": rows, "totals": totals,
+             "by_meal": by_meal_subtotals,
+             "filter_meal": meal.lower() if meal else None,
+             "goal_kcal": goal},
             json_out=True,
         )
         return
 
+    title_suffix = f" · {meal.lower()}" if meal else ""
     render_rows(
         rows,
         [("meal", "Meal"), ("food", "Food"), ("kcal", "Kcal"),
          ("protein", "P·g"), ("carbs", "C·g"), ("fat", "F·g")],
         json_out=False,
-        title=f"🍎 Food log · {day:%a %d %b}",
+        title=f"🍎 Food log · {day:%a %d %b}{title_suffix}",
         empty="No food logged today — add one with: clibo calorie log \"...\" -k 300",
     )
     summary = (
         f"🔥 [bold]{totals['kcal']}[/bold] kcal    "
         f"🥩 {totals['protein']:g}g    🍚 {totals['carbs']:g}g    🧈 {totals['fat']:g}g"
     )
-    if goal:
+    if goal and not meal:
         summary += (
             f"\n🎯 {bar(totals['kcal'], goal)}  "
             f"[dim]{totals['kcal']}/{goal} kcal[/dim]"
         )
     console.print(summary)
+    # Per-meal subtotal line (skipped when filtering — the totals line already
+    # is the per-meal view).
+    if not meal and len(by_meal_subtotals) > 1:
+        parts = [
+            f"  [dim]{m}[/dim] {by_meal_subtotals[m]['kcal']}"
+            for m in MEALS if m in by_meal_subtotals
+        ]
+        console.print("  " + "   ·   ".join(parts))
 
 
 @app.command(name="list")

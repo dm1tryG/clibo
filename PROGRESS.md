@@ -4,6 +4,50 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 111 — `calorie today` gains per-meal subtotals + `--meal` filter · 2026-05-24
+
+Agent-mode probe on *"How many calories did I have for breakfast
+today?"* surfaced a small but real gap. `calorie today` returned
+day-wide totals and a flat entries list — no per-meal subtotals,
+no way to scope to one meal. The agent had to filter JSON
+client-side or remember `calorie list -m breakfast -d today`.
+
+- 🆕 **`by_meal` subtotals** in `calorie today --json`. Always
+  populated (regardless of any filter), keyed by meal, includes
+  `kcal/protein/carbs/fat/count`. Empty meals are omitted —
+  no noise. Answers *"calories for breakfast today?"* in one
+  field: `d["by_meal"]["breakfast"]["kcal"]`.
+- 🆕 **`--meal/-m MEAL` filter on `calorie today`**. Scopes
+  entries + totals to a single meal. The JSON's `filter_meal`
+  field surfaces what was filtered for round-trip consistency.
+  `by_meal` stays complete — agents can still see the rest.
+- 🎨 **Human view** — when no filter is applied (or there are
+  ≥2 meals logged), a per-meal subtotal line appears under
+  the kcal total: `breakfast 325 · lunch 520 · snack 230`.
+  With `--meal`, the title gets a suffix (`Food log · Sat 24 May
+  · breakfast`) and the subtotal line is skipped.
+- 🛡 **Sentinel-bug avoidance** — the bare-command callback from
+  iter 105 was `ctx.invoke(today, json_out=False)`, which under
+  the new `--meal` parameter would have forwarded a Typer
+  `OptionInfo` sentinel. Updated to
+  `ctx.invoke(today, meal=None, json_out=False)`.
+- 🎤 NL flow verified end-to-end:
+  • `calorie today -m breakfast --json` → entries=2, totals.kcal=325,
+    filter_meal="breakfast", full by_meal preserved ✓
+  • `calorie today` (bare via iter 105) → rendered + per-meal
+    line "breakfast 325 · lunch 520 · snack 230" ✓
+  • `calorie today -m supper` → friendly "Meal must be one of: …" ✓
+- 🧪 **7 new tests**: by_meal shape + counts, empty-meals omitted,
+  --meal scopes entries + totals, by_meal preserved during filter,
+  bad meal rejected, no-match filter returns empty cleanly, bare
+  command still works (iter-105 regression).
+- **Tests:** 1,088 passing (+7); ruff clean.
+
+Small but real polish: the agent's natural breakfast-calorie ask
+now lands on a direct field in the JSON or a one-flag CLI invocation.
+
+---
+
 ### Iteration 110 — bare-command default on 4 entity tools (pipeline / upcoming / due) · 2026-05-24
 
 Agent-mode self-test on three entity-tool questions — *"What books
