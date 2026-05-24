@@ -4,6 +4,29 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `writing today` + `caffeine today`: remaining + pct fields · 2026-05-24
+
+Two more daily-goal tools picked up the same derived-signal shape.
+The daily-goal contract is now uniform across all 7 tools.
+
+- ✍️ **`writing today`** gains `remaining_words` (floored at 0)
+  and `pct_of_goal` — target semantics, like water/focus/steps/
+  meditate. `reached` now defaults to False when no goal (was
+  always True before).
+- ☕ **`caffeine today`** gains `remaining_mg` (signed, negative
+  when over the limit) and `pct_of_limit` — cap semantics, like
+  calorie. All three signal fields null when `daily_limit_mg == 0`.
+- 🧪 **4 new tests**: under-goal/over-goal shapes for writing,
+  under-limit/over-limit shapes for caffeine.
+- **Tests:** 1,396 passing (+4); ruff clean.
+
+**Why this matters:** the derived-signal pattern is now consistent
+across every daily-goal tool — 5 target-type (water / focus / steps
+/ meditate / writing) and 2 cap-type (calorie / caffeine). Same
+mental model for an agent rendering progress.
+
+---
+
 ### `water/focus/steps/meditate today`: remaining + pct_of_goal · 2026-05-24
 
 Symmetry with last iter's calorie budget fields. The four target-

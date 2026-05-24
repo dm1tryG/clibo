@@ -194,13 +194,17 @@ def today(json_out: JsonOpt = False) -> None:
         for p, w in sorted(by_project.items(), key=lambda kv: -kv[1])
     ]
     streak = _streak(all_days)
+    remaining_words = max(0, goal - total) if goal > 0 else None
+    pct_of_goal = round(total / goal * 100, 1) if goal > 0 else None
     if json_out:
         render_record(
             {
                 "date": day,
                 "total_words": total,
                 "goal_words": goal,
-                "reached": total >= goal,
+                "reached": total >= goal if goal > 0 else False,
+                "remaining_words": remaining_words,
+                "pct_of_goal": pct_of_goal,
                 "sessions": len(entries),
                 "by_project": by_project_rows,
                 "current_streak": streak,

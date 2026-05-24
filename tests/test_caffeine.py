@@ -191,3 +191,24 @@ def test_caffeine_help_still_works(cli):
     assert result.exit_code == 0
     assert "log" in result.stdout
     assert "today" in result.stdout
+
+
+# ── caffeine today: remaining_mg + pct_of_limit ──
+
+
+def test_caffeine_today_under_limit(cli):
+    cli.run("caffeine", "log", "Espresso", "-m", "75")
+    data = cli.json("caffeine", "today")
+    assert data["total_mg"] == 75
+    assert data["daily_limit_mg"] == 400
+    assert data["over_limit"] is False
+    assert data["remaining_mg"] == 325
+    assert data["pct_of_limit"] == 18.8
+
+
+def test_caffeine_today_over_limit(cli):
+    cli.run("caffeine", "log", "Coffee", "-m", "500")
+    data = cli.json("caffeine", "today")
+    assert data["over_limit"] is True
+    assert data["remaining_mg"] == -100
+    assert data["pct_of_limit"] == 125.0

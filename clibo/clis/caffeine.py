@@ -226,6 +226,16 @@ def today(json_out: JsonOpt = False) -> None:
         )
     total = sum(e.mg for e in entries)
     residual, bedtime_dt = _todays_residual_at_bedtime()
+    # Cap-aware signals (analog to calorie): remaining is signed
+    # (negative when over the daily limit), pct_of_limit rolls past 100.
+    if limit > 0:
+        over_limit = total > limit
+        remaining_mg = limit - total
+        pct_of_limit = round(total / limit * 100, 1)
+    else:
+        over_limit = None
+        remaining_mg = None
+        pct_of_limit = None
     if json_out:
         render_record(
             {
@@ -233,7 +243,9 @@ def today(json_out: JsonOpt = False) -> None:
                 "drinks": len(entries),
                 "total_mg": total,
                 "daily_limit_mg": limit,
-                "over_limit": total > limit,
+                "over_limit": over_limit,
+                "remaining_mg": remaining_mg,
+                "pct_of_limit": pct_of_limit,
                 "residual_at_bedtime_mg": residual,
                 "bedtime": bedtime_dt.isoformat(),
                 "entries": [_row(e) for e in entries],

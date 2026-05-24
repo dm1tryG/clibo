@@ -255,3 +255,24 @@ def test_writing_stats_best_session_null_when_no_sessions(cli):
     # we'll trust the safe-default code (None) instead of constructing
     # an empty window here. The empty-state was covered by the existing
     # `best_day is None` test.
+
+
+# ── writing today: remaining_words + pct_of_goal ──
+
+
+def test_writing_today_remaining_and_pct(cli):
+    cli.run("writing", "log", "novel", "-w", "200")
+    data = cli.json("writing", "today")
+    assert data["total_words"] == 200
+    assert data["goal_words"] == 500
+    assert data["remaining_words"] == 300
+    assert data["pct_of_goal"] == 40.0
+    assert data["reached"] is False
+
+
+def test_writing_today_remaining_floors_at_zero(cli):
+    cli.run("writing", "log", "novel", "-w", "600")
+    data = cli.json("writing", "today")
+    assert data["remaining_words"] == 0
+    assert data["reached"] is True
+    assert data["pct_of_goal"] == 120.0
