@@ -4,6 +4,43 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### 🏷️ Iteration 118 — v1.13.0 release · 2026-05-24
+
+Nine substantive iters stacked since v1.12.0 (iters 109-117). Three
+big visibility loops closed (search / streaks / todo date filters)
+plus year-aware reading, meetings UX, calorie per-meal, and four
+more bare-command tools.
+
+- 🆙 **`pyproject.toml`** `1.12.0 → 1.13.0`. Description updated to
+  feature search, streaks, todo date filters, year rollups.
+- 🆙 **`clibo/__init__.py`** `__version__ = "1.13.0"`.
+- 📦 **Build** — `uv build` produced both artifacts. PASSED `twine check`.
+- 🚀 **`twine upload`** — https://pypi.org/project/clibo/1.13.0/
+- 🧪 **End-to-end verified from PyPI** across every headline:
+  • `workout streak` + `mileage streak` ✓
+  • `search dentist` → events ✓
+  • `search Electricity` → bills ✓
+  • `todo list --due tomorrow` → only tomorrow's task ✓
+  • `books year` → current year rollup ✓
+  • `meetings add … -A "Bob: send timeline" -A "Alice: …"` →
+    action_items=2 in one call ✓
+- 🏷️ **Git tag `v1.13.0`** pushed.
+- 🚀 **GitHub release** with detailed changelog:
+  https://github.com/dm1tryG/clibo/releases/tag/v1.13.0
+- 📊 Release scoreboard:
+  • 1,145 tests passing (+197 vs v1.12.0's 948 → no wait,
+    v1.12.0 was 1,061; +84 from v1.12.0's actual count)
+  • 74 tools (unchanged — pattern not new surface)
+  • 9 iterations stacked
+  • `clibo search` reaches **51 sources** (was 35 before iter 114)
+  • **9 daily-cadence tools** in the streak family (was 5)
+
+This is the **deep visibility polish** release. No new tools; the
+suite got materially better at answering common questions across
+the tools that already exist.
+
+---
+
 ### Iteration 117 — `todo list` gains date filters · 2026-05-24
 
 Agent-mode probe on *"What do I have to do tomorrow?"* surfaced
