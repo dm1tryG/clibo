@@ -4,6 +4,63 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 102 — `car drive` (business / personal / commute mileage) · 2026-05-24
+
+Agent-mode self-test on *"Drove 47 miles for the client meeting"*
+caught a real gap. `mileage` is explicitly athletic
+(run/walk/cycle/hike/swim). `car` has `fuel` + `service` but no
+**trip log** — so business mileage (typically tax-deductible) and
+commute tracking had no home.
+
+- 🆕 **New `CarDrive` table** — separate from `CarEntry` because
+  the column shape is different. Fields: `purpose`,
+  `distance_km`, `category`, `odometer_start`/`end`, date, note.
+- 🚗 **`car drive PURPOSE`** subcommand. Distance from any of:
+  • `--km 47` — explicit kilometres
+  • `--mi 30` — miles, converted to km (× 1.609344)
+  • `--start-odo` + `--end-odo` — auto-computes from the pair
+- 💼 **`category: business | personal | commute`** — the whole point.
+  Tax authorities allow per-km/per-mile deductions for the business
+  bucket (rate varies by jurisdiction — clibo holds the totals,
+  users compute the deduction at filing time).
+- 🚗 **`car list` unified** — merges `CarEntry` rows (fuel +
+  service) with `CarDrive` rows by date-then-id, so the human view
+  is one chronological log of "what I did with the car". `-k`
+  filter accepts `fuel` / `service` / `drive`.
+- 📊 **`car stats` extended** — adds `drive_entries`,
+  `drive_total_km`, `drive_by_category[]`. Agent reading the JSON
+  can pull business mileage in one call.
+- 🛡 **Validation**: no distance → friendly error; bad category;
+  negative km; end odometer ≥ start odometer. Four guard rails.
+- 📋 **`car rm ID --drive`** — IDs are per-table, so a flag
+  disambiguates. Without the flag, `rm` keeps its old fuel/service
+  semantics (back-compat).
+- 🎤 NL flow verified end-to-end:
+  • `car drive "Acme meeting" --mi 47 -c business` → 75.64 km ✓
+  • `car drive "commute home" --km 12 -c commute` ✓
+  • `car drive "errands" --start-odo 50000 --end-odo 50080` → 80 km ✓
+  • Unified `car list` shows all three kinds with merged Purpose / Service column ✓
+  • `car stats` → `drive_by_category: [business 75.64, personal 80, commute 12]` ✓
+- 🧪 **13 new tests** pin every flow: km / mi / odometer-pair,
+  default category, four validation paths, list-includes-drives,
+  drive-only filter, stats breakdown, rm with `--drive` flag,
+  rm without `--drive` still deletes fuel/service.
+- 📚 **SKILL.md** rewritten with an 8-row NL → command table
+  including the business/commute distinction.
+- 📚 **README + catalog description** updated: car is now
+  "Car maintenance, fuel & driving log (business/commute mileage
+  for taxes)".
+- 📚 **docs/SCHEMA.md** regenerated — `car_drive` table (90 tables
+  total, up from 89).
+- **Tests:** 987 passing (+13); ruff clean.
+
+The car tool now serves the freelancer / consultant use case it
+was missing — track business mileage all year, hand a clean total
+to your accountant at filing time. No new tool added; an existing
+one filled out.
+
+---
+
 ### Iteration 101 — `meds take` auto-creates + `meds edit` / name-resolve · 2026-05-24
 
 Agent-mode self-test on *"Took my morning vitamins"* caught a real

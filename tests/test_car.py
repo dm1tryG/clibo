@@ -86,3 +86,99 @@ def test_stats_skips_no_odometer_fuelups(cli):
 def test_negative_volume_fails(cli):
     result = cli.run("car", "fuel", "1000", "-5")
     assert result.exit_code != 0
+
+
+# ── drive trips (iter 102) ──
+
+
+def test_drive_with_km(cli):
+    data = cli.json("car", "drive", "client meeting", "--km", "47",
+                    "-c", "business")
+    assert data["purpose"] == "client meeting"
+    assert data["distance_km"] == 47.0
+    assert data["category"] == "business"
+    assert data["kind"] == "drive"
+
+
+def test_drive_with_miles_converts_to_km(cli):
+    """47 mi = 75.64 km (mile = 1.609344 km)."""
+    data = cli.json("car", "drive", "trip", "--mi", "47", "-c", "business")
+    assert data["distance_km"] == 75.64
+
+
+def test_drive_with_odometer_pair_auto_computes_distance(cli):
+    data = cli.json("car", "drive", "errands",
+                    "--start-odo", "50000", "--end-odo", "50080")
+    assert data["distance_km"] == 80.0
+    assert data["odometer_start"] == 50000
+    assert data["odometer_end"] == 50080
+
+
+def test_drive_default_category_is_personal(cli):
+    data = cli.json("car", "drive", "trip", "--km", "10")
+    assert data["category"] == "personal"
+
+
+def test_drive_rejects_no_distance(cli):
+    result = cli.run("car", "drive", "trip")
+    assert result.exit_code != 0
+
+
+def test_drive_rejects_bad_category(cli):
+    result = cli.run("car", "drive", "trip", "--km", "10", "-c", "vacation")
+    assert result.exit_code != 0
+
+
+def test_drive_rejects_negative_distance(cli):
+    result = cli.run("car", "drive", "trip", "--km", "-5")
+    assert result.exit_code != 0
+
+
+def test_drive_rejects_inverted_odometer(cli):
+    result = cli.run("car", "drive", "trip",
+                     "--start-odo", "100", "--end-odo", "50")
+    assert result.exit_code != 0
+
+
+def test_list_includes_drives(cli):
+    cli.run("car", "fuel", "45.5", "-o", "50000", "-c", "65")
+    cli.run("car", "drive", "client meeting", "--km", "47", "-c", "business")
+    rows = cli.json("car", "list")
+    kinds = [r.get("kind") for r in rows]
+    assert "fuel" in kinds
+    assert "drive" in kinds
+
+
+def test_list_filter_drive_only(cli):
+    cli.run("car", "fuel", "30", "-c", "40")
+    cli.run("car", "drive", "x", "--km", "10")
+    rows = cli.json("car", "list", "-k", "drive")
+    assert all(r["kind"] == "drive" for r in rows)
+
+
+def test_stats_includes_drive_breakdown(cli):
+    cli.run("car", "drive", "to-client", "--km", "47", "-c", "business")
+    cli.run("car", "drive", "commute", "--km", "12", "-c", "commute")
+    cli.run("car", "drive", "errands", "--km", "20", "-c", "personal")
+    stats = cli.json("car", "stats")
+    assert stats["drive_entries"] == 3
+    assert stats["drive_total_km"] == 79.0
+    by_cat = {r["category"]: r["km"] for r in stats["drive_by_category"]}
+    assert by_cat["business"] == 47.0
+    assert by_cat["commute"] == 12.0
+    assert by_cat["personal"] == 20.0
+
+
+def test_rm_drive_uses_flag(cli):
+    cli.run("car", "drive", "doomed", "--km", "10")
+    cli.json("car", "rm", "1", "--drive")
+    rows = cli.json("car", "list", "-k", "drive")
+    assert not any(r["kind"] == "drive" for r in rows)
+
+
+def test_rm_fuel_unchanged_without_flag(cli):
+    """`car rm 1` (no --drive) still deletes a fuel/service entry."""
+    cli.run("car", "fuel", "30")
+    cli.json("car", "rm", "1")
+    rows = cli.json("car", "list", "-k", "fuel")
+    assert rows == []

@@ -260,7 +260,7 @@ sub-command and every flag.
 | ✅ | `meals` 🍽️ | Weekly meal planner |
 | ✅ | `chores` 🧹 | Household chores rotation |
 | ✅ | `plants` 🪴 | Plant care & watering schedule |
-| ✅ | `car` 🚗 | Car maintenance & fuel log |
+| ✅ | `car` 🚗 | Car maintenance, fuel & driving log (business/commute mileage for taxes) |
 | ✅ | `home` 🏠 | Home maintenance & repairs |
 | ✅ | `pets` 🐾 | Pet care, feeding & vet log |
 | ✅ | `travel` ✈️ | Trip planner & itinerary |

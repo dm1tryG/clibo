@@ -2,7 +2,7 @@
 
 Auto-generated reference for every SQLite table clibo writes to. Regenerate with `python scripts/dump_schema.py`.
 
-_89 tables in total._
+_90 tables in total._
 
 ## Contents
 
@@ -849,6 +849,20 @@ _89 tables in total._
 | `created_at` | `DATETIME` | NOT NULL, default |
 
 ## Home & Life
+
+### `car_drive`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | `INTEGER` | PK, NOT NULL |
+| `purpose` | `VARCHAR` | NOT NULL |
+| `distance_km` | `FLOAT` | NOT NULL |
+| `category` | `VARCHAR` | NOT NULL, default |
+| `odometer_start` | `INTEGER` | — |
+| `odometer_end` | `INTEGER` | — |
+| `entry_date` | `DATE` | NOT NULL, indexed, default |
+| `created_at` | `DATETIME` | NOT NULL, default |
+| `note` | `VARCHAR` | — |
 
 ### `car_entry`
 

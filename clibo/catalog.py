@@ -75,7 +75,9 @@ CATALOG: list[Tool] = [
     Tool("meals", "🍽️", "Home & Life", "Weekly meal planner"),
     Tool("chores", "🧹", "Home & Life", "Household chores rotation"),
     Tool("plants", "🪴", "Home & Life", "Plant care & watering schedule"),
-    Tool("car", "🚗", "Home & Life", "Car maintenance & fuel log"),
+    Tool("car", "🚗", "Home & Life",
+         "Car maintenance, fuel & driving log (with business/commute "
+         "mileage breakdown for taxes)"),
     Tool("home", "🏠", "Home & Life", "Home maintenance & repairs"),
     Tool("pets", "🐾", "Home & Life", "Pet care, feeding & vet log"),
     Tool("travel", "✈️", "Home & Life", "Trip planner & itinerary"),
