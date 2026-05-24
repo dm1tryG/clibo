@@ -66,3 +66,20 @@ def test_invalid_grade_fails(cli):
     cli.run("flashcards", "add", "x", "y")
     result = cli.run("flashcards", "grade", "1", "maybe")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_flashcards_runs_due(cli):
+    """`clibo flashcards` (no subcommand) runs `due`."""
+    result = cli.run("flashcards")
+    assert result.exit_code == 0
+
+
+def test_flashcards_help_still_works(cli):
+    """`clibo flashcards --help` still shows the menu after the bare change."""
+    result = cli.run("flashcards", "--help")
+    assert result.exit_code == 0
+    assert "due" in result.stdout

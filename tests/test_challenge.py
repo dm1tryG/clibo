@@ -175,3 +175,20 @@ def test_searchable_and_in_recent(cli):
     assert any(h["source"] == "challenge" for h in hits["results"])
     recent = cli.json("recent")
     assert any(e["source"] == "challenge" for e in recent["events"])
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_challenge_runs_status(cli):
+    """`clibo challenge` (no subcommand) runs `status`."""
+    result = cli.run("challenge")
+    assert result.exit_code == 0
+
+
+def test_challenge_help_still_works(cli):
+    """`clibo challenge --help` still shows the menu after the bare change."""
+    result = cli.run("challenge", "--help")
+    assert result.exit_code == 0
+    assert "status" in result.stdout

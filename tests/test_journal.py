@@ -40,3 +40,20 @@ def test_stats_streak(cli):
 def test_invalid_mood_fails(cli):
     result = cli.run("journal", "write", "bad mood", "-m", "9")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_journal_runs_today(cli):
+    """`clibo journal` (no subcommand) runs `today`."""
+    result = cli.run("journal")
+    assert result.exit_code == 0
+
+
+def test_journal_help_still_works(cli):
+    """`clibo journal --help` still shows the menu after the bare change."""
+    result = cli.run("journal", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

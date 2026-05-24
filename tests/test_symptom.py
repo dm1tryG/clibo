@@ -166,3 +166,20 @@ def test_stats_empty(cli):
     assert stats["total_episodes"] == 0
     assert stats["top_symptoms"] == []
     assert stats["worst_episode"] is None
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_symptom_runs_today(cli):
+    """`clibo symptom` (no subcommand) runs `today`."""
+    result = cli.run("symptom")
+    assert result.exit_code == 0
+
+
+def test_symptom_help_still_works(cli):
+    """`clibo symptom --help` still shows the menu after the bare change."""
+    result = cli.run("symptom", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

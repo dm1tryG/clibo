@@ -39,3 +39,20 @@ def test_stats_window(cli):
 def test_negative_minutes_fails(cli):
     result = cli.run("focus", "log", "-5")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_focus_runs_today(cli):
+    """`clibo focus` (no subcommand) runs `today`."""
+    result = cli.run("focus")
+    assert result.exit_code == 0
+
+
+def test_focus_help_still_works(cli):
+    """`clibo focus --help` still shows the menu after the bare change."""
+    result = cli.run("focus", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

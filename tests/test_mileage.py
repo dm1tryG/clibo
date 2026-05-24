@@ -44,3 +44,20 @@ def test_invalid_activity_fails(cli):
 def test_negative_distance_fails(cli):
     result = cli.run("mileage", "log", "-1")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_mileage_runs_week(cli):
+    """`clibo mileage` (no subcommand) runs `week`."""
+    result = cli.run("mileage")
+    assert result.exit_code == 0
+
+
+def test_mileage_help_still_works(cli):
+    """`clibo mileage --help` still shows the menu after the bare change."""
+    result = cli.run("mileage", "--help")
+    assert result.exit_code == 0
+    assert "week" in result.stdout

@@ -45,3 +45,20 @@ def test_stats_window(cli):
 def test_stop_without_timer_fails(cli):
     result = cli.run("time", "stop")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_time_runs_status(cli):
+    """`clibo time` (no subcommand) runs `status`."""
+    result = cli.run("time")
+    assert result.exit_code == 0
+
+
+def test_time_help_still_works(cli):
+    """`clibo time --help` still shows the menu after the bare change."""
+    result = cli.run("time", "--help")
+    assert result.exit_code == 0
+    assert "status" in result.stdout

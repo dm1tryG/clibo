@@ -100,3 +100,20 @@ def test_searchable_and_in_recent(cli):
     # appears in the recent feed
     recent = cli.json("recent")
     assert any(event["source"] == "stretches" for event in recent["events"])
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_stretches_runs_today(cli):
+    """`clibo stretches` (no subcommand) runs `today`."""
+    result = cli.run("stretches")
+    assert result.exit_code == 0
+
+
+def test_stretches_help_still_works(cli):
+    """`clibo stretches --help` still shows the menu after the bare change."""
+    result = cli.run("stretches", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

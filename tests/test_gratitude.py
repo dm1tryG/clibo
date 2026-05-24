@@ -50,3 +50,20 @@ def test_remove(cli):
     entry = cli.json("gratitude", "add", "temp")
     removed = cli.json("gratitude", "rm", str(entry["id"]))
     assert removed["deleted"] == entry["id"]
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_gratitude_runs_today(cli):
+    """`clibo gratitude` (no subcommand) runs `today`."""
+    result = cli.run("gratitude")
+    assert result.exit_code == 0
+
+
+def test_gratitude_help_still_works(cli):
+    """`clibo gratitude --help` still shows the menu after the bare change."""
+    result = cli.run("gratitude", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

@@ -4,6 +4,69 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 106 — bare-command default rolled out to 13 more tools · 2026-05-24
+
+Iter 105 covered 9 health tools. This iter finishes the pattern
+rollout across **every productivity + hobby tool with a dominant
+single-verb summary**. Total now: **25 tools** follow the "bare
+command = the answer" rule.
+
+- 🎯 **13 more tools updated**:
+
+  | Tool | Bare runs |
+  |---|---|
+  | `focus` | `today` — pomodoro count + goal |
+  | `time` | `status` — is a timer running? today's total |
+  | `events` | `today` — today's events |
+  | `journal` | `today` — today's entries |
+  | `worklog` | `today` — today's work-log lines |
+  | `challenge` | `status` — active challenges + progress |
+  | `gratitude` | `today` — today's entries + streak |
+  | `writing` | `today` — words + goal + streak |
+  | `mileage` | `week` — this week's distance vs goal |
+  | `flashcards` | `due` — cards due for review |
+  | `dreams` | `today` — today's dreams |
+  | `stretches` | `today` — today's sessions |
+  | `symptom` | `today` — today's symptom log |
+
+- 🐛 **Real bug caught**: `ctx.invoke()` doesn't resolve Typer's
+  `ArgumentInfo` / `OptionInfo` sentinel objects when the target
+  function has optional positionals or options. They got forwarded
+  through to SQLAlchemy as literals, producing
+  `Error binding parameter: type 'ArgumentInfo' is not supported`.
+  Fixed by passing explicit `None` / real defaults in two
+  callbacks:
+  • `challenge` → `ctx.invoke(status, challenge_id=None, json_out=False)`
+  • `flashcards` → `ctx.invoke(due, deck=None, limit=20, json_out=False)`
+- ⚙️ **Mechanical pattern via Python script** — wrote a small
+  `pathlib`-based loop that replaced the Typer init line +
+  appended the callback in all 13 files in one pass. Doable
+  manually but tidier.
+- 🎤 NL flow verified across all 13 on an empty SQLite DB
+  (worst-case for ctx.invoke sentinel forwarding):
+  • `clibo challenge` → "🚀 No active challenges." ✓
+  • `clibo flashcards` → "Nothing due — you're all caught up! ✨" ✓
+  • All others → render correct empty-state messages or seed-data
+    summaries cleanly with exit 0 ✓
+- 🧪 **26 new tests** (2 per tool): bare runs the right summary,
+  help still works. Plus the two empty-DB ArgumentInfo bug regressions
+  pinned (any tool added in the future with optional args will be
+  caught the same way).
+- **Tests:** 1,039 passing (+26); ruff clean.
+
+**Tally so far**: 25 tools follow *"bare command = the answer"*:
+`networth`, `caffeine`, `fasting`, `calorie`, `water`, `mood`,
+`sleep`, `steps`, `workout`, `meds`, `vitals`, `habit` (iter
+103-105) + `focus`, `time`, `events`, `journal`, `worklog`,
+`challenge`, `gratitude`, `writing`, `mileage`, `flashcards`,
+`dreams`, `stretches`, `symptom` (this iter). That's a third of
+the 74-tool catalog. The remaining ⅔ are either entity-tools
+(crm, books, films, ideas, …) where the dominant action is `list`
+or `add`, or aggregate tools (stats, …) where bare-help is
+correct.
+
+---
+
 ### Iteration 105 — bare-command default rolled out to 9 health tools 🎉 1000+ tests · 2026-05-24
 
 Iter 103/104 established the *"bare command = the answer"* pattern

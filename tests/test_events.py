@@ -68,3 +68,20 @@ def test_list_no_filter_returns_all_upcoming(cli):
     cli.run("events", "add", "B", "-d", "2027-06-02", "-c", "y")
     rows = cli.json("events", "list")
     assert len(rows) == 2
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_events_runs_today(cli):
+    """`clibo events` (no subcommand) runs `today`."""
+    result = cli.run("events")
+    assert result.exit_code == 0
+
+
+def test_events_help_still_works(cli):
+    """`clibo events --help` still shows the menu after the bare change."""
+    result = cli.run("events", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

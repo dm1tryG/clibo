@@ -64,3 +64,20 @@ def test_stats_lucid_rate(cli):
 def test_invalid_vividness_fails(cli):
     result = cli.run("dreams", "add", "bad", "-v", "9")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_dreams_runs_today(cli):
+    """`clibo dreams` (no subcommand) runs `today`."""
+    result = cli.run("dreams")
+    assert result.exit_code == 0
+
+
+def test_dreams_help_still_works(cli):
+    """`clibo dreams --help` still shows the menu after the bare change."""
+    result = cli.run("dreams", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

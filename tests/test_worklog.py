@@ -39,3 +39,20 @@ def test_stats_by_kind(cli):
 def test_invalid_kind_fails(cli):
     result = cli.run("worklog", "add", "Bad", "-k", "maybe")
     assert result.exit_code != 0
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_worklog_runs_today(cli):
+    """`clibo worklog` (no subcommand) runs `today`."""
+    result = cli.run("worklog")
+    assert result.exit_code == 0
+
+
+def test_worklog_help_still_works(cli):
+    """`clibo worklog --help` still shows the menu after the bare change."""
+    result = cli.run("worklog", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout

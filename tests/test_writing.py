@@ -153,3 +153,20 @@ def test_stats_avg_wpm(cli):
     cli.run("writing", "log", "novel", "-w", "500", "-t", "10")   # 50 wpm
     data = cli.json("writing", "stats")
     assert data["avg_wpm"] == 50.0
+
+
+
+# ── bare-command default (iter 106) ──
+
+
+def test_bare_writing_runs_today(cli):
+    """`clibo writing` (no subcommand) runs `today`."""
+    result = cli.run("writing")
+    assert result.exit_code == 0
+
+
+def test_writing_help_still_works(cli):
+    """`clibo writing --help` still shows the menu after the bare change."""
+    result = cli.run("writing", "--help")
+    assert result.exit_code == 0
+    assert "today" in result.stdout
