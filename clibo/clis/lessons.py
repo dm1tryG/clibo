@@ -32,7 +32,17 @@ class Lesson(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
+    """Default: ``clibo lessons`` (bare) lists lessons from the last year."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(
+            list_lessons, days=365, category=None, tag=None,
+            json_out=json_out,
+        )
 
 
 def _row(lesson: Lesson) -> dict:

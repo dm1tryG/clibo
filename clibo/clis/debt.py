@@ -44,7 +44,14 @@ class DebtPayment(SQLModel, table=True):
     note: str | None = None
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
+    """Default: ``clibo debt`` (bare) lists every debt with payoff progress."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(list_debts, json_out=json_out)
 
 
 def _resolve(db, ident: str) -> Debt | None:

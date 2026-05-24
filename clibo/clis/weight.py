@@ -29,7 +29,14 @@ class WeightLog(SQLModel, table=True):
     note: str | None = None
 
 
-app = typer.Typer(no_args_is_help=True, help=HELP)
+app = typer.Typer(no_args_is_help=False, help=HELP, invoke_without_command=True)
+
+
+@app.callback()
+def _default(ctx: typer.Context, json_out: JsonOpt = False) -> None:
+    """Default: ``clibo weight`` (bare) lists recent measurements."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(list_entries, days=30, json_out=json_out)
 
 
 def _bmi(weight_kg: float, height_cm: float) -> float:

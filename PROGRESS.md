@@ -4,6 +4,38 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Bare-default lands on 10 more entity tools · 2026-05-24
+
+Continuing the previous sweep. Ten more entity tools now respond
+to bare `clibo <tool>` with their natural list view.
+
+- ⚖️ **`clibo weight`** → `list_entries` (last 30d)
+- 💡 **`clibo ideas`** → `list_ideas` (every idea)
+- 💬 **`clibo quotes`** → `list_quotes` (every quote)
+- 📓 **`clibo lessons`** → `list_lessons` (last 365d)
+- 👨‍🍳 **`clibo recipes`** → `list_recipes` (every recipe)
+- 🔖 **`clibo bookmark`** → `list_bookmarks` (every saved link)
+- ⭐ **`clibo wishlist`** → `list_items` (open, priority-sorted)
+- 🥫 **`clibo pantry`** → `list_items` (everything in stock)
+- 🏆 **`clibo brag`** → `list_achievements` (last 90d)
+- 📉 **`clibo debt`** → `list_debts` (with payoff progress)
+
+Each callback passes every optional flag at its declared default
+to defend against the ArgumentInfo sentinel that bit `calorie today`
+earlier.
+
+- 🧪 **Contract test** (`tests/test_bare_command_json.py`)
+  extended — all 10 added to `BARE_DEFAULT_TOOLS`. `--json` is now
+  pinned across 57 entity tools total.
+- **Tests:** 1,273 passing; ruff clean.
+
+**Why this matters:** combined with the previous batch (todo / books /
+notes / crm / savings), 15 more "type the tool's name, see the
+answer" entry points landed in two sessions. The convention is now
+truly universal across the entity-tool surface.
+
+---
+
 ### Bare-default lands on 5 more high-traffic entity tools · 2026-05-24
 
 NL-probe gap: `clibo todo`, `clibo books`, `clibo notes`, `clibo crm`,
