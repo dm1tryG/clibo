@@ -122,3 +122,90 @@ def test_compare_month_donations_better_when_higher(cli):
     data = cli.json("compare", "--month", "-y", "2025", "-m", "5")
     don = next(r for r in data["rows"] if r["label"] == "Donations")
     assert don["direction"] == "better"
+
+
+# ── year-over-year compare (compare --year-mode) ──
+
+
+def test_compare_year_mode_defaults_to_current_vs_previous(cli):
+    from datetime import date
+    data = cli.json("compare", "--year-mode")
+    assert data["current"]["year"] == date.today().year
+    assert data["prior"]["year"] == date.today().year - 1
+
+
+def test_compare_year_mode_arbitrary_year(cli):
+    """Anchor year picks any past pair (e.g. 2023 vs 2022)."""
+    data = cli.json("compare", "--year-mode", "-y", "2023")
+    assert data["current"]["year"] == 2023
+    assert data["prior"]["year"] == 2022
+
+
+def test_compare_year_money_aggregates(cli):
+    cli.run("income", "add", "Old", "-a", "1000", "-d", "2025-06-15")
+    cli.run("income", "add", "New", "-a", "5000", "-d", "2026-06-15")
+    cli.run("expense", "add", "Old", "-a", "300", "-d", "2025-06-15")
+    cli.run("expense", "add", "New", "-a", "500", "-d", "2026-06-15")
+    data = cli.json("compare", "--year-mode", "-y", "2026")
+    income_row = next(r for r in data["rows"] if r["label"] == "Income")
+    assert income_row["current"] == 5000.0
+    assert income_row["prior"] == 1000.0
+    assert income_row["direction"] == "better"  # higher income is better
+
+
+def test_compare_year_expenses_worse_when_higher(cli):
+    """Expenses going up year-on-year is `worse`."""
+    cli.run("expense", "add", "Old", "-a", "300", "-d", "2025-06-15")
+    cli.run("expense", "add", "New", "-a", "1500", "-d", "2026-06-15")
+    data = cli.json("compare", "--year-mode", "-y", "2026")
+    expenses = next(r for r in data["rows"] if r["label"] == "Expenses")
+    assert expenses["direction"] == "worse"
+
+
+def test_compare_year_books_finished(cli):
+    """Backdate one book's `finished` to last year via SQL — `books add`
+    only sets it to today."""
+    cli.run("books", "add", "Old", "-p", "200", "-s", "finished")
+    cli.run("books", "add", "New A", "-p", "100", "-s", "finished")
+    cli.run("books", "add", "New B", "-p", "150", "-s", "finished")
+    import os
+    import sqlite3
+    from datetime import date
+    last_year = date(date.today().year - 1, 8, 1).isoformat()
+    con = sqlite3.connect(f"{os.environ['CLIBO_HOME']}/clibo.db")
+    con.execute(
+        "UPDATE books_book SET finished=? WHERE title='Old'",
+        (last_year,),
+    )
+    con.commit()
+    con.close()
+    data = cli.json("compare", "--year-mode")
+    books = next(r for r in data["rows"] if r["label"] == "Books finished")
+    assert books["current"] == 2
+    assert books["prior"] == 1
+    assert books["direction"] == "better"
+
+
+def test_compare_year_delta_pct(cli):
+    cli.run("income", "add", "Old", "-a", "1000", "-d", "2025-06-15")
+    cli.run("income", "add", "New", "-a", "2000", "-d", "2026-06-15")
+    data = cli.json("compare", "--year-mode", "-y", "2026")
+    income = next(r for r in data["rows"] if r["label"] == "Income")
+    # 100% increase over 1000 → delta_pct = 100.0
+    assert income["delta_pct"] == 100.0
+
+
+def test_compare_year_empty_renders_nothing_logged(cli):
+    """No data in either year → human view shouldn't crash."""
+    result = cli.run("compare", "--year-mode", "-y", "1999")
+    assert result.exit_code == 0
+
+
+def test_compare_year_mode_human_view_runs(cli):
+    cli.run("income", "add", "Salary", "-a", "5000")
+    result = cli.run("compare", "--year-mode")
+    assert result.exit_code == 0
+    # Both year labels appear in the header
+    from datetime import date
+    assert str(date.today().year) in result.output
+    assert str(date.today().year - 1) in result.output

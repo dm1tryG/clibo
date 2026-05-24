@@ -4,6 +4,38 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `compare --year-mode` — year-over-year comparison · 2026-05-24
+
+NL-probe gap: *"how does this year compare to last year?"* had no
+answer. `compare` did week-over-week and month-over-month but not
+year-over-year — the natural extension after `clibo year` landed.
+
+- ⚖️ **`clibo compare --year-mode`** — side-by-side year-over-year
+  comparison on 17 metrics: income, expenses, donations, net cash
+  flow, tasks done, focus minutes, journal entries, books finished,
+  pages read, films, writing words, workouts + minutes, days
+  meditated, sleep avg, mileage, gratitude entries. Pass
+  `--year YYYY` to anchor the comparison (default: current vs prior).
+- 📦 **New in `clibo/compare.py`**: `YEAR_METRICS` list, `compare_years`
+  function, `render_compare_years` function. Reuses the existing
+  `_render_rows_table` helper for visual parity with month-compare.
+- 🎤 NL flows verified:
+  • `compare --year-mode` → defaults to current vs previous year
+  • `compare --year-mode -y 2023` → 2023 vs 2022
+  • Direction inference works (income up = better, expenses up = worse)
+- 🧪 **8 new tests** in `tests/test_compare.py`: defaults, arbitrary
+  year, money aggregates, expenses-worse-when-higher, books finished,
+  delta_pct calculation, empty-state, human view.
+- **Tests:** 1,291 passing (+8); ruff clean.
+
+**Why this matters:** `clibo compare` is now the universal "how am
+I doing vs the past?" command — week / month / year, same flags,
+same row shape, same direction inference. Pairs with `clibo year`
+(absolute view) to answer both *"how was 2026?"* and *"how is 2026
+shaping up vs 2025?"* without leaving the CLI.
+
+---
+
 ### `clibo year` — calendar-year rollup, sister to today/week/month · 2026-05-24
 
 Real gap: the temporal trio `today` (now) / `week` (last 7d) /

@@ -240,9 +240,14 @@ def compare(
         help="Compare this calendar month vs the previous one "
              "(default: week-over-week)",
     ),
+    year_mode: bool = typer.Option(
+        False, "--year-mode",
+        help="Compare this calendar year vs the previous one. "
+             "Pass `--year YYYY` to anchor the comparison.",
+    ),
     year: int = typer.Option(
         None, "--year", "-y",
-        help="Calendar year for --month (default: current)",
+        help="Calendar year (anchor for --month or --year-mode; default: current)",
     ),
     month_num: int = typer.Option(
         None, "--month-of", "-m",
@@ -250,12 +255,18 @@ def compare(
     ),
     json_out: JsonOpt = False,
 ) -> None:
-    """⚖️ Week-over-week (default) or month-over-month comparison.
+    """⚖️ Week-over-week (default), month-over-month, or year-over-year.
 
     Without flags, compares the current 7 days vs the 7 before. With
     ``--month``, compares the current calendar month vs the previous one
-    — pass ``--year`` / ``--month-of`` to look at any past pair.
+    — pass ``--year`` / ``--month-of`` to look at any past pair. With
+    ``--year-mode``, compares the current calendar year vs the previous
+    one — pass ``--year YYYY`` to anchor that pair.
     """
+    if year_mode:
+        from clibo.compare import render_compare_years
+        render_compare_years(json_out=json_out, year=year)
+        return
     if month_mode:
         from clibo.compare import render_compare_months
         render_compare_months(json_out=json_out, year=year, month=month_num)

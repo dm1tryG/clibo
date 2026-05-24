@@ -249,6 +249,99 @@ MONTH_METRICS: list[_Metric] = [
 ]
 
 
+YEAR_METRICS: list[_Metric] = [
+    _Metric("Income", "💵",
+            lambda y: y.income_total,
+            _fmt_money, polarity=+1),
+    _Metric("Expenses", "💸",
+            lambda y: y.expense_total,
+            _fmt_money, polarity=-1),
+    _Metric("Donations", "❤️",
+            lambda y: y.donations_total,
+            _fmt_money, polarity=+1),
+    _Metric("Net cash flow", "💰",
+            lambda y: y.net_cash_flow,
+            _fmt_money, polarity=+1),
+    _Metric("Tasks done", "✅",
+            lambda y: float(y.tasks_done),
+            lambda v: f"{int(v)}", polarity=+1),
+    _Metric("Focus min", "🍅",
+            lambda y: float(y.focus_minutes),
+            _fmt_minutes, polarity=+1),
+    _Metric("Journal entries", "📔",
+            lambda y: float(y.journal_entries),
+            lambda v: f"{int(v)}", polarity=+1),
+    _Metric("Books finished", "📚",
+            lambda y: float(y.books_finished),
+            lambda v: f"{int(v)}", polarity=+1),
+    _Metric("Pages read", "📖",
+            lambda y: float(y.pages_read),
+            _fmt_int, polarity=+1),
+    _Metric("Films watched", "🎬",
+            lambda y: float(y.films_watched),
+            lambda v: f"{int(v)}", polarity=0),
+    _Metric("Writing words", "✍️",
+            lambda y: float(y.writing_words),
+            _fmt_int, polarity=+1),
+    _Metric("Workouts", "🏋️",
+            lambda y: float(y.workouts),
+            lambda v: f"{int(v)}", polarity=+1),
+    _Metric("Workout min", "⏱️",
+            lambda y: float(y.workout_minutes),
+            _fmt_minutes, polarity=+1),
+    _Metric("Days meditated", "🧘",
+            lambda y: float(y.days_meditated),
+            lambda v: f"{int(v)}", polarity=+1),
+    _Metric("Sleep avg", "😴",
+            lambda y: y.avg_sleep_hours,
+            lambda v: f"{v:g}h", polarity=+1),
+    _Metric("Mileage km", "🏃",
+            lambda y: y.mileage_km,
+            lambda v: f"{v:g} km", polarity=+1),
+    _Metric("Gratitude entries", "🙏",
+            lambda y: float(y.gratitude_entries),
+            lambda v: f"{int(v)}", polarity=+1),
+]
+
+
+def compare_years(
+    year: int | None = None,
+) -> tuple[object, object, list[CompareRow]]:
+    """Compare a calendar year against the year before it.
+
+    Defaults to the current year vs the previous year. Pass ``year`` to
+    compare any past year against its predecessor.
+    """
+    from clibo.yearly import collect_year
+    today = date.today()
+    cur_year = year or today.year
+    prior_year = cur_year - 1
+    current = collect_year(cur_year)
+    prior = collect_year(prior_year)
+    rows: list[CompareRow] = []
+    for metric in YEAR_METRICS:
+        cur = metric.extract(current)
+        pri = metric.extract(prior)
+        cur_str = metric.format(cur) if cur is not None else "—"
+        pri_str = metric.format(pri) if pri is not None else "—"
+        delta = (cur - pri) if (cur is not None and pri is not None) else None
+        delta_pct = None
+        if delta is not None and pri:
+            delta_pct = round(100 * delta / pri, 1)
+        rows.append(CompareRow(
+            label=metric.label,
+            emoji=metric.emoji,
+            current=cur,
+            prior=pri,
+            current_display=cur_str,
+            prior_display=pri_str,
+            delta=delta,
+            delta_pct=delta_pct,
+            direction=_direction(cur, pri, metric.polarity),
+        ))
+    return current, prior, rows
+
+
 def _prior_month(year: int, month: int) -> tuple[int, int]:
     return (year - 1, 12) if month == 1 else (year, month - 1)
 
@@ -438,5 +531,36 @@ def render_compare_months(
     _render_rows_table(
         prior_label=prior.month_name,
         current_label=current.month_name,
+        rows=rows,
+    )
+
+
+def render_compare_years(
+    json_out: bool,
+    year: int | None = None,
+) -> None:
+    """Render the side-by-side year-over-year comparison."""
+    from clibo.core.output import _emit_json
+    current, prior, rows = compare_years(year=year)
+    if json_out:
+        _emit_json({
+            "current": {"year": current.year},
+            "prior": {"year": prior.year},
+            "rows": [
+                {
+                    "label": r.label, "emoji": r.emoji,
+                    "current": r.current, "prior": r.prior,
+                    "current_display": r.current_display,
+                    "prior_display": r.prior_display,
+                    "delta": r.delta, "delta_pct": r.delta_pct,
+                    "direction": r.direction,
+                }
+                for r in rows
+            ],
+        })
+        return
+    _render_rows_table(
+        prior_label=str(prior.year),
+        current_label=str(current.year),
         rows=rows,
     )
