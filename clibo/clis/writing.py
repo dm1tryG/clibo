@@ -463,6 +463,11 @@ def stats(
         daily[entry.entry_date] = daily.get(entry.entry_date, 0) + entry.words
     top_projects = sorted(by_project.items(), key=lambda kv: kv[1], reverse=True)[:5]
     best_day = max(daily.items(), key=lambda kv: kv[1]) if daily else None
+    # Single biggest session — the *"what's my best session ever?"* PR.
+    # Distinct from best_day which sums multiple sessions on the same date.
+    best_session_entry = (
+        max(entries, key=lambda e: e.words) if entries else None
+    )
     data = {
         "window_days": days,
         "sessions": len(entries),
@@ -477,6 +482,15 @@ def stats(
         ),
         "best_day": (
             {"date": best_day[0], "words": best_day[1]} if best_day else None
+        ),
+        "best_session": (
+            {
+                "id": best_session_entry.id,
+                "entry_date": best_session_entry.entry_date,
+                "project": best_session_entry.project,
+                "words": best_session_entry.words,
+                "duration_min": best_session_entry.duration_min,
+            } if best_session_entry else None
         ),
         "top_projects": [
             {"project": p, "words": w} for p, w in top_projects

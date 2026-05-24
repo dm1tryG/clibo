@@ -204,6 +204,14 @@ def stats(
     if not sessions:
         fail("No focus sessions in this window", json_out=json_out)
     total = sum(s.minutes for s in sessions)
+    # Best single session — *"what's my longest unbroken focus block?"*.
+    # Distinct from the per-day total since one day may contain many.
+    best = max(sessions, key=lambda s: s.minutes)
+    # Best day — total focus across multiple sessions on the same date.
+    daily: dict[date, int] = {}
+    for s in sessions:
+        daily[s.entry_date] = daily.get(s.entry_date, 0) + s.minutes
+    best_day = max(daily.items(), key=lambda kv: kv[1])
     data = {
         "window_days": days,
         "sessions": len(sessions),
@@ -211,6 +219,13 @@ def stats(
         "total_hours": round(total / 60, 1),
         "avg_session_minutes": round(total / len(sessions), 1),
         "days_focused": len({s.entry_date for s in sessions}),
+        "best_session": {
+            "id": best.id,
+            "entry_date": best.entry_date,
+            "task": best.task,
+            "minutes": best.minutes,
+        },
+        "best_day": {"date": best_day[0], "minutes": best_day[1]},
     }
     render_record(data, json_out=json_out, title=f"📊 Focus stats · last {days}d")
 

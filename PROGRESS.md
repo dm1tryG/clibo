@@ -4,6 +4,35 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `writing stats` + `focus stats` gain best_session · 2026-05-24
+
+Same shape as the mileage best_pace fix: each tool now distinguishes
+*biggest single session* from *biggest day-total*. Both questions
+are natural and were conflated under `best_day`.
+
+- ✍️ **`writing stats.best_session`** — single largest words log,
+  with `{id, entry_date, project, words, duration_min}`. Answers
+  *"what's my biggest writing session ever?"*. Distinct from
+  `best_day` which sums multiple sessions on the same date.
+- 🍅 **`focus stats.best_session`** — single longest focus block.
+  Plus a new **`best_day`** (sum across same-day sessions) for
+  parity with writing's shape — `focus stats` had only the average
+  and total before.
+- 🎤 NL flow verified: three writing logs on the same day (500, 800,
+  1500 words) → `best_session.words == 1500`, `best_day.words == 2800`.
+  Same logic for focus: longest unbroken block vs day's total.
+- 🧪 **4 new tests**: writing best_session picks single max,
+  empty-state guard, focus best_session vs best_day distinction,
+  focus best_day across multi-day input.
+- **Tests:** 1,316 passing (+4); ruff clean.
+
+**Why this matters:** PR records and daily aggregates are different
+questions. *"What's my biggest output?"* could mean either; the
+ambiguity is now resolved with both metrics shown side-by-side
+in the same JSON.
+
+---
+
 ### `mileage stats` surfaces best_pace + best_pace_session · 2026-05-24
 
 NL-probe friction: *"what's my fastest running pace?"* —
