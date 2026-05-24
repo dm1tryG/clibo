@@ -118,3 +118,72 @@ def test_streaks_includes_stretches(cli):
     data = cli.json("streaks")
     sources = [s["source"] for s in data["streaks"]]
     assert "stretches" in sources
+
+
+# ── streaks --at-risk + done_today field ──
+
+
+def test_streaks_done_today_true_when_logged(cli):
+    """A habit checked today has done_today=True in the aggregated view."""
+    cli.run("habit", "add", "Read")
+    cli.run("habit", "check", "Read", "-d", "yesterday")
+    cli.run("habit", "check", "Read")
+    data = cli.json("streaks")
+    row = next(s for s in data["streaks"] if s["name"] == "Read")
+    assert row["done_today"] is True
+    assert row["current"] == 2
+
+
+def test_streaks_done_today_false_when_streak_through_yesterday(cli):
+    """Streaked through yesterday but not today → done_today is False."""
+    cli.run("habit", "add", "Read")
+    cli.run("habit", "check", "Read", "-d", "2 days ago")
+    cli.run("habit", "check", "Read", "-d", "yesterday")
+    data = cli.json("streaks")
+    row = next(s for s in data["streaks"] if s["name"] == "Read")
+    assert row["done_today"] is False
+    assert row["current"] == 2  # still active, just at-risk
+
+
+def test_streaks_at_risk_filter_excludes_done_today(cli):
+    """`streaks --at-risk` hides streaks already continued today."""
+    cli.run("habit", "add", "Read")
+    cli.run("habit", "add", "Exercise")
+    cli.run("habit", "check", "Read", "-d", "yesterday")
+    cli.run("habit", "check", "Read")        # streaked today (safe)
+    cli.run("habit", "check", "Exercise", "-d", "yesterday")  # not yet today
+    data = cli.json("streaks", "--at-risk")
+    names = {s["name"] for s in data["streaks"]}
+    assert "Read" not in names           # done today, hidden
+    assert "Exercise" in names           # at risk, shown
+    assert data["at_risk_filter"] is True
+
+
+def test_streaks_at_risk_filter_excludes_inactive(cli):
+    """current==0 streaks (no longer alive) aren't 'at risk' — already lost."""
+    cli.run("habit", "add", "Lapsed")
+    cli.run("habit", "check", "Lapsed", "-d", "5 days ago")
+    cli.run("habit", "check", "Lapsed", "-d", "4 days ago")
+    # Gap of multiple days — current streak is 0.
+    data = cli.json("streaks", "--at-risk")
+    assert all(s["current"] > 0 for s in data["streaks"])
+
+
+def test_streaks_at_risk_empty_when_everything_done(cli):
+    """All streaks continued today → empty at-risk view, friendly message."""
+    cli.run("habit", "add", "Read")
+    cli.run("habit", "check", "Read")
+    data = cli.json("streaks", "--at-risk")
+    assert data["count"] == 0
+    result = cli.run("streaks", "--at-risk")
+    assert result.exit_code == 0
+    assert "No streaks at risk" in result.output
+
+
+def test_streaks_human_view_marks_done_today(cli):
+    """Human view shows ✓ done today on continued streaks."""
+    cli.run("habit", "add", "Read")
+    cli.run("habit", "check", "Read", "-d", "yesterday")
+    cli.run("habit", "check", "Read")
+    result = cli.run("streaks")
+    assert "done today" in result.output

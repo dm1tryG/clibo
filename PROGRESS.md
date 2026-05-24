@@ -4,6 +4,45 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `clibo streaks --at-risk` + `done_today` per streak · 2026-05-24
+
+Extends the streak-risk concept beyond habits to every aggregated
+streak. `clibo streaks` already listed habits / gratitude / steps /
+workout / mileage / meditate / stretches / fasting / challenge —
+now each row carries a `done_today` boolean, and a new `--at-risk`
+flag filters to active-but-not-yet-continued streaks.
+
+- 📊 **`StreakRow.done_today`** — populated per source:
+  - habit / gratitude / meditate / stretches / workout / mileage:
+    today in the source's set of activity dates
+  - steps: today's total ≥ daily goal (partial doesn't count)
+  - fasting: a target-hit fast ends today
+  - challenge: today has a successful check-in
+- 🔧 **`clibo streaks --at-risk` (`-r`)** — filters to streaks where
+  `current > 0` AND `done_today == False`. Direct answer to *"what
+  am I about to break?"*.
+- ⚠ **Human view annotations**: live streaks render with `⚠ at risk`
+  (yellow) or `✓ done today` (green) so the all-streaks view is
+  glanceable without the flag.
+- 🎤 NL flows verified:
+  • Habit checked today completing a 2-day streak → `done_today=True`
+  • Habit streaked through yesterday, no check today →
+    `done_today=False`, appears under `--at-risk`
+  • All-done day → `--at-risk` empty state: *"Nothing at risk ✓"*
+- 🧪 **6 new tests** in `tests/test_streaks.py`: done_today=True
+  when logged, done_today=False when streak-through-yesterday,
+  `--at-risk` excludes done-today, excludes inactive (current=0),
+  empty state, human-view annotation.
+- **Tests:** 1,330 passing (+6); ruff clean.
+
+**Why this matters:** previous iter put streak risk on individual
+habit rows of `today`; this iter generalises the same idea across
+every streak source in the suite. A morning glance at
+`clibo streaks --at-risk` is now the canonical *"what would I
+lose if I sat on the couch today?"* check.
+
+---
+
 ### `clibo today` surfaces per-habit streak risk · 2026-05-24
 
 NL ask: *"don't let me break my 5-day streak today"*. The dashboard

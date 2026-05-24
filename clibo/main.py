@@ -288,14 +288,22 @@ def compare(
 
 
 @app.command()
-def streaks(json_out: JsonOpt = False) -> None:
+def streaks(
+    at_risk: bool = typer.Option(
+        False, "--at-risk", "-r",
+        help="Only show streaks active but not yet continued today — "
+             "the ones that break at midnight.",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
     """🔥 Every active streak across the suite, in one view.
 
     Aggregates habits, gratitude, step-goal, fasting target-hits and
     challenges. Sorted current-desc so the longest live streak is first.
+    Pass ``--at-risk`` to filter to streaks that need attention today.
     """
     from clibo.streaks import render_streaks
-    render_streaks(json_out=json_out)
+    render_streaks(json_out=json_out, at_risk=at_risk)
 
 
 @app.command()

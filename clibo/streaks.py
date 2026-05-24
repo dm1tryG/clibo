@@ -37,6 +37,11 @@ class StreakRow:
     name: str            # e.g. habit name, "Daily gratitude", "Step goal"
     current: int
     longest: int
+    # ``done_today`` is True if the streak's daily condition has
+    # already been satisfied today. Combined with current > 0 this
+    # tells the user which streaks are *at risk* (active + not yet
+    # contributed-to today), supporting ``streaks --at-risk``.
+    done_today: bool = False
     note: str | None = None    # extra context — e.g. "day 5 / 30" for a challenge
 
 
@@ -74,6 +79,7 @@ def collect_streaks() -> list[StreakRow]:
                     source="habit", emoji="🔥",
                     name=habit.name,
                     current=current, longest=longest,
+                    done_today=today in check_dates,
                     note=(f"target {habit.target_per_week}/wk"
                           if habit.target_per_week != 7 else None),
                 ))
@@ -90,6 +96,7 @@ def collect_streaks() -> list[StreakRow]:
                     source="gratitude", emoji="🙏",
                     name="Daily gratitude",
                     current=g_current, longest=g_longest,
+                    done_today=today in gratitude_dates,
                 ))
 
         # 👟 Steps — consecutive days hitting the daily goal.
@@ -108,6 +115,9 @@ def collect_streaks() -> list[StreakRow]:
                     source="steps", emoji="👟",
                     name="Step goal",
                     current=current, longest=longest,
+                    # Goal-hit today? Only counts if total reached the
+                    # daily goal — partial credit doesn't keep a streak.
+                    done_today=totals.get(today, 0) >= steps_goal,
                     note=f"goal {steps_goal:,}/day",
                 ))
 
@@ -123,6 +133,7 @@ def collect_streaks() -> list[StreakRow]:
                     source="workout", emoji="🏋️",
                     name="Workout days",
                     current=w_current, longest=w_longest,
+                    done_today=today in workout_dates,
                 ))
 
         # 🏃 Mileage — consecutive days with any distance entry.
@@ -137,6 +148,7 @@ def collect_streaks() -> list[StreakRow]:
                     source="mileage", emoji="🏃",
                     name="Mileage days",
                     current=m_current, longest=m_longest,
+                    done_today=today in mileage_dates,
                 ))
 
         # 🧘 Meditate — consecutive days with any meditation session.
@@ -151,6 +163,7 @@ def collect_streaks() -> list[StreakRow]:
                     source="meditate", emoji="🧘",
                     name="Meditation",
                     current=me_current, longest=me_longest,
+                    done_today=today in meditate_dates,
                 ))
 
         # 🧎 Stretches — consecutive days with any stretching session.
@@ -165,6 +178,7 @@ def collect_streaks() -> list[StreakRow]:
                     source="stretches", emoji="🧎",
                     name="Stretching",
                     current=s_current, longest=s_longest,
+                    done_today=today in stretch_dates,
                 ))
 
         # 🕒 Fasting — consecutive completed fasts (each ≥ target) by start date.
@@ -190,6 +204,7 @@ def collect_streaks() -> list[StreakRow]:
                     source="fasting", emoji="🕒",
                     name="Fasting target-hit",
                     current=f_current, longest=f_longest,
+                    done_today=today in hit_dates,
                 ))
 
         # 🚀 Challenges — per active challenge, count consecutive check-ins
@@ -214,6 +229,7 @@ def collect_streaks() -> list[StreakRow]:
                     source="challenge", emoji="🚀",
                     name=ch.name,
                     current=current, longest=longest,
+                    done_today=today in check_dates,
                     note=f"day {day_n}/{ch.target_days}",
                 ))
 
@@ -221,37 +237,64 @@ def collect_streaks() -> list[StreakRow]:
     return rows
 
 
-def render_streaks(json_out: bool) -> None:
-    """Render the global streaks view to stdout."""
+def render_streaks(json_out: bool, at_risk: bool = False) -> None:
+    """Render the global streaks view to stdout.
+
+    ``at_risk=True`` filters to streaks that are active (current > 0)
+    but haven't been continued today — the ones that break at midnight.
+    """
     rows = collect_streaks()
+    if at_risk:
+        rows = [r for r in rows if r.current > 0 and not r.done_today]
     if json_out:
         _emit_json({
             "count": len(rows),
+            "at_risk_filter": at_risk,
             "streaks": [
                 {
                     "source": r.source, "emoji": r.emoji, "name": r.name,
-                    "current": r.current, "longest": r.longest, "note": r.note,
+                    "current": r.current, "longest": r.longest,
+                    "done_today": r.done_today, "note": r.note,
                 }
                 for r in rows
             ],
         })
         return
     if not rows:
-        console.print(
-            "\n🔥 [dim]No streaks yet — start a habit, log gratitude, hit your "
-            "step goal, complete a fast, or check in on a challenge.[/dim]\n"
-        )
+        if at_risk:
+            console.print(
+                "\n🔥 [dim green]No streaks at risk — everything active "
+                "has been continued today. ✓[/dim green]\n"
+            )
+        else:
+            console.print(
+                "\n🔥 [dim]No streaks yet — start a habit, log gratitude, "
+                "hit your step goal, complete a fast, or check in on a "
+                "challenge.[/dim]\n"
+            )
         return
-    console.print(f"\n🔥 [bold]Streaks[/bold]   "
-                   f"[dim]{len(rows)} active[/dim]\n")
+    title = "Streaks at risk" if at_risk else "Streaks"
+    console.print(
+        f"\n🔥 [bold]{title}[/bold]   [dim]{len(rows)} "
+        f"{'on the line' if at_risk else 'active'}[/dim]\n"
+    )
     for r in rows:
         cur = (f"[bold red]{r.current}[/bold red]" if r.current >= 7
                else f"[bold]{r.current}[/bold]" if r.current > 0
                else "[dim]0[/dim]")
         best = (f"  [dim]best {r.longest}[/dim]" if r.longest > r.current
                 else "  [dim]·[/dim]")
+        # At-risk warning vs done-today celebration — only when the
+        # streak is alive (current > 0).
+        if r.current > 0:
+            tag = (
+                "  [yellow]⚠ at risk[/yellow]" if not r.done_today
+                else "  [green]✓ done today[/green]"
+            )
+        else:
+            tag = ""
         note = f"   [dim]({r.note})[/dim]" if r.note else ""
         console.print(
-            f"  {r.emoji}  {r.name:<26} {cur:>3} {best}{note}"
+            f"  {r.emoji}  {r.name:<26} {cur:>3} {best}{tag}{note}"
         )
     console.print()
