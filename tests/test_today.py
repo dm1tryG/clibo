@@ -272,3 +272,61 @@ def test_today_symptoms_aggregates_episodes(cli):
     assert s["worst_intensity"] == 9
     assert s["worst_name"] == "migraine"
     assert sorted(s["names"]) == ["back pain", "migraine"]
+
+
+# ── tasks.done_today on the snapshot (iter 125) ──
+
+
+def _set_done_at(home_dir, task_id: int, when: date) -> None:
+    """Helper: backdate a task's completion to `when`. Tests need this
+    because `todo done` always stamps `done_at = today`."""
+    import sqlite3
+    con = sqlite3.connect(f"{home_dir}/clibo.db")
+    con.execute(
+        "UPDATE todo_task SET done=1, done_at=? WHERE id=?",
+        (when.isoformat(), task_id),
+    )
+    con.commit()
+    con.close()
+
+
+def test_today_lists_tasks_completed_today(cli, tmp_path):
+    """`today.tasks.done_today` shows tasks finished today."""
+    cli.run("todo", "add", "Ship it", "-p", "high")
+    cli.run("todo", "done", "1")
+    data = cli.json("today")
+    titles = [t["title"] for t in data["tasks"]["done_today"]]
+    assert "Ship it" in titles
+
+
+def test_yesterday_lists_tasks_completed_yesterday(cli, tmp_path):
+    """Answers 'what did I get done yesterday?' — the natural ask."""
+    cli.run("todo", "add", "Shipped yesterday", "-p", "high")
+    cli.run("todo", "add", "Still pending")
+    _set_done_at(str(tmp_path), 1, date.today() - timedelta(days=1))
+    data = cli.json("yesterday")
+    titles = [t["title"] for t in data["tasks"]["done_today"]]
+    assert titles == ["Shipped yesterday"]
+
+
+def test_today_done_today_excludes_other_days(cli, tmp_path):
+    """Tasks completed on different days don't leak into today's view."""
+    cli.run("todo", "add", "Done two days ago")
+    _set_done_at(str(tmp_path), 1, date.today() - timedelta(days=2))
+    data = cli.json("today")
+    assert data["tasks"]["done_today"] == []
+
+
+def test_yesterday_done_today_empty_when_nothing_finished(cli):
+    """No completed-yesterday tasks → empty list, not missing key."""
+    data = cli.json("yesterday")
+    assert data["tasks"]["done_today"] == []
+
+
+def test_done_today_preserves_priority(cli):
+    """The done-today block carries priority through."""
+    cli.run("todo", "add", "Critical", "-p", "high")
+    cli.run("todo", "done", "1")
+    item = cli.json("today")["tasks"]["done_today"][0]
+    assert item["priority"] == "high"
+    assert item["title"] == "Critical"

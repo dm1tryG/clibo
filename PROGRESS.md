@@ -4,6 +4,38 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 125 — `done_today` on today/yesterday + `goals` bare-default · 2026-05-24
+
+Two agent-mode frictions, both fixed.
+
+- 🏁 **`tasks.done_today` on the day snapshot** — `clibo yesterday`
+  now answers *"what did I get done yesterday?"*. Same field on
+  `clibo today` shows what's been finished since morning. Pulls
+  from `Task.done_at == snapshot_date`, exposed as a list of
+  `{title, priority}` in JSON and as a `🏁 Done yesterday  N` /
+  `🏁 Done today  N` section in the human view. Header label
+  adapts to the snapshot's date.
+- 🎯 **`clibo goals` (bare) now lists active goals** — was the
+  last entity-tool gap in the iter-110 bare-command rollout.
+  Now matches `clibo todo`, `clibo crm`, `clibo books`, etc.
+- 🎤 NL flows verified:
+  • `clibo yesterday --json` → `tasks.done_today` populated
+  • `clibo today --json` → `tasks.done_today` for in-day audit
+  • `clibo goals` (no args) → table of active goals
+- 🧪 **7 new tests**: 5 on `done_today` (today, yesterday,
+  date-isolation, empty-state, priority preservation) + 2 on
+  bare-`goals` (populated, empty-state).
+- **Tests:** 1,192 passing (+7); ruff clean.
+
+**Why this matters:** *"What did I get done yesterday?"* is the
+canonical end-of-week retrospective question. Before this iter,
+`clibo yesterday` showed the same in-progress shape as `today`
+(overdue + due_today + ongoing trackers), missing the completed
+list entirely. The Task model already had `done_at` — same
+data-collection-without-query pattern as iter 124's CRM fix.
+
+---
+
 ### Iteration 124 — `crm dormant`: surface who needs outreach · 2026-05-24
 
 Agent-mode probe of *"what contacts haven't I talked to in a

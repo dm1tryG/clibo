@@ -110,6 +110,16 @@ def collect_today(on: date | None = None) -> TodaySnapshot:
         tasks = list(db.exec(select(Task).where(Task.done == False)).all())  # noqa: E712
         overdue = [t for t in tasks if t.due and t.due < today]
         due_today = [t for t in tasks if t.due == today]
+        # Tasks completed on the snapshot's date — answers "what did I
+        # get done?". Especially valuable for `clibo yesterday`.
+        done_today_tasks = list(
+            db.exec(
+                select(Task)
+                .where(Task.done == True)  # noqa: E712
+                .where(Task.done_at == today)
+                .order_by(Task.id.desc())
+            ).all()
+        )
         # 🔥 Habits
         habits = list(
             db.exec(select(Habit).where(Habit.active == True)).all()  # noqa: E712
@@ -332,6 +342,10 @@ def collect_today(on: date | None = None) -> TodaySnapshot:
             pending=len(tasks),
             overdue=[TaskSummary(title=t.title, priority=t.priority) for t in overdue],
             due_today=[TaskSummary(title=t.title, priority=t.priority) for t in due_today],
+            done_today=[
+                TaskSummary(title=t.title, priority=t.priority)
+                for t in done_today_tasks
+            ],
         ),
         habits=HabitsBlock(
             total=len(habits),
@@ -457,6 +471,17 @@ def render_today(json_out: bool, on: date | None = None) -> None:
             console.print(f"  [red]⚠ overdue[/red]  {t.title}  [dim]({t.priority})[/dim]")
         for t in data.tasks.due_today:
             console.print(f"  [yellow]● today[/yellow]    {t.title}  [dim]({t.priority})[/dim]")
+        console.print()
+
+    # 🏁 Completed-on-this-day — most valuable on `clibo yesterday`,
+    # where the natural ask is "what did I get done?".
+    if data.tasks.done_today:
+        verb = "Done yesterday" if header == "Yesterday" else (
+            "Done today" if header == "Today" else f"Done on {data.date:%b %d}"
+        )
+        console.print(f"[bold]🏁 {verb}[/bold]  [green]{len(data.tasks.done_today)}[/green]")
+        for t in data.tasks.done_today:
+            console.print(f"  [green]✓[/green]  {t.title}  [dim]({t.priority})[/dim]")
         console.print()
 
     # 🔥 Habits
@@ -691,6 +716,7 @@ def render_today(json_out: bool, on: date | None = None) -> None:
     # Empty-state cheer
     has_anything = any([
         data.birthdays, data.tasks.overdue, data.tasks.due_today,
+        data.tasks.done_today,
         data.habits.total, metric_lines, data.events, data.meals,
         data.bills, data.followups, data.plants_thirsty, data.chores_due,
         data.fasting, today_lines, data.challenges_pending,

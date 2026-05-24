@@ -60,3 +60,23 @@ def test_deadline_accepts_d_shortcut(cli):
     data = cli.json("goals", "add", "Run a marathon", "-d", "in 6 months")
     assert data["name"] == "Run a marathon"
     assert data["deadline"] is not None
+
+
+# ── bare-command default (iter 125) ──
+
+
+def test_bare_goals_lists_active(cli):
+    """`clibo goals` (no subcommand) lists active goals — iter-110 convention."""
+    cli.run("goals", "add", "Read 30 books")
+    cli.run("goals", "add", "Run 1000km")
+    result = cli.run("goals")
+    assert result.exit_code == 0
+    assert "Read 30 books" in result.output
+    assert "Run 1000km" in result.output
+
+
+def test_bare_goals_empty_state(cli):
+    """No goals → graceful empty state, not a crash."""
+    result = cli.run("goals")
+    assert result.exit_code == 0
+    assert "No goals yet" in result.output

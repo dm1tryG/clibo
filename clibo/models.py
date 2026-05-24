@@ -39,6 +39,9 @@ class TasksBlock(_BaseSnapshot):
     pending: int
     overdue: list[TaskSummary]
     due_today: list[TaskSummary]
+    # Tasks completed on the snapshot's date — most useful on `yesterday`,
+    # where the natural question is "what did I get done?".
+    done_today: list[TaskSummary] = []
 
 
 class HabitItem(_BaseSnapshot):
