@@ -532,6 +532,75 @@ def top(
 
 
 @app.command()
+def stale(
+    days: int = typer.Option(
+        14, "--days", "-d",
+        help="Threshold in days since last reading session (default 14)",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
+    """🌫️  Books you're "reading" but haven't picked up in a while.
+
+    Mirrors ``ideas stale`` / ``crm dormant``. Books with status
+    ``reading`` whose most recent BookSession is older than ``--days``
+    (or that have no sessions at all but are flagged reading).
+    Sorted longest-untouched first. Answers *"which book have I
+    abandoned without admitting it?"*.
+    """
+    if days < 0:
+        fail("--days must be non-negative", json_out=json_out)
+    today = date.today()
+    cutoff = today - timedelta(days=days)
+    with session() as db:
+        reading_books = list(
+            db.exec(select(Book).where(Book.status == "reading")).all()
+        )
+        sessions = list(db.exec(select(BookSession)).all())
+    last_session: dict[int, date] = {}
+    for s in sessions:
+        prev = last_session.get(s.book_id)
+        if prev is None or s.entry_date > prev:
+            last_session[s.book_id] = s.entry_date
+
+    stale_rows: list[dict] = []
+    for b in reading_books:
+        last = last_session.get(b.id)
+        # No session → use `started` if present; otherwise fall back
+        # to "never picked up", days_since = days since created.
+        anchor = last or b.started
+        if anchor is None or anchor <= cutoff:
+            days_since = (today - anchor).days if anchor else None
+            stale_rows.append(_row(b) | {
+                "last_session": last,
+                "days_since_last_session": days_since,
+            })
+    # Sort: longest-untouched first; never-touched (None) at the top.
+    stale_rows.sort(
+        key=lambda r: (
+            r["days_since_last_session"] is not None,
+            -(r["days_since_last_session"] or 0),
+        )
+    )
+    render_rows(
+        stale_rows,
+        [("id", "ID"), ("title", "Title"), ("author", "Author"),
+         ("pages", "Pages"), ("last_session", "Last read"),
+         ("days_since_last_session", "Stale")],
+        json_out=json_out,
+        title=f"🌫️  Stale reads · >{days}d since a session",
+        formatters={
+            "days_since_last_session": lambda v, r: (
+                f"{v}d" if v is not None else "never"
+            ),
+        },
+        empty=(
+            f"All in-progress books have a session within "
+            f"the last {days} days. 📚"
+        ),
+    )
+
+
+@app.command()
 def stats(json_out: JsonOpt = False) -> None:
     """📊 Reading stats — finished, in-progress, pages read, session pace."""
     with session() as db:

@@ -334,3 +334,69 @@ def test_books_top_invalid_status_fails(cli):
 def test_books_top_empty_returns_empty_list(cli):
     rows = cli.json("books", "top")
     assert rows == []
+
+
+# ── books stale: in-progress reads that have gone cold ──
+
+
+def test_books_stale_excludes_books_with_recent_sessions(cli):
+    """A book read today shouldn't show up in stale."""
+    cli.run("books", "add", "Fresh", "-p", "300", "-s", "reading")
+    cli.run("books", "read", "Fresh", "50")  # today
+    rows = cli.json("books", "stale")
+    assert rows == []
+
+
+def test_books_stale_picks_old_reads(cli):
+    """A book whose last session is older than --days appears."""
+    cli.run("books", "add", "Stale", "-p", "400", "-s", "reading")
+    cli.run("books", "read", "Stale", "50", "-d", "30 days ago")
+    rows = cli.json("books", "stale")
+    titles = [r["title"] for r in rows]
+    assert "Stale" in titles
+    stale = next(r for r in rows if r["title"] == "Stale")
+    assert stale["days_since_last_session"] >= 29
+
+
+def test_books_stale_excludes_finished_and_wishlist(cli):
+    """Only `reading`-status books are eligible — finished/wishlist excluded."""
+    cli.run("books", "add", "Done", "-p", "100", "-s", "finished")
+    cli.run("books", "add", "Wished", "-p", "200")  # wishlist
+    cli.run("books", "add", "Open", "-p", "300", "-s", "reading")
+    cli.run("books", "read", "Open", "10", "-d", "30 days ago")
+    rows = cli.json("books", "stale")
+    titles = {r["title"] for r in rows}
+    assert titles == {"Open"}
+
+
+def test_books_stale_threshold(cli):
+    """`--days 60` only flags books over that threshold."""
+    cli.run("books", "add", "Recent stale", "-p", "300", "-s", "reading")
+    cli.run("books", "add", "Very stale", "-p", "400", "-s", "reading")
+    cli.run("books", "read", "Recent stale", "20", "-d", "20 days ago")
+    cli.run("books", "read", "Very stale", "30", "-d", "90 days ago")
+    rows = cli.json("books", "stale", "--days", "60")
+    titles = [r["title"] for r in rows]
+    assert titles == ["Very stale"]
+
+
+def test_books_stale_negative_days_fails(cli):
+    result = cli.run("books", "stale", "--days", "-1")
+    assert result.exit_code != 0
+
+
+def test_books_stale_sorted_longest_untouched_first(cli):
+    cli.run("books", "add", "Older", "-p", "300", "-s", "reading")
+    cli.run("books", "add", "Newer", "-p", "300", "-s", "reading")
+    cli.run("books", "read", "Older", "50", "-d", "60 days ago")
+    cli.run("books", "read", "Newer", "50", "-d", "30 days ago")
+    rows = cli.json("books", "stale")
+    assert [r["title"] for r in rows] == ["Older", "Newer"]
+
+
+def test_books_stale_empty_when_all_fresh(cli):
+    cli.run("books", "add", "Fresh", "-p", "300", "-s", "reading")
+    cli.run("books", "read", "Fresh", "50")
+    result = cli.run("books", "stale")
+    assert result.exit_code == 0
+    assert "All in-progress" in result.output

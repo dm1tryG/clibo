@@ -4,6 +4,35 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `clibo books stale` — books you're "reading" but aren't · 2026-05-24
+
+Continues the stale-data convention from the previous iter. The
+last-iter notes pointed at `books stale` as the natural next
+application of the lens — done.
+
+- 📚 **`clibo books stale [-d N]`** — `reading`-status books whose
+  most-recent `BookSession.entry_date` is older than N days
+  (default 14). Books with no session at all but flagged reading
+  show up too, anchored on the book's `started` date.
+- 🪞 Empty state: *"All in-progress books have a session within
+  the last N days 📚"*.
+- 🎤 NL flow verified:
+  • Book read today → not stale
+  • Book with 30-day-old session → stale at default 14d
+  • Finished and wishlist books always excluded
+  • Sort: longest-untouched first (triage order)
+- 🧪 **7 new tests**: fresh excluded, old picked, status filter,
+  threshold tuning, validation, sort order, empty state.
+- 📚 SKILL.md updated with the new subcommand.
+- **Tests:** 1,354 passing (+7); ruff clean.
+
+**Why this matters:** "reading" status that drifts into reality of
+"abandoned" is one of the most common book-tracker self-deceptions.
+`books stale` makes that visible — same pattern as `crm dormant`
+(contacts) and `ideas stale` (open ideas).
+
+---
+
 ### `clibo ideas stale` — surface ideas you've been sitting on · 2026-05-24
 
 NL ask: *"what have I been sitting on?"* — `ideas list` shows
