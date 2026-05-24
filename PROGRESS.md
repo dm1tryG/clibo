@@ -4,6 +4,52 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 114 — `clibo search` indexes 7 more entity tools · 2026-05-24
+
+Agent-mode probe on *"When was the last time I went to the
+dentist?"* surfaced a real gap: `clibo search dentist` returned
+**zero hits** despite an `events` row titled "Dentist
+appointment" being logged. `events` was simply not in the search
+index. Other key tools missed too.
+
+- 🔍 **7 new sources** added to `clibo search`:
+
+  | Source | Searches | Snippet |
+  |---|---|---|
+  | `events` | title, location, category, note | `Dentist appointment (2026-02-15)` |
+  | `birthdays` | person, note | `Mom · birthday (03-15)` |
+  | `goals` | name, description, note | `Read 30 books` (or `✓ Read 30 books` if done) |
+  | `jobs` | company, role, location, notes | `Software Engineer @ Stripe (interviewing)` |
+  | `leads` | name, contact, notes | `BigCorp deal · new — Alice at BigCorp` |
+  | `travel` | name, destination, notes | `Berlin trip → Berlin` |
+  | `pets` | name, species, breed, notes | `Whiskers (cat)` |
+
+- 🐛 **Bug caught**: `JobApplication.notes` (plural) — wrote
+  `.note` first; ruff caught the issue on import. Fixed and
+  pinned by 11 new search tests.
+- 🐛 **Ruff E741**: `lambda l:` for leads tripped the
+  "ambiguous variable name" lint. Renamed to `lambda lead:`.
+- 🎤 NL flow verified across all 7 — the original probe and
+  representative queries:
+  • `search dentist` → events ✓
+  • `search Mom` → birthdays ✓
+  • `search Berlin` → travel ✓
+  • `search Stripe` → jobs ✓
+  • `search "Maine Coon"` → pets (by breed) ✓
+  • `search BigCorp` → leads ✓
+  • `search reading` → goals (by name + description) ✓
+- 🧪 **11 new tests** spanning all 7 sources, covering both
+  primary fields (title/name) and secondary ones (location,
+  description, breed).
+- **Tests:** 1,114 passing (+11); ruff clean.
+
+`clibo search` was already the strongest cross-tool primitive;
+now it actually reaches everything text-bearing. The agent
+question *"when did I last do X?"* lands no matter which tool
+recorded it.
+
+---
+
 ### Iteration 113 — streak family completed: mileage + stretches + meditate · 2026-05-24
 
 Iter 112 added `workout streak` + workout to the top-level

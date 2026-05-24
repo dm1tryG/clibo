@@ -11,6 +11,7 @@ from __future__ import annotations
 from sqlalchemy import or_
 from sqlmodel import select
 
+from clibo.clis.birthdays import Occasion
 from clibo.clis.bookmark import Bookmark
 from clibo.clis.books import Book, BookSession
 from clibo.clis.brag import Achievement
@@ -21,20 +22,25 @@ from clibo.clis.cv import CvEntry
 from clibo.clis.documents import Document
 from clibo.clis.donations import Donation
 from clibo.clis.dreams import Dream
+from clibo.clis.events import Event
 from clibo.clis.expense import Expense
 from clibo.clis.fasting import FastSession
 from clibo.clis.films import Film
 from clibo.clis.gifts import Gift
+from clibo.clis.goals import Goal
 from clibo.clis.gratitude import GratitudeEntry
 from clibo.clis.ideas import Idea
 from clibo.clis.income import IncomeEntry
 from clibo.clis.invest import Transaction as InvestTransaction
+from clibo.clis.jobs import JobApplication
 from clibo.clis.journal import JournalEntry
+from clibo.clis.leads import Lead
 from clibo.clis.lessons import Lesson
 from clibo.clis.meetings import Meeting
 from clibo.clis.network import Connection
 from clibo.clis.notes import Note
 from clibo.clis.packages import Package
+from clibo.clis.pets import Pet
 from clibo.clis.quotes import Quote
 from clibo.clis.recipes import Recipe
 from clibo.clis.steps import StepEntry
@@ -42,6 +48,7 @@ from clibo.clis.stretches import StretchSession
 from clibo.clis.symptom import Symptom
 from clibo.clis.tip import TipEntry
 from clibo.clis.todo import Task
+from clibo.clis.travel import Trip
 from clibo.clis.wishlist import WishlistItem
 from clibo.clis.worklog import WorkLogEntry
 from clibo.clis.writing import WritingSession
@@ -174,6 +181,33 @@ SOURCES: list[tuple] = [
       Symptom.relief, Symptom.note],
      lambda s: f"{s.name} {s.intensity}/10"
                 + (f" ({s.location})" if s.location else "")),
+    # ── entity tools (iter 114 — were missing from search) ───────────────
+    ("events", Event,
+     [Event.title, Event.location, Event.category, Event.note],
+     lambda e: f"{e.title} ({e.event_date})"
+                + (f" @ {e.location}" if e.location else "")),
+    ("birthdays", Occasion,
+     [Occasion.person, Occasion.note],
+     lambda o: f"{o.person} · {o.kind} ({o.month:02d}-{o.day:02d})"),
+    ("goals", Goal,
+     [Goal.name, Goal.description, Goal.note],
+     lambda g: f"{'✓ ' if g.done else ''}{g.name}"),
+    ("jobs", JobApplication,
+     [JobApplication.company, JobApplication.role,
+      JobApplication.location, JobApplication.notes],
+     lambda j: f"{j.role} @ {j.company} ({j.status})"),
+    ("leads", Lead,
+     [Lead.name, Lead.contact, Lead.notes],
+     lambda lead: f"{lead.name} · {lead.stage}"
+                + (f" — {lead.contact}" if lead.contact else "")),
+    ("travel", Trip,
+     [Trip.name, Trip.destination, Trip.notes],
+     lambda t: t.name
+                + (f" → {t.destination}" if t.destination else "")),
+    ("pets", Pet,
+     [Pet.name, Pet.species, Pet.breed, Pet.notes],
+     lambda p: f"{p.name}"
+                + (f" ({p.species})" if p.species else "")),
 ]
 
 
