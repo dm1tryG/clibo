@@ -236,25 +236,32 @@ def currency(
 def year(
     yr: int = typer.Option(None, "--year", "-y",
                             help="Calendar year (default: current)"),
+    category: str = typer.Option(
+        None, "--category", "-c",
+        help="Narrow to a single category (e.g. food, rent). "
+             "Answers 'how much did I spend on X this year?'",
+    ),
     json_out: JsonOpt = False,
 ) -> None:
     """📅 Annual spending — total, by_category, by_month, biggest expense.
 
     Mirrors `donations year` / `books year`. Answers *"what was my
     most expensive month?"* via `by_month`, *"what's my biggest
-    spending category this year?"* via `by_category`.
+    spending category this year?"* via `by_category`. Pass
+    ``--category food`` to scope every aggregate to that category.
     """
     target_year = yr or date.today().year
     start = date(target_year, 1, 1)
     end = date(target_year, 12, 31)
     with session() as db:
-        entries = list(
-            db.exec(
-                select(Expense)
-                .where(Expense.entry_date >= start)
-                .where(Expense.entry_date <= end)
-            ).all()
+        query = (
+            select(Expense)
+            .where(Expense.entry_date >= start)
+            .where(Expense.entry_date <= end)
         )
+        if category:
+            query = query.where(Expense.category == category.lower())
+        entries = list(db.exec(query).all())
     total = round(sum(e.amount for e in entries), 2)
     by_cat: dict[str, float] = {}
     by_month: dict[int, float] = {}
@@ -292,8 +299,10 @@ def year(
             if biggest_expense else None
         ),
         "currency": get_currency(),
+        "category": category.lower() if category else None,
     }
-    render_record(data, json_out=json_out, title=f"📅 Spending · {target_year}")
+    label = f"{target_year}" + (f" · {category.lower()}" if category else "")
+    render_record(data, json_out=json_out, title=f"📅 Spending · {label}")
 
 
 @app.command()

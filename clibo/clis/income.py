@@ -240,24 +240,40 @@ def rm(
 def year(
     yr: int = typer.Option(None, "--year", "-y",
                             help="Calendar year (default: current)"),
+    category: str = typer.Option(
+        None, "--category", "-c",
+        help="Narrow to one category (freelance/salary/gift/refund/…). "
+             "Answers 'how much freelance income this year?'",
+    ),
+    source: str = typer.Option(
+        None, "--source", "-s",
+        help="Narrow to one source (fuzzy substring match). "
+             "Answers 'how much did Acme pay me this year?'",
+    ),
     json_out: JsonOpt = False,
 ) -> None:
     """📅 Annual income — total, by_category, by_month, biggest source.
 
     Mirrors `expense year` / `donations year`. Answers
     *"how much did I make this year?"* + the per-month breakdown.
+    Filter with ``--category`` or ``--source`` to scope every
+    aggregate; combine them to answer *"how much salary from
+    Acme this year?"*.
     """
     target_year = yr or date.today().year
     start = date(target_year, 1, 1)
     end = date(target_year, 12, 31)
     with session() as db:
-        entries = list(
-            db.exec(
-                select(IncomeEntry)
-                .where(IncomeEntry.entry_date >= start)
-                .where(IncomeEntry.entry_date <= end)
-            ).all()
+        query = (
+            select(IncomeEntry)
+            .where(IncomeEntry.entry_date >= start)
+            .where(IncomeEntry.entry_date <= end)
         )
+        if category:
+            query = query.where(IncomeEntry.category == category.lower())
+        if source:
+            query = query.where(IncomeEntry.source.ilike(f"%{source}%"))
+        entries = list(db.exec(query).all())
     total = round(sum(e.amount for e in entries), 2)
     by_cat: dict[str, float] = {}
     by_source: dict[str, float] = {}
@@ -293,8 +309,15 @@ def year(
             if biggest_month else None
         ),
         "currency": get_currency(),
+        "category": category.lower() if category else None,
+        "source": source if source else None,
     }
-    render_record(data, json_out=json_out, title=f"📅 Income · {target_year}")
+    label_bits = [str(target_year)]
+    if category:
+        label_bits.append(category.lower())
+    if source:
+        label_bits.append(f"src={source}")
+    render_record(data, json_out=json_out, title=f"📅 Income · {' · '.join(label_bits)}")
 
 
 @app.command()

@@ -15,6 +15,7 @@ command accepts `--json`. Uses the same shared `money/currency` setting.
 | `clibo income add SOURCE -a AMOUNT -c CATEGORY` | Log an income event |
 | `clibo income list --days 30 [-c CATEGORY]` | Recent income |
 | `clibo income month [-m YYYY-MM]` | This month's breakdown by category |
+| `clibo income year [-c CATEGORY] [-s SOURCE]` | Annual breakdown; filter to one category or source |
 | `clibo income show ID` | Detail |
 | `clibo income edit ID` | Edit an entry |
 | `clibo income rm ID` | Delete |
@@ -32,6 +33,8 @@ Common categories: `salary`, `freelance`, `gift`, `refund`, `dividend`,
 | "Mom sent me 100 for my birthday" | `clibo income add "Mom — birthday" -a 100 -c gift` |
 | "Refund from Amazon, 23.50" | `clibo income add "Amazon refund" -a 23.50 -c refund` |
 | "What did I earn this month?" | `clibo income month` |
+| "How much salary did I get this year?" | `clibo income year -c salary` |
+| "How much did Acme pay me this year?" | `clibo income year -s acme` |
 
 ```bash
 clibo income month --json

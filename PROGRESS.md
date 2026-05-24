@@ -4,6 +4,38 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 126 — `expense/income year` gain filter flags · 2026-05-24
+
+NL-probe friction: *"How much did I spend on food this year?"* —
+`expense year` returns the whole-year breakdown with `by_category`,
+but you can't scope the query down to a single category. Same gap
+on `income year` for `--category` and `--source`. Fixed.
+
+- 💸 **`expense year --category food`** — scopes total/expenses/
+  biggest_expense/by_month to one category. `by_category` then
+  contains just the filtered category for symmetry. The new
+  `category` JSON field echoes the active filter (or `null`).
+- 💵 **`income year --category salary`** + **`--source acme`** —
+  category filter mirrors expense; source filter is fuzzy (ILIKE
+  `%acme%`). Both can combine: *"How much salary from Acme?"*
+- 🎤 NL flows verified:
+  • `expense year -c food` → just food's annual total
+  • `income year -c salary -s acme` → intersection of both filters
+  • `income year -s CORP` → case-insensitive substring match
+- 🧪 **9 new tests**: 4 on expense (filter, default null, case-
+  insensitive, no-match graceful), 5 on income (category, source,
+  combined, fuzzy substring, defaults null).
+- 📚 Both SKILL.md updated with `--category` + `--source` examples
+  and the matching NL→command rows.
+- **Tests:** 1,201 passing (+9); ruff clean.
+
+**Why this matters:** the annual rollup from iter 122 was already
+the natural answer to *"how was my year?"* — adding filter flags
+turns it into *"how was my year for X?"* without dropping into
+SQL or piping through `jq`.
+
+---
+
 ### Iteration 125 — `done_today` on today/yesterday + `goals` bare-default · 2026-05-24
 
 Two agent-mode frictions, both fixed.

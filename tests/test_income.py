@@ -140,3 +140,55 @@ def test_income_stats_includes_by_year(cli):
     data = cli.json("income", "stats")
     assert "by_year" in data
     assert data["by_year"][0]["total"] == 5000
+
+
+# ── income year --category / --source filters (iter 126) ──
+
+
+def test_income_year_filter_by_category(cli):
+    """`--category salary` scopes to salary entries only."""
+    cli.run("income", "add", "Acme", "-a", "5000", "-c", "salary")
+    cli.run("income", "add", "Acme", "-a", "5000", "-c", "salary")
+    cli.run("income", "add", "Stripe", "-a", "1000", "-c", "freelance")
+    data = cli.json("income", "year", "--category", "salary")
+    assert data["total"] == 10000.0
+    assert data["entries"] == 2
+    assert data["category"] == "salary"
+
+
+def test_income_year_filter_by_source(cli):
+    """`--source acme` answers 'how much did Acme pay me this year?'."""
+    cli.run("income", "add", "Acme Corp", "-a", "5000", "-c", "salary")
+    cli.run("income", "add", "Acme Corp", "-a", "3000", "-c", "salary")
+    cli.run("income", "add", "Stripe", "-a", "1000", "-c", "freelance")
+    data = cli.json("income", "year", "--source", "acme")
+    assert data["total"] == 8000.0
+    assert data["entries"] == 2
+    assert data["source"] == "acme"
+
+
+def test_income_year_combine_filters(cli):
+    """`--category salary --source acme` intersects both filters."""
+    cli.run("income", "add", "Acme", "-a", "5000", "-c", "salary")
+    cli.run("income", "add", "Acme", "-a", "500", "-c", "gift")
+    cli.run("income", "add", "Stripe", "-a", "1000", "-c", "salary")
+    data = cli.json("income", "year", "--category", "salary", "--source", "acme")
+    assert data["total"] == 5000.0
+    assert data["entries"] == 1
+
+
+def test_income_year_source_is_fuzzy_substring(cli):
+    """`--source corp` matches `Acme Corp` (case-insensitive substring)."""
+    cli.run("income", "add", "Acme Corp", "-a", "5000")
+    cli.run("income", "add", "Stripe", "-a", "1000")
+    data = cli.json("income", "year", "--source", "CORP")
+    assert data["entries"] == 1
+    assert data["total"] == 5000.0
+
+
+def test_income_year_no_filter_keeps_fields_null(cli):
+    """Without filters, both `category` and `source` are None."""
+    cli.run("income", "add", "Anywhere", "-a", "100")
+    data = cli.json("income", "year")
+    assert data["category"] is None
+    assert data["source"] is None

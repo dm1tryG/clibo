@@ -121,3 +121,42 @@ def test_expense_stats_includes_by_year(cli):
     from datetime import date
     assert data["by_year"][0]["year"] == date.today().year
     assert data["by_year"][0]["total"] == 1500
+
+
+# ── expense year --category filter (iter 126) ──
+
+
+def test_expense_year_filter_by_category(cli):
+    """`--category food` answers 'how much did I spend on food this year?'."""
+    cli.run("expense", "add", "Groceries", "-a", "50", "-c", "food")
+    cli.run("expense", "add", "Restaurant", "-a", "80", "-c", "food")
+    cli.run("expense", "add", "Rent", "-a", "1500", "-c", "housing")
+    data = cli.json("expense", "year", "--category", "food")
+    assert data["total"] == 130.0
+    assert data["expenses"] == 2
+    assert data["category"] == "food"
+    # by_category now contains only the filtered category.
+    assert data["by_category"] == [{"category": "food", "amount": 130.0}]
+
+
+def test_expense_year_no_filter_keeps_category_null(cli):
+    """Without --category, the new `category` field stays None."""
+    cli.run("expense", "add", "Anything", "-a", "10", "-c", "food")
+    data = cli.json("expense", "year")
+    assert data["category"] is None
+
+
+def test_expense_year_category_case_insensitive(cli):
+    """`--category FOOD` matches lowercase-stored `food`."""
+    cli.run("expense", "add", "Groceries", "-a", "50", "-c", "food")
+    data = cli.json("expense", "year", "--category", "FOOD")
+    assert data["expenses"] == 1
+
+
+def test_expense_year_category_no_match(cli):
+    """Unknown category → zero total, but doesn't crash."""
+    cli.run("expense", "add", "Groceries", "-a", "50", "-c", "food")
+    data = cli.json("expense", "year", "--category", "nonexistent")
+    assert data["total"] == 0
+    assert data["expenses"] == 0
+    assert data["biggest_expense"] is None
