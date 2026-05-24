@@ -137,3 +137,64 @@ def test_single_writing_entry_is_not_active(cli):
     data = cli.json("checkin")
     names = [c["name"] for c in data["logged"] + data["pending"]]
     assert "Writing" not in names
+
+
+# ── --all flag for discovery (iter 129) ──
+
+
+def test_checkin_all_lists_every_tracker_when_empty(cli):
+    """`checkin --all` on a fresh install surfaces all 14 trackers."""
+    data = cli.json("checkin", "--all")
+    names = {c["name"] for c in data["pending"] + data["logged"]}
+    expected = {
+        "Weight", "Sleep", "Mood", "Steps", "Workout", "Caffeine",
+        "Meditate", "Stretches", "Mileage", "Journal", "Gratitude",
+        "Writing", "Symptom", "Fasting",
+    }
+    assert expected <= names
+    assert data["pending_count"] == len(expected)
+    assert data["logged_count"] == 0
+
+
+def test_checkin_all_marks_logged_today_correctly(cli):
+    """If a tracker has today's entry, --all moves it to `logged`."""
+    cli.run("weight", "log", "70")
+    data = cli.json("checkin", "--all")
+    logged_names = {c["name"] for c in data["logged"]}
+    pending_names = {c["name"] for c in data["pending"]}
+    assert "Weight" in logged_names
+    assert "Weight" not in pending_names
+
+
+def test_checkin_all_carries_old_last_value(cli):
+    """Inactive trackers still surface their last-ever entry's value."""
+    cli.run("weight", "log", "70", "-d", "2025-01-01")
+    data = cli.json("checkin", "--all")
+    weight_row = next(c for c in data["pending"] + data["logged"]
+                      if c["name"] == "Weight")
+    assert weight_row["last_value"] == "70 kg"
+    assert weight_row["last_days_ago"] is not None
+    assert weight_row["last_days_ago"] > 0
+
+
+def test_checkin_without_all_still_filters_to_active(cli):
+    """`--all` is opt-in; default behaviour unchanged."""
+    cli.run("weight", "log", "70")
+    data = cli.json("checkin")
+    names = {c["name"] for c in data["pending"] + data["logged"]}
+    # Only an actively-tracked thing makes it in; nothing else leaks.
+    assert names <= {"Weight"}
+
+
+def test_checkin_empty_state_hint_mentions_all_flag(cli):
+    """The empty-state message should point users at `--all`."""
+    result = cli.run("checkin")
+    assert result.exit_code == 0
+    assert "--all" in result.output
+
+
+def test_checkin_all_human_view_runs(cli):
+    """Rich render works in --all mode without crashing."""
+    result = cli.run("checkin", "--all")
+    assert result.exit_code == 0
+    assert "All trackers" in result.output

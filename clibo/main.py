@@ -257,20 +257,32 @@ def streaks(json_out: JsonOpt = False) -> None:
 
 
 @app.command()
-def checkin(json_out: JsonOpt = False) -> None:
+def checkin(
+    all_trackers: bool = typer.Option(
+        False, "--all", "-a",
+        help="Show every tracker clibo knows about, not just active ones. "
+             "Useful for discovery: 'what can I log?'",
+    ),
+    json_out: JsonOpt = False,
+) -> None:
     """📋 Pending daily check-ins across every actively-tracked tool.
 
     Surfaces one question per actively-used tracker (≥2 entries in the last
     14 days) that hasn't been logged today, with a copy-pasteable command
     and the last known value. `--json` outputs the same data structured —
     ideal for an AI agent to ask the user one question at a time.
+
+    Pass ``--all`` to also list inactive trackers (under the 2-in-14d
+    threshold) so you can discover what other tools are available to log.
     """
     from datetime import date as _date
 
     from clibo.models import CheckinSummary
     today = _date.today()
     with session() as db:
-        checkins = collect_checkins(db, today=today)
+        checkins = collect_checkins(
+            db, today=today, include_inactive=all_trackers,
+        )
     pending = [c for c in checkins if not c.logged_today]
     done = [c for c in checkins if c.logged_today]
     summary = CheckinSummary(
@@ -287,15 +299,20 @@ def checkin(json_out: JsonOpt = False) -> None:
         console.print(
             "\n  📋 [dim]No active trackers detected yet.[/dim]   "
             "[dim](A tracker becomes active after 2+ entries in 14 days.)[/dim]\n"
+            "  [dim]Run [cyan]clibo checkin --all[/cyan] to see every "
+            "tracker available to log.[/dim]\n"
         )
         return
-    if not pending:
+    if not pending and not all_trackers:
         console.print(
             f"\n  📋 [green]✓ All {len(done)} daily check-ins are in for today.[/green]\n"
         )
         return
+    header = (
+        "📋 All trackers" if all_trackers else "📋 Today's check-ins"
+    )
     console.print(
-        f"\n[bold]📋 Today's check-ins[/bold]   "
+        f"\n[bold]{header}[/bold]   "
         f"[cyan]{len(done)}[/cyan] done   ·   "
         f"[yellow]{len(pending)}[/yellow] pending\n"
     )
@@ -309,6 +326,16 @@ def checkin(json_out: JsonOpt = False) -> None:
                 f"      💡 last [dim]{ci.last_value}{ago_part}[/dim]"
             )
         console.print(f"      ➤  [cyan]{ci.command}[/cyan]\n")
+    # In --all mode, also show what's already logged today so the view
+    # is exhaustive — answers "what's left to log?" at a glance.
+    if all_trackers and done:
+        console.print("[bold]✓ Already logged today[/bold]\n")
+        for ci in done:
+            console.print(
+                f"  {ci.emoji}  [green]{ci.name}[/green]  "
+                f"[dim]{ci.today_value}[/dim]"
+            )
+        console.print()
 
 
 @app.command()

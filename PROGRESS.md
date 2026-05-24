@@ -4,6 +4,41 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### Iteration 129 — `clibo checkin --all` for tracker discovery · 2026-05-24
+
+Real-user friction surfaced in conversation: on a fresh install,
+`clibo checkin` says "No active trackers detected yet" — accurate
+but a dead end. The user has no way to discover what trackers
+clibo even *has* without trawling `--help`.
+
+- 📋 **`clibo checkin --all`** — surface every tracker clibo
+  knows about (all 14 in `checkins.TRACKERS`), regardless of
+  the 2-in-14-day activity threshold. Inactive trackers still
+  carry their last-ever entry as context. Answers *"what can
+  I log?"* directly.
+- 🧭 **Empty-state hint** updated: now points the user at
+  `clibo checkin --all` so the dead end becomes onboarding.
+- 🪞 In `--all` mode the human view splits into two sections —
+  pending discovery list, then a *✓ Already logged today*
+  recap — so the exhaustive view stays scannable.
+- ⚙ `collect_checkins(..., include_inactive=True)` — same logic
+  available to anyone calling the collector directly (today's
+  dashboard, etc.) without changing default behaviour.
+- 🧪 **6 new tests** in `tests/test_checkins.py`: all-14-trackers
+  appear under `--all`, today's log moves to `logged`, very-old
+  entries still carry through as `last_value`, default mode
+  unchanged, empty hint mentions `--all`, human render runs.
+- **Tests:** 1,234 passing (+6); ruff clean.
+
+**Why this matters:** the user asked *"how do I know what to fill
+in today?"* — the answer was `clibo checkin`, but discoverability
+was poor. The two-in-fourteen-days activity threshold is the right
+default for daily prompts, but on day 1 (or after a long pause)
+it produced a wall of nothing. `--all` turns the same command
+into a discovery aid without polluting the default flow.
+
+---
+
 ### Iteration 128 — `clibo overdue`: everything that already slipped · 2026-05-24
 
 The retrospective companion to iter 127's `upcoming`. NL-probe

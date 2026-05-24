@@ -195,13 +195,22 @@ def _entry_date_of(tracker: _Tracker, entry: Any) -> date:
 
 
 def collect_checkins(
-    db: Any, today: date | None = None, days: int = ACTIVE_WINDOW_DAYS
+    db: Any,
+    today: date | None = None,
+    days: int = ACTIVE_WINDOW_DAYS,
+    include_inactive: bool = False,
 ) -> list[CheckinStatus]:
-    """Return one :class:`CheckinStatus` per actively-used tracker.
+    """Return one :class:`CheckinStatus` per tracker.
 
     ``db`` is an open SQLModel session. ``days`` controls the activity window.
     A tracker is "active" if it has at least
-    :data:`MIN_ENTRIES_TO_BE_ACTIVE` entries in the window.
+    :data:`MIN_ENTRIES_TO_BE_ACTIVE` entries in the window — by default,
+    only active trackers are returned.
+
+    Pass ``include_inactive=True`` to include every defined tracker
+    regardless of usage. The inactive ones come back with ``last_value``
+    derived from any entry ever (or ``None`` if there is none) so the
+    user can still discover what's available to log.
     """
     today = today or date.today()
     since = today - timedelta(days=days - 1)
@@ -216,6 +225,36 @@ def collect_checkins(
             ).all()
         )
         if len(entries) < MIN_ENTRIES_TO_BE_ACTIVE:
+            if not include_inactive:
+                continue
+            # Inactive tracker: try to surface *any* prior entry for
+            # context, even if it's older than the activity window.
+            last_entry = db.exec(
+                select(tc.model).order_by(date_col.desc())
+            ).first()
+            today_entry = (
+                last_entry
+                if last_entry and _entry_date_of(tc, last_entry) == today
+                else None
+            )
+            if today_entry is last_entry:
+                last_entry = None  # don't repeat it in last_value
+            last_days_ago = (
+                (today - _entry_date_of(tc, last_entry)).days
+                if last_entry else None
+            )
+            results.append(CheckinStatus(
+                name=tc.name,
+                emoji=tc.emoji,
+                logged_today=today_entry is not None,
+                today_value=(
+                    tc.format_value(today_entry) if today_entry else None
+                ),
+                last_value=tc.format_value(last_entry) if last_entry else None,
+                last_days_ago=last_days_ago,
+                question=tc.question,
+                command=tc.command,
+            ))
             continue
         today_entry = next(
             (e for e in entries if _entry_date_of(tc, e) == today), None
