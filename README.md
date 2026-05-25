@@ -161,7 +161,10 @@ A handful of root commands tie all 74 tools together:
 | `clibo month [-y Y] [-m M]` | Calendar-month rollup: money-first (income vs expenses vs donations + net cash flow), then health & wellness, productivity, hobbies (books finished, films watched). |
 | `clibo year [-y Y]` | Calendar-year rollup: total income/expenses/donations + net cash flow, biggest spending month, tasks done, focus hours, books finished, writing words, workouts, sleep average, weight change. Sister to `today`/`week`/`month`. |
 | `clibo lifetime` | All-time totals across every tracker — total income/expenses earned/spent, all books finished, all words written, all mileage, weight range, years-since-first-log. The unbounded sister to `clibo year`. |
-| `clibo recent` | A chronological activity feed across every tool — newest first, with relative timestamps ("just now", "yesterday"). |
+| `clibo recent [--tool X]` | A chronological activity feed across every tool — newest first, with relative timestamps. `--tool workout` filters to one source. |
+| `clibo compare [--month\|--year-mode]` | Week-over-week (default), month-over-month, or year-over-year comparison across 17+ metrics with direction-aware "better/worse" labels. |
+| `clibo streaks [--at-risk]` | Every live streak across the suite — habits, gratitude, step-goal, fasting, workouts, meditate, stretches, mileage, challenges. `--at-risk` filters to streaks not yet continued today. |
+| `clibo checkin [--all]` | Pending daily check-ins across every actively-tracked tool — one question per tool with a copy-pasteable command. `--all` shows every tracker for discovery. |
 | `clibo backup [PATH]` | Copy the local SQLite database to a timestamped `.db` backup (default: `~/.clibo/backups/`). |
 | `clibo restore PATH` | Replace the live database with a backup. |
 | `clibo export [PATH]` | Dump every clibo table to one JSON file — ideal for an agent to read the whole local state in one go. |

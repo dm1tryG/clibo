@@ -1,8 +1,10 @@
-"""Tests for the shared parse_minutes / parse_hours helpers.
+"""Tests for the shared input-parsing helpers in ``clibo.core.base``.
 
-These power the H:MM notation across sleep / focus / meditate /
-stretches / workout. Pinning them here so any change to the parsing
-contract fails loudly in one focused place.
+Covers ``parse_minutes`` / ``parse_hours`` (H:MM duration notation),
+``parse_weight_kg`` (kg / lb with auto-conversion),
+``parse_distance_km`` (km / mi), ``parse_volume_ml`` (ml / oz / L),
+and ``parse_temperature_c`` (C / F). Pinning them here so any change
+to the parsing contract fails loudly in one focused place.
 """
 
 from __future__ import annotations
