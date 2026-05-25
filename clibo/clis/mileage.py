@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import typer
 from sqlmodel import Field, SQLModel, select
 
-from clibo.core.base import parse_date, parse_minutes
+from clibo.core.base import parse_date, parse_distance_km, parse_minutes
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, bar, console, fail, ok, render_record, render_rows
 from clibo.core.settings import get_setting, set_setting
@@ -70,7 +70,11 @@ def _weekly_goal() -> float:
 
 @app.command()
 def log(
-    distance_km: float = typer.Argument(..., help="Distance in km"),
+    distance_km: str = typer.Argument(
+        ...,
+        help="Distance — km by default ('5'), or with explicit suffix "
+             "('5km' / '3.1mi'); miles auto-convert to km",
+    ),
     activity: str = typer.Option("run", "--activity", "-a",
                                  help=f"{'/'.join(ACTIVITIES)}"),
     duration: str = typer.Option(
@@ -81,15 +85,20 @@ def log(
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
 ) -> None:
-    """🏃 Log a distance-based activity session."""
-    if distance_km <= 0:
+    """🏃 Log a distance-based activity session.
+
+    Accepts km by default (``5``), or with explicit suffix (``5km`` /
+    ``3.1mi``). Miles auto-convert to km via 1 mi = 1.609344 km.
+    """
+    parsed_km = parse_distance_km(distance_km)
+    if parsed_km <= 0:
         fail("Distance must be positive", json_out=json_out)
     activity = activity.lower()
     if activity not in ACTIVITIES:
         fail(f"Activity must be one of: {', '.join(ACTIVITIES)}", json_out=json_out)
     parsed_duration = parse_minutes(duration)
     entry = MileageEntry(
-        activity=activity, distance_km=distance_km, duration_min=parsed_duration,
+        activity=activity, distance_km=parsed_km, duration_min=parsed_duration,
         entry_date=parse_date(on), note=note,
     )
     with session() as db:
@@ -99,7 +108,7 @@ def log(
         data = _row(entry)
     pace = (f" — {data['pace_min_per_km']:.2f} min/km"
             if data["pace_min_per_km"] else "")
-    ok(f"Logged {EMOJI} {distance_km:g} km {activity}{pace}",
+    ok(f"Logged {EMOJI} {parsed_km:g} km {activity}{pace}",
        json_out=json_out, data=data)
 
 

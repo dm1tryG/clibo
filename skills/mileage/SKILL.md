@@ -13,7 +13,7 @@ command accepts `--json`.
 
 | Command | What it does |
 |---|---|
-| `clibo mileage log KM -a ACTIVITY -t MIN` | Log a session (also `-d` date, `-n` note) |
+| `clibo mileage log DISTANCE -a ACTIVITY -t MIN` | Log a session — `5`, `5km`, or `3.1mi` (miles auto-convert); duration accepts H:MM |
 | `clibo mileage list --days 14 [-a ACTIVITY]` | Recent sessions |
 | `clibo mileage week` | This week's distance vs the weekly goal |
 | `clibo mileage goal --set 25` | Set weekly km goal (default 20) |

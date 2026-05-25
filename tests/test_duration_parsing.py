@@ -128,3 +128,48 @@ def test_parse_weight_kg_strips_case():
 def test_parse_weight_kg_bad_input_fails():
     with pytest.raises(typer.BadParameter):
         parse_weight_kg("heavy")
+
+
+# ── parse_distance_km ────────────────────────────────────────────────────
+
+
+from clibo.core.base import parse_distance_km  # noqa: E402
+
+
+def test_parse_distance_km_plain_float():
+    assert parse_distance_km(5) == 5.0
+    assert parse_distance_km(5.5) == 5.5
+
+
+def test_parse_distance_km_plain_string():
+    assert parse_distance_km("5") == 5.0
+
+
+def test_parse_distance_km_with_km_suffix():
+    assert parse_distance_km("5km") == 5.0
+    assert parse_distance_km("5 km") == 5.0
+
+
+def test_parse_distance_km_mi_converts_to_km():
+    """3.1 mi × 1.609344 = 4.989 km (rounded to 3 dp)."""
+    assert parse_distance_km("3.1mi") == 4.989
+
+
+def test_parse_distance_km_miles_plural():
+    """'5 miles' (space + plural) → 8.047 km."""
+    assert parse_distance_km("5 miles") == 8.047
+
+
+def test_parse_distance_km_mile_singular():
+    """'1 mile' (singular) also works."""
+    assert parse_distance_km("1 mile") == 1.609
+
+
+def test_parse_distance_km_strips_case():
+    assert parse_distance_km("5KM") == 5.0
+    assert parse_distance_km("3.1MI") == 4.989
+
+
+def test_parse_distance_km_bad_input_fails():
+    with pytest.raises(typer.BadParameter):
+        parse_distance_km("far")

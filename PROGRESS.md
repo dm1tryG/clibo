@@ -4,6 +4,32 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `mileage log` accepts `km` / `mi` distance suffixes · 2026-05-25
+
+NL friction: *"I ran 5 miles"* / *"3.1mi"* / *"5km"* all rejected —
+bare-number-only. Same paper cut as weight last iter.
+
+- 🏃 **`clibo mileage log 5`** — km assumed (back-compat)
+- 🏃 **`clibo mileage log "5km"`** — explicit km suffix
+- 🏃 **`clibo mileage log "3.1mi"`** — miles → 4.989 km via
+  1 mi = 1.609344 km (international exact)
+- 🏃 **`clibo mileage log "5 miles"`** — space + plural works;
+  `1 mile` singular also works
+- Mixed-case (`5KM`, `3.1MI`) parsed the same.
+- 🧰 **New helper `parse_distance_km`** in `clibo/core/base.py` —
+  joins `parse_weight_kg` / `parse_minutes` / `parse_hours` as a
+  shared input-form parser.
+- 🧪 **8 helper unit tests + 5 mileage CLI integration tests**
+  covering km/mi/miles/mile, plural, mixed-case, bad input.
+- 📚 SKILL.md updated.
+- **Tests:** 1,483 passing (+13); ruff clean.
+
+**Why this matters:** US runners think in miles. Same conversion-on-
+input win as `165lb → 74.84kg`. Five canonical-notation papers cuts
+fixed in five iterations.
+
+---
+
 ### `weight log` accepts `kg` / `lb` unit suffixes · 2026-05-25
 
 NL friction: `clibo weight log 70.5kg` and `clibo weight log 165lb`

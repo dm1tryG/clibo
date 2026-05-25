@@ -332,3 +332,44 @@ def parse_weight_kg(value: str | float) -> float:
     if unit == "lb":
         amount = amount * _LB_TO_KG
     return round(amount, 2)
+
+
+# 1 mile = 1.609344 km (international standard, exact).
+_MILE_TO_KM = 1.609344
+
+
+def parse_distance_km(value: str | float) -> float:
+    """Parse a distance value into kilometres.
+
+    Accepts:
+      * plain float / numeric string (``5``, ``"5"``) — assumed km
+      * ``"5km"`` / ``"5 km"`` — explicit km suffix
+      * ``"3.1mi"`` / ``"3.1 mi"`` / ``"3.1 miles"`` — miles, converted
+        to km using 1 mile = 1.609344 km.
+
+    Output is rounded to 3 decimal places. Raises ``typer.BadParameter``
+    on bad input.
+    """
+    if isinstance(value, int | float):
+        return round(float(value), 3)
+    text = str(value).strip().lower().replace(" ", "")
+    if text.endswith("miles"):
+        text, unit = text[:-5], "mi"
+    elif text.endswith("mile"):
+        text, unit = text[:-4], "mi"
+    elif text.endswith("mi"):
+        text, unit = text[:-2], "mi"
+    elif text.endswith("km"):
+        text, unit = text[:-2], "km"
+    else:
+        unit = "km"
+    try:
+        amount = float(text)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"Distance must be a number with optional 'km' or 'mi' suffix "
+            f"(got {value!r})"
+        ) from exc
+    if unit == "mi":
+        amount = amount * _MILE_TO_KM
+    return round(amount, 3)

@@ -158,3 +158,32 @@ def test_mileage_log_no_duration_default(cli):
 def test_mileage_log_duration_bad_input_fails(cli):
     result = cli.run("mileage", "log", "5", "-t", "lots")
     assert result.exit_code != 0
+
+
+# ── mileage log accepts km/mi distance suffixes ──
+
+
+def test_mileage_log_km_suffix(cli):
+    data = cli.json("mileage", "log", "5km")
+    assert data["distance_km"] == 5.0
+
+
+def test_mileage_log_mi_converts(cli):
+    """3.1 mi × 1.609344 = 4.989 km."""
+    data = cli.json("mileage", "log", "3.1mi")
+    assert data["distance_km"] == 4.989
+
+
+def test_mileage_log_miles_plural_with_space(cli):
+    data = cli.json("mileage", "log", "5 miles")
+    assert data["distance_km"] == 8.047
+
+
+def test_mileage_log_plain_number_still_works(cli):
+    data = cli.json("mileage", "log", "5.5")
+    assert data["distance_km"] == 5.5
+
+
+def test_mileage_log_bad_distance_fails(cli):
+    result = cli.run("mileage", "log", "far")
+    assert result.exit_code != 0
