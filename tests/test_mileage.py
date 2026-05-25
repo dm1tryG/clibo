@@ -134,3 +134,27 @@ def test_mileage_stats_best_and_avg_can_differ(cli):
     data = cli.json("mileage", "stats")
     assert data["best_pace_min_per_km"] == 6.0
     assert data["avg_pace_min_per_km"] == 7.0
+
+
+# ── mileage log -t (duration) accepts H:MM ──
+
+
+def test_mileage_log_duration_hh_mm(cli):
+    data = cli.json("mileage", "log", "5", "-t", "0:30")
+    assert data["duration_min"] == 30
+
+
+def test_mileage_log_duration_plain_int(cli):
+    data = cli.json("mileage", "log", "5", "-t", "25")
+    assert data["duration_min"] == 25
+
+
+def test_mileage_log_no_duration_default(cli):
+    """Omitting -t → 0 minutes (distance-only log; no pace)."""
+    data = cli.json("mileage", "log", "5")
+    assert data["duration_min"] == 0
+
+
+def test_mileage_log_duration_bad_input_fails(cli):
+    result = cli.run("mileage", "log", "5", "-t", "lots")
+    assert result.exit_code != 0

@@ -62,3 +62,27 @@ def test_time_help_still_works(cli):
     result = cli.run("time", "--help")
     assert result.exit_code == 0
     assert "status" in result.stdout
+
+
+# ── time log accepts H:MM ──
+
+
+def test_time_log_hh_mm(cli):
+    data = cli.json("time", "log", "clibo", "1:25")
+    assert data["minutes"] == 85
+
+
+def test_time_log_plain_int_still_works(cli):
+    data = cli.json("time", "log", "clibo", "45")
+    assert data["minutes"] == 45
+
+
+def test_time_log_bad_input_fails(cli):
+    result = cli.run("time", "log", "clibo", "lots")
+    assert result.exit_code != 0
+
+
+def test_time_log_zero_or_negative_fails(cli):
+    """`time log 0` is meaningless — fail loudly."""
+    result = cli.run("time", "log", "clibo", "0")
+    assert result.exit_code != 0

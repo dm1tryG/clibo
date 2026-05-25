@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import typer
 from sqlmodel import Field, SQLModel, select
 
-from clibo.core.base import parse_date
+from clibo.core.base import parse_date, parse_minutes
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, bar, console, fail, ok, render_record, render_rows
 from clibo.core.settings import get_setting, set_setting
@@ -73,8 +73,10 @@ def log(
     distance_km: float = typer.Argument(..., help="Distance in km"),
     activity: str = typer.Option("run", "--activity", "-a",
                                  help=f"{'/'.join(ACTIVITIES)}"),
-    duration: int = typer.Option(0, "--duration", "-t",
-                                  help="Duration in minutes (enables pace)"),
+    duration: str = typer.Option(
+        "0", "--duration", "-t",
+        help="Duration — minutes ('30') or H:MM ('1:30') (enables pace)",
+    ),
     on: str = typer.Option("today", "--date", "-d", help="Date"),
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
@@ -85,8 +87,9 @@ def log(
     activity = activity.lower()
     if activity not in ACTIVITIES:
         fail(f"Activity must be one of: {', '.join(ACTIVITIES)}", json_out=json_out)
+    parsed_duration = parse_minutes(duration)
     entry = MileageEntry(
-        activity=activity, distance_km=distance_km, duration_min=duration,
+        activity=activity, distance_km=distance_km, duration_min=parsed_duration,
         entry_date=parse_date(on), note=note,
     )
     with session() as db:

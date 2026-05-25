@@ -4,6 +4,28 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `time log` and `mileage log -t` accept H:MM notation · 2026-05-25
+
+After yesterday's helper extraction + sweep across 5 tools, two more
+duration fields adopted the convention. Now every "minutes" input in
+clibo reads canonical clock notation.
+
+- ⏱️ **`clibo time log clibo "1:25"`** → 85 minutes
+- 🏃 **`clibo mileage log 5 -t "0:30"`** → 30 minutes
+- Both reuse `parse_minutes` from `clibo/core/base.py` — zero new
+  parse logic, just import + call.
+- 🧪 **8 new tests** (4 each): H:MM form, plain-int back-compat,
+  default/zero handling, bad-input failures.
+- **Tests:** 1,457 passing; ruff clean.
+
+**Why this matters:** the H:MM convention is now uniform across
+**7 duration-taking commands** — sleep, focus, meditate, stretches,
+workout, time, mileage. Every clock-style phrasing parses without
+mental conversion. Adopting it in a future tool is one line:
+`from clibo.core.base import parse_minutes`.
+
+---
+
 ### H:MM notation across 3 more tools + shared `parse_minutes`/`parse_hours` helpers · 2026-05-25
 
 After H:MM landed on `sleep log` and `focus log` last iter, the same

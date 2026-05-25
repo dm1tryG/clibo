@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import typer
 from sqlmodel import Field, SQLModel, select
 
-from clibo.core.base import parse_date
+from clibo.core.base import parse_date, parse_minutes
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, bar, console, fail, ok, render_record, render_rows
 
@@ -127,24 +127,28 @@ def status(json_out: JsonOpt = False) -> None:
 @app.command()
 def log(
     project: str = typer.Argument(..., help="Project"),
-    minutes: int = typer.Argument(..., help="Minutes to log"),
+    minutes: str = typer.Argument(
+        ...,
+        help="Duration — minutes ('45') or H:MM ('1:25')",
+    ),
     task: str = typer.Option(None, "--task", "-t", help="What you worked on"),
     on: str = typer.Option("today", "--date", "-d", help="Date"),
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
 ) -> None:
     """⏱️ Log time manually without a timer."""
-    if minutes <= 0:
+    parsed_min = parse_minutes(minutes)
+    if parsed_min <= 0:
         fail("Minutes must be positive", json_out=json_out)
-    entry = TimeEntry(project=project, task=task, minutes=minutes,
+    entry = TimeEntry(project=project, task=task, minutes=parsed_min,
                       entry_date=parse_date(on), note=note)
     with session() as db:
         db.add(entry)
         db.flush()
         db.refresh(entry)
         data = {"id": entry.id, "project": entry.project, "task": entry.task,
-                "minutes": minutes, "entry_date": entry.entry_date}
-    ok(f"Logged {EMOJI} {_hm(minutes)} on '{project}'", json_out=json_out, data=data)
+                "minutes": parsed_min, "entry_date": entry.entry_date}
+    ok(f"Logged {EMOJI} {_hm(parsed_min)} on '{project}'", json_out=json_out, data=data)
 
 
 # `add` is a friendlier alias for `log` (predictable verbs across tools).
