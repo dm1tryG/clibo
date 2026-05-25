@@ -85,3 +85,46 @@ def test_parse_hours_bad_hh_mm_fails():
 def test_parse_hours_bad_string_fails():
     with pytest.raises(typer.BadParameter):
         parse_hours("lots")
+
+
+# ── parse_weight_kg ──────────────────────────────────────────────────────
+
+
+from clibo.core.base import parse_weight_kg  # noqa: E402
+
+
+def test_parse_weight_kg_plain_float():
+    assert parse_weight_kg(70.5) == 70.5
+
+
+def test_parse_weight_kg_plain_string():
+    assert parse_weight_kg("70.5") == 70.5
+
+
+def test_parse_weight_kg_with_kg_suffix():
+    assert parse_weight_kg("70.5kg") == 70.5
+
+
+def test_parse_weight_kg_with_kg_suffix_and_space():
+    assert parse_weight_kg("70.5 kg") == 70.5
+
+
+def test_parse_weight_kg_lb_converts_to_kg():
+    """165 lb × 0.45359237 = 74.84 kg (rounded to 2 dp)."""
+    assert parse_weight_kg("165lb") == 74.84
+
+
+def test_parse_weight_kg_lbs_plural_works():
+    """'200 lbs' (with space + plural) → 90.72 kg."""
+    assert parse_weight_kg("200 lbs") == 90.72
+
+
+def test_parse_weight_kg_strips_case():
+    """Mixed-case suffixes parse the same as lower-case."""
+    assert parse_weight_kg("70KG") == 70.0
+    assert parse_weight_kg("165LB") == 74.84
+
+
+def test_parse_weight_kg_bad_input_fails():
+    with pytest.raises(typer.BadParameter):
+        parse_weight_kg("heavy")

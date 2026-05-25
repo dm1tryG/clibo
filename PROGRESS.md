@@ -4,6 +4,33 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `weight log` accepts `kg` / `lb` unit suffixes · 2026-05-25
+
+NL friction: `clibo weight log 70.5kg` and `clibo weight log 165lb`
+both rejected — bare-number-only. But both notations are how humans
+talk about weight, and US users especially want pounds.
+
+- ⚖️ **`clibo weight log 70.5`** — kg assumed (back-compat)
+- ⚖️ **`clibo weight log "70.5kg"`** — explicit kg suffix
+- ⚖️ **`clibo weight log "165lb"`** — pounds → auto-converted to
+  74.84 kg (NIST exact 1 lb = 0.45359237 kg)
+- ⚖️ **`clibo weight log "200 lbs"`** — space + plural also works
+- Mixed-case (`70KG`, `165LB`) parsed the same.
+- 🧰 **New helper `parse_weight_kg`** in `clibo/core/base.py` —
+  used by `weight log`; available for future tools that need
+  weight input.
+- 🧪 **8 helper unit tests + 5 weight CLI integration tests**
+  covering kg/lb forms, plural, mixed-case, bad input.
+- 📚 SKILL.md updated to show `165lb` example.
+- **Tests:** 1,470 passing (+13); ruff clean.
+
+**Why this matters:** US users routinely think in pounds. Forcing
+them to mentally convert before each weigh-in was a paper cut
+that auto-conversion eliminates. Plus the kg suffix matches how
+every scale prints the reading.
+
+---
+
 ### `time log` and `mileage log -t` accept H:MM notation · 2026-05-25
 
 After yesterday's helper extraction + sweep across 5 tools, two more

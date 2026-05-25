@@ -12,7 +12,7 @@ accepts `--json`.
 
 | Command | What it does |
 |---|---|
-| `clibo weight log KG` | Log a weight measurement (`-d` date, `-n` note) |
+| `clibo weight log WEIGHT` | Log a weight — `70.5`, `70.5kg`, or `165lb` (lb auto-converts) |
 | `clibo weight list --days 30` | Recent measurements |
 | `clibo weight rm ID` | Delete a measurement |
 | `clibo weight height --set 178` | Set height in cm (enables BMI) |
@@ -24,6 +24,7 @@ accepts `--json`.
 clibo weight height --set 178
 clibo weight log 75.5
 clibo weight log 74.8 -d yesterday
+clibo weight log 165lb       # pounds auto-convert to kg
 clibo weight stats --days 30
 ```
 

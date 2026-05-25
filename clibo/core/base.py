@@ -293,3 +293,42 @@ def parse_hours(value: str | float) -> float:
         raise typer.BadParameter(
             f"Hours must be a number or H:MM (got {value!r})"
         ) from exc
+
+
+# 1 lb = 0.45359237 kg (NIST exact definition).
+_LB_TO_KG = 0.45359237
+
+
+def parse_weight_kg(value: str | float) -> float:
+    """Parse a body-weight value into kilograms.
+
+    Accepts:
+      * plain float or numeric string (``70.5``, ``"70.5"``) — assumed kg
+      * ``"70.5kg"`` / ``"70.5 kg"`` — explicit kg suffix
+      * ``"165lb"`` / ``"165 lb"`` / ``"165lbs"`` — pounds, converted to kg
+        using 1 lb = 0.45359237 kg.
+
+    Output is rounded to 2 decimal places. Raises ``typer.BadParameter``
+    on bad input.
+    """
+    if isinstance(value, int | float):
+        return round(float(value), 2)
+    text = str(value).strip().lower().replace(" ", "")
+    if text.endswith("lbs"):
+        text, unit = text[:-3], "lb"
+    elif text.endswith("lb"):
+        text, unit = text[:-2], "lb"
+    elif text.endswith("kg"):
+        text, unit = text[:-2], "kg"
+    else:
+        unit = "kg"
+    try:
+        amount = float(text)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"Weight must be a number with optional 'kg' or 'lb' suffix "
+            f"(got {value!r})"
+        ) from exc
+    if unit == "lb":
+        amount = amount * _LB_TO_KG
+    return round(amount, 2)

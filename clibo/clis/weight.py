@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import typer
 from sqlmodel import Field, SQLModel, select
 
-from clibo.core.base import parse_date
+from clibo.core.base import parse_date, parse_weight_kg
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, fail, ok, render_record, render_rows
 from clibo.core.settings import get_setting, set_setting
@@ -58,15 +58,25 @@ def _bmi_class(bmi: float) -> str:
 
 @app.command()
 def log(
-    weight_kg: float = typer.Argument(..., help="Your weight in kilograms"),
+    weight_kg: str = typer.Argument(
+        ...,
+        help="Weight — kg by default ('70.5'), or with explicit suffix "
+             "('70.5kg' / '165lb'); pounds are auto-converted to kg",
+    ),
     on: str = typer.Option("today", "--date", "-d", help="Date measured"),
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
 ) -> None:
-    """⚖️ Log a body-weight measurement."""
-    if weight_kg <= 0:
+    """⚖️ Log a body-weight measurement.
+
+    Accepts a plain number (``70.5`` — kg assumed) or a unit-suffixed
+    value (``70.5kg`` / ``165lb``). Pounds auto-convert to kg using
+    1 lb = 0.45359237 kg (NIST exact).
+    """
+    parsed_kg = parse_weight_kg(weight_kg)
+    if parsed_kg <= 0:
         fail("Weight must be positive", json_out=json_out)
-    entry = WeightLog(weight_kg=weight_kg, entry_date=parse_date(on), note=note)
+    entry = WeightLog(weight_kg=parsed_kg, entry_date=parse_date(on), note=note)
     with session() as db:
         db.add(entry)
         db.flush()
@@ -74,12 +84,12 @@ def log(
         data = {"id": entry.id, "weight_kg": entry.weight_kg, "entry_date": entry.entry_date}
     height = get_setting(NAME, "height_cm")
     if height:
-        bmi = _bmi(weight_kg, float(height))
+        bmi = _bmi(parsed_kg, float(height))
         data["bmi"] = bmi
-        ok(f"Logged {EMOJI} {weight_kg:g}kg — BMI {bmi} ({_bmi_class(bmi)})",
+        ok(f"Logged {EMOJI} {parsed_kg:g}kg — BMI {bmi} ({_bmi_class(bmi)})",
            json_out=json_out, data=data)
     else:
-        ok(f"Logged {EMOJI} {weight_kg:g}kg", json_out=json_out, data=data)
+        ok(f"Logged {EMOJI} {parsed_kg:g}kg", json_out=json_out, data=data)
 
 
 # `add` is a friendlier alias for `log` (predictable verbs across tools).
