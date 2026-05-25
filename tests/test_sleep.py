@@ -111,3 +111,45 @@ def test_sleep_log_bad_input_fails(cli):
 def test_sleep_log_hh_mm_with_zero_minutes(cli):
     data = cli.json("sleep", "log", "8:00")
     assert data["hours"] == 8.0
+
+
+# ── sleep log derives hours from --bedtime + --wake ──
+
+
+def test_sleep_log_derives_from_bedtime_wake(cli):
+    """Omit hours; --bedtime + --wake → derived duration."""
+    data = cli.json("sleep", "log", "-b", "23:30", "-w", "07:00")
+    assert data["hours"] == 7.5
+    assert data["bedtime"] == "23:30"
+    assert data["wake_time"] == "07:00"
+
+
+def test_sleep_log_wraps_midnight(cli):
+    """Bedtime 00:30, wake 08:00 → 7.5h (wraps to next day)."""
+    data = cli.json("sleep", "log", "-b", "00:30", "-w", "08:00")
+    assert data["hours"] == 7.5
+
+
+def test_sleep_log_explicit_hours_overrides_times(cli):
+    """If user passes hours, ignore bedtime/wake for the duration calc."""
+    data = cli.json("sleep", "log", "6.0", "-b", "23:30", "-w", "07:00")
+    assert data["hours"] == 6.0
+
+
+def test_sleep_log_no_args_fails(cli):
+    """No hours and no times → loud error, not silent default."""
+    result = cli.run("sleep", "log")
+    assert result.exit_code != 0
+    assert "Provide hours" in result.output or "--bedtime" in result.output
+
+
+def test_sleep_log_only_bedtime_fails(cli):
+    """Just one of bedtime/wake isn't enough to derive — need both."""
+    result = cli.run("sleep", "log", "-b", "23:30")
+    assert result.exit_code != 0
+
+
+def test_sleep_log_same_time_means_24h_assumes_full_day(cli):
+    """Edge: bedtime == wake → treat as 24h (rare but well-defined)."""
+    data = cli.json("sleep", "log", "-b", "08:00", "-w", "08:00")
+    assert data["hours"] == 24.0

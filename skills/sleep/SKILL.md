@@ -11,7 +11,8 @@ Sleep duration & quality tracker. Local SQLite. Every command accepts `--json`.
 
 | Command | What it does |
 |---|---|
-| `clibo sleep log HOURS -q 4` | Log a night's sleep (`-q` quality 1–5) |
+| `clibo sleep log HOURS -q 4` | Log a night's sleep (`7.5` or `7:30`; omit if `-b/-w` given) |
+| `clibo sleep log -b 23:30 -w 07:00` | Derive hours from bedtime + wake (wraps midnight) |
 | `clibo sleep last` | Show your most recent night |
 | `clibo sleep list --days 7` | Recent nights |
 | `clibo sleep rm ID` | Delete an entry |

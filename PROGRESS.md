@@ -4,6 +4,31 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `sleep log` derives hours from `--bedtime` + `--wake` · 2026-05-25
+
+NL ask: *"I went to bed at 23:30 and woke at 07:00"*. The user gave
+both clock times — but still had to compute and type the duration.
+
+- 😴 **`clibo sleep log -b 23:30 -w 07:00`** — hours omitted; clibo
+  computes 7.5h from the time pair. Wraps midnight (00:30 → 08:00
+  also = 7.5h).
+- 🔁 **Explicit hours still wins**: passing both `hours` and
+  `-b`/`-w` keeps the typed hours unchanged. Times are stored
+  alongside but the duration arg is authoritative when given.
+- 🚫 **Loud failures**: no args at all, or just one of bedtime/wake,
+  fail with a clear "provide hours OR both times" message.
+- 🧪 **6 new tests**: derivation, midnight wrap, explicit-overrides-
+  derivation, no-args fails, only-bedtime fails, same-time → 24h.
+- 📚 SKILL.md updated.
+- **Tests:** 1,512 passing (+6); ruff clean.
+
+**Why this matters:** the sleep log already accepted bedtime/wake
+options to record on the row — but didn't use them for computation.
+Three duration entry forms now: decimal, H:MM, derived-from-times.
+Whichever phrasing the user reaches for first, it works.
+
+---
+
 ### `water drink` and `vitals temp` accept imperial suffixes · 2026-05-25
 
 Two more canonical-notation paper cuts. *"16oz of water"* and

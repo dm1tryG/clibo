@@ -61,11 +61,32 @@ def _row(entry: SleepLog) -> dict:
     }
 
 
+def _hours_between(bedtime: str, wake: str) -> float:
+    """Return float hours between a bedtime and wake time (HH:MM).
+
+    Wraps midnight: if wake < bedtime by clock, assume the wake is on
+    the following day (e.g. 23:30 → 07:00 = 7.5h).
+    """
+    try:
+        b_h, b_m = (int(p) for p in bedtime.split(":", 1))
+        w_h, w_m = (int(p) for p in wake.split(":", 1))
+    except (ValueError, TypeError) as exc:
+        raise typer.BadParameter(
+            f"Bedtime/wake must be HH:MM (got {bedtime!r} / {wake!r})"
+        ) from exc
+    bed_min = b_h * 60 + b_m
+    wake_min = w_h * 60 + w_m
+    if wake_min <= bed_min:
+        wake_min += 24 * 60
+    return round((wake_min - bed_min) / 60, 2)
+
+
 @app.command()
 def log(
     hours: str = typer.Argument(
-        ...,
-        help="Hours slept — accepts decimal ('7.5') or H:MM ('7:30')",
+        None,
+        help="Hours slept — decimal ('7.5') or H:MM ('7:30'). Omit if "
+             "both --bedtime and --wake are given; clibo derives it.",
     ),
     quality: int = typer.Option(3, "--quality", "-q", help="Sleep quality, 1 (terrible) – 5 (great)"),
     on: str = typer.Option("today", "--date", "-d", help="Date you woke up"),
@@ -76,10 +97,22 @@ def log(
 ) -> None:
     """😴 Log a night of sleep.
 
-    Accepts either the decimal form (``clibo sleep log 7.5``) or
-    the canonical ``H:MM`` notation (``clibo sleep log 7:30``).
+    Three ways to specify duration:
+      * decimal:   ``clibo sleep log 7.5``
+      * H:MM:      ``clibo sleep log 7:30``
+      * inferred:  ``clibo sleep log -b 23:30 -w 07:00``  (computes 7.5h)
     """
-    parsed_hours = parse_hours(hours)
+    if hours is None:
+        if bedtime and wake:
+            parsed_hours = _hours_between(bedtime, wake)
+        else:
+            fail(
+                "Provide hours (e.g. 7.5 / 7:30), or both --bedtime "
+                "and --wake to derive it.",
+                json_out=json_out,
+            )
+    else:
+        parsed_hours = parse_hours(hours)
     if parsed_hours <= 0 or parsed_hours > 24:
         fail("Hours must be between 0 and 24", json_out=json_out)
     if quality not in QUALITY_LABELS:
