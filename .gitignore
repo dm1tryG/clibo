@@ -20,3 +20,8 @@ venv/
 
 # OS
 .DS_Store
+
+# Local-only dev artifacts (not part of the public package)
+PROGRESS.md
+PLAN.md
+.claude/
