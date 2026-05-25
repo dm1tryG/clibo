@@ -173,3 +173,77 @@ def test_parse_distance_km_strips_case():
 def test_parse_distance_km_bad_input_fails():
     with pytest.raises(typer.BadParameter):
         parse_distance_km("far")
+
+
+# ── parse_volume_ml ──────────────────────────────────────────────────────
+
+
+from clibo.core.base import parse_volume_ml  # noqa: E402
+
+
+def test_parse_volume_ml_plain_int():
+    assert parse_volume_ml(500) == 500
+
+
+def test_parse_volume_ml_ml_suffix():
+    assert parse_volume_ml("500ml") == 500
+    assert parse_volume_ml("500 ml") == 500
+
+
+def test_parse_volume_ml_oz_converts():
+    """16 fl oz × 29.5735 = 473 ml (rounded)."""
+    assert parse_volume_ml("16oz") == 473
+
+
+def test_parse_volume_ml_ounces_plural():
+    assert parse_volume_ml("16 ounces") == 473
+
+
+def test_parse_volume_ml_floz_form():
+    assert parse_volume_ml("16floz") == 473
+
+
+def test_parse_volume_ml_l_suffix():
+    assert parse_volume_ml("1L") == 1000
+    assert parse_volume_ml("1.5l") == 1500
+
+
+def test_parse_volume_ml_litre_words():
+    assert parse_volume_ml("1 litre") == 1000
+    assert parse_volume_ml("1 liter") == 1000
+
+
+def test_parse_volume_ml_bad_input_fails():
+    with pytest.raises(typer.BadParameter):
+        parse_volume_ml("a glass")
+
+
+# ── parse_temperature_c ──────────────────────────────────────────────────
+
+
+from clibo.core.base import parse_temperature_c  # noqa: E402
+
+
+def test_parse_temperature_c_plain():
+    assert parse_temperature_c(37) == 37.0
+    assert parse_temperature_c("37") == 37.0
+
+
+def test_parse_temperature_c_celsius_suffix():
+    assert parse_temperature_c("37C") == 37.0
+    assert parse_temperature_c("37 °C") == 37.0
+
+
+def test_parse_temperature_c_fahrenheit_converts():
+    """98.6 °F → (98.6 - 32) * 5/9 = 37.0 °C (rounded to 1 dp)."""
+    assert parse_temperature_c("98.6F") == 37.0
+    assert parse_temperature_c("100F") == 37.8
+
+
+def test_parse_temperature_c_fahrenheit_with_degree_sign():
+    assert parse_temperature_c("98.6 °F") == 37.0
+
+
+def test_parse_temperature_c_bad_input_fails():
+    with pytest.raises(typer.BadParameter):
+        parse_temperature_c("warm")

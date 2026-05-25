@@ -16,7 +16,7 @@ Local SQLite. Every command accepts `--json`.
 | `clibo vitals bp 120/80` (or `bp 120 80`) | Log blood pressure (auto-classified) |
 | `clibo vitals pulse BPM` | Log heart rate |
 | `clibo vitals glucose VALUE` | Log blood glucose (`-u` unit) |
-| `clibo vitals temp CELSIUS` | Log body temperature |
+| `clibo vitals temp TEMP` | Log body temperature — `37`, `37C`, or `98.6F` (F auto-converts) |
 | `clibo vitals spo2 PERCENT` | Log blood-oxygen saturation |
 | `clibo vitals latest` | Most recent reading of each vital |
 | `clibo vitals list --kind bp` | Recent readings (filter by kind) |

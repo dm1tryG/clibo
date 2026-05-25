@@ -11,7 +11,7 @@ Daily water intake tracker. Local SQLite. Every command accepts `--json`.
 
 | Command | What it does |
 |---|---|
-| `clibo water drink [ML]` | Log a drink (default 250 ml) |
+| `clibo water drink [AMOUNT]` | Log a drink — `500`, `500ml`, `16oz`, or `1L` (default 250 ml); oz and L auto-convert |
 | `clibo water today` | Today's total and a goal-progress bar |
 | `clibo water list --days 7` | Daily totals for the last N days |
 | `clibo water rm ID` | Delete a log entry |

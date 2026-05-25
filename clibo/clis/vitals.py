@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import typer
 from sqlmodel import Field, SQLModel, select
 
-from clibo.core.base import parse_date
+from clibo.core.base import parse_date, parse_temperature_c
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, fail, ok, render_record, render_rows
 
@@ -184,15 +184,24 @@ def glucose(
 
 @app.command()
 def temp(
-    celsius: float = typer.Argument(..., help="Body temperature in °C"),
+    celsius: str = typer.Argument(
+        ...,
+        help="Body temperature — °C by default ('37'), or with explicit "
+             "suffix ('37C' / '98.6F'); F auto-converts to C",
+    ),
     on: str = typer.Option("today", "--date", "-d", help="Date"),
     note: str = typer.Option(None, "--note", "-n", help="Optional note"),
     json_out: JsonOpt = False,
 ) -> None:
-    """🌡️ Log a body-temperature reading."""
-    data = _save(VitalReading(kind="temp", value=celsius, unit="°C",
+    """🌡️ Log a body-temperature reading.
+
+    Accepts plain Celsius (``37``) or unit-suffixed (``37C`` / ``98.6F``).
+    Fahrenheit converts via ``(F - 32) * 5/9``.
+    """
+    parsed_c = parse_temperature_c(celsius)
+    data = _save(VitalReading(kind="temp", value=parsed_c, unit="°C",
                               entry_date=parse_date(on), note=note))
-    ok(f"Logged 🌡️ temperature {celsius:g} °C", json_out=json_out, data=data)
+    ok(f"Logged 🌡️ temperature {parsed_c:g} °C", json_out=json_out, data=data)
 
 
 @app.command()

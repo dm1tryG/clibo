@@ -73,3 +73,34 @@ def test_water_today_remaining_floors_at_zero_when_reached(cli):
     assert data["remaining_ml"] == 0
     assert data["reached"] is True
     assert data["pct_of_goal"] == 125.0
+
+
+# ── water drink accepts ml/oz/L unit suffixes ──
+
+
+def test_water_drink_ml_suffix(cli):
+    data = cli.json("water", "drink", "500ml")
+    assert data["amount_ml"] == 500
+
+
+def test_water_drink_oz_converts(cli):
+    """16 fl oz → 473 ml."""
+    data = cli.json("water", "drink", "16oz")
+    assert data["amount_ml"] == 473
+
+
+def test_water_drink_litres(cli):
+    data = cli.json("water", "drink", "1L")
+    assert data["amount_ml"] == 1000
+    data2 = cli.json("water", "drink", "1.5l")
+    assert data2["amount_ml"] == 1500
+
+
+def test_water_drink_plain_int_still_works(cli):
+    data = cli.json("water", "drink", "500")
+    assert data["amount_ml"] == 500
+
+
+def test_water_drink_bad_input_fails(cli):
+    result = cli.run("water", "drink", "a sip")
+    assert result.exit_code != 0

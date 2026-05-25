@@ -209,3 +209,33 @@ def test_vitals_bp_invalid_systolic_fails(cli):
     """Non-int single arg (no slash) is invalid."""
     result = cli.run("vitals", "bp", "high")
     assert result.exit_code != 0
+
+
+# ── vitals temp accepts C/F unit suffixes ──
+
+
+def test_vitals_temp_plain_celsius(cli):
+    data = cli.json("vitals", "temp", "37")
+    assert data["value"] == 37.0
+
+
+def test_vitals_temp_celsius_suffix(cli):
+    data = cli.json("vitals", "temp", "37C")
+    assert data["value"] == 37.0
+
+
+def test_vitals_temp_fahrenheit_converts(cli):
+    """98.6 °F → 37.0 °C."""
+    data = cli.json("vitals", "temp", "98.6F")
+    assert data["value"] == 37.0
+
+
+def test_vitals_temp_high_fahrenheit(cli):
+    """100 °F → 37.8 °C."""
+    data = cli.json("vitals", "temp", "100F")
+    assert data["value"] == 37.8
+
+
+def test_vitals_temp_bad_input_fails(cli):
+    result = cli.run("vitals", "temp", "warm")
+    assert result.exit_code != 0

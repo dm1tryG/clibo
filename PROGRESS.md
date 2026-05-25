@@ -4,6 +4,34 @@ A running log of the build loop. Newest entries on top.
 
 ---
 
+### `water drink` and `vitals temp` accept imperial suffixes · 2026-05-25
+
+Two more canonical-notation paper cuts. *"16oz of water"* and
+*"98.6°F"* are how a large fraction of users naturally phrase
+volume and body temperature — both were rejected.
+
+- 💧 **`clibo water drink 500ml` / `16oz` / `1L` / `1.5l`** —
+  US fluid ounces convert via 1 fl oz = 29.5735295625 ml (NIST);
+  litres × 1000 for ml. Plain `500` is still kg-of-the-default.
+- 🌡️ **`clibo vitals temp 37C` / `98.6F` / `37 °C`** —
+  Fahrenheit converts via `(F − 32) × 5/9`. Degree-sign + space
+  tolerated. Plain `37` still means Celsius.
+- 🧰 **Two new helpers** in `clibo/core/base.py`:
+  - `parse_volume_ml` — handles ml / oz / floz / litres
+  - `parse_temperature_c` — handles C / F / °C / °F
+- 🧪 **15 helper unit tests + 10 CLI integration tests** covering
+  every form and conversion.
+- 📚 SKILL.md updated for both tools.
+- **Tests:** 1,506 passing (+23); ruff clean.
+
+**Why this matters:** US scales, kettles, and thermometers print
+imperial. Forcing mental conversion before each log was a paper
+cut that eroded daily use. **Five tools now auto-convert imperial
+on input**: weight (lb), mileage (mi), water (oz/L), vitals temp
+(F), vitals bp (`120/80`).
+
+---
+
 ### `mileage log` accepts `km` / `mi` distance suffixes · 2026-05-25
 
 NL friction: *"I ran 5 miles"* / *"3.1mi"* / *"5km"* all rejected —

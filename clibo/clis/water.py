@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import typer
 from sqlmodel import Field, SQLModel, select
 
-from clibo.core.base import parse_date
+from clibo.core.base import parse_date, parse_volume_ml
 from clibo.core.db import session
 from clibo.core.output import JsonOpt, bar, console, fail, ok, render_record, render_rows
 from clibo.core.settings import get_setting, set_setting
@@ -45,14 +45,24 @@ def _goal() -> int:
 
 @app.command()
 def drink(
-    amount_ml: int = typer.Argument(250, help="Amount in millilitres (default: a 250ml glass)"),
+    amount_ml: str = typer.Argument(
+        "250",
+        help="Amount — ml by default ('500'), or with explicit suffix "
+             "('500ml' / '16oz' / '1L'); oz and L auto-convert to ml",
+    ),
     on: str = typer.Option("today", "--date", "-d", help="Date"),
     json_out: JsonOpt = False,
 ) -> None:
-    """💧 Log a drink of water."""
-    if amount_ml <= 0:
+    """💧 Log a drink of water.
+
+    Accepts plain ml (``500``) or unit-suffixed values (``500ml`` /
+    ``16oz`` / ``1L``). US fluid ounces convert via 1 fl oz =
+    29.5735 ml; litres × 1000.
+    """
+    parsed_ml = parse_volume_ml(amount_ml)
+    if parsed_ml <= 0:
         fail("Amount must be positive", json_out=json_out)
-    entry = WaterLog(amount_ml=amount_ml, entry_date=parse_date(on))
+    entry = WaterLog(amount_ml=parsed_ml, entry_date=parse_date(on))
     with session() as db:
         db.add(entry)
         db.flush()
@@ -64,9 +74,9 @@ def drink(
         )
     goal = _goal()
     ok(
-        f"Logged {EMOJI} {amount_ml}ml — {total}/{goal}ml today",
+        f"Logged {EMOJI} {parsed_ml}ml — {total}/{goal}ml today",
         json_out=json_out,
-        data={"id": entry.id, "amount_ml": amount_ml, "total_today": total, "goal_ml": goal},
+        data={"id": entry.id, "amount_ml": parsed_ml, "total_today": total, "goal_ml": goal},
     )
 
 

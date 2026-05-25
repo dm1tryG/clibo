@@ -373,3 +373,93 @@ def parse_distance_km(value: str | float) -> float:
     if unit == "mi":
         amount = amount * _MILE_TO_KM
     return round(amount, 3)
+
+
+# 1 US fluid ounce = 29.5735295625 ml (NIST exact).
+_FLOZ_TO_ML = 29.5735295625
+
+
+def parse_volume_ml(value: str | float) -> float:
+    """Parse a volume value into millilitres.
+
+    Accepts:
+      * plain numeric (``500``) — assumed ml
+      * ``"500ml"`` / ``"500 ml"`` — explicit ml suffix
+      * ``"16oz"`` / ``"16 fl oz"`` / ``"16 ounces"`` — US fluid ounces,
+        converted to ml using 1 fl oz = 29.5735295625 ml.
+      * ``"1L"`` / ``"1.5l"`` / ``"1 litre"`` / ``"1 liter"`` — litres,
+        multiplied by 1000 for ml.
+
+    Output is rounded to the nearest ml. Raises ``typer.BadParameter``
+    on bad input.
+    """
+    if isinstance(value, int | float):
+        return round(float(value))
+    text = str(value).strip().lower().replace(" ", "")
+    # Order matters: "ml" must be checked before "l".
+    if text.endswith("floz"):
+        text, unit = text[:-4], "oz"
+    elif text.endswith("ounces"):
+        text, unit = text[:-6], "oz"
+    elif text.endswith("ounce"):
+        text, unit = text[:-5], "oz"
+    elif text.endswith("oz"):
+        text, unit = text[:-2], "oz"
+    elif text.endswith("ml"):
+        text, unit = text[:-2], "ml"
+    elif text.endswith("litres") or text.endswith("liters"):
+        text, unit = text[:-6], "l"
+    elif text.endswith("litre") or text.endswith("liter"):
+        text, unit = text[:-5], "l"
+    elif text.endswith("l"):
+        text, unit = text[:-1], "l"
+    else:
+        unit = "ml"
+    try:
+        amount = float(text)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"Volume must be a number with optional 'ml', 'l', or 'oz' "
+            f"suffix (got {value!r})"
+        ) from exc
+    if unit == "oz":
+        amount = amount * _FLOZ_TO_ML
+    elif unit == "l":
+        amount = amount * 1000
+    return round(amount)
+
+
+def parse_temperature_c(value: str | float) -> float:
+    """Parse a body-temperature value into Celsius.
+
+    Accepts:
+      * plain numeric (``37``) — assumed Celsius
+      * ``"37C"`` / ``"37 °C"`` — explicit Celsius suffix
+      * ``"98.6F"`` / ``"98.6 °F"`` — Fahrenheit, converted via
+        ``(F - 32) * 5/9``.
+
+    Output is rounded to 1 decimal place. Raises ``typer.BadParameter``
+    on bad input.
+    """
+    if isinstance(value, int | float):
+        return round(float(value), 1)
+    text = (
+        str(value).strip().lower().replace(" ", "")
+        .replace("°", "").replace("deg", "")
+    )
+    if text.endswith("f"):
+        text, unit = text[:-1], "f"
+    elif text.endswith("c"):
+        text, unit = text[:-1], "c"
+    else:
+        unit = "c"
+    try:
+        amount = float(text)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"Temperature must be a number with optional 'C' or 'F' "
+            f"suffix (got {value!r})"
+        ) from exc
+    if unit == "f":
+        amount = (amount - 32) * 5 / 9
+    return round(amount, 1)
